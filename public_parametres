@@ -1,0 +1,16 @@
+
+HOSTS_ADD='
+# Example. Mirror links.
+#0.0.0.0	mirror.example.com	mirror.localhost
+#0.0.0.0	exapmle.com	localhost
+'
+
+repo_debian_main='deb http://deb.debian.org/debian $debian_distr main non-free contrib'
+repo_debian_updates='deb http://deb.debian.org/debian $debian_distr-updates main non-free contrib'
+repo_debian_backports='deb http://deb.debian.org/debian $debian_distr-backports main non-free contrib'
+repo_debian_security='deb http://security.debian.org/ $debian_distr/updates main non-free contrib'
+repo_debian_wine='deb http://dl.winehq.org/wine-builds/debian/ $debian_distr main'
+repo_debian_webmin='deb [arch=$debian_arch] http:///download.webmin.com/download/repository sarge contrib'
+mirror_archlinux='http://mirrors.evowise.com/archlinux'
+mirror_archlinux_32='http://mirror.archlinux32.org'
+mirror_archlinux_arm='http://mirror.archlinuxarm.org'

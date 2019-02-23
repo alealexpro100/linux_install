@@ -1,0 +1,76 @@
+#!/bin/bash
+#######################################
+#       Script for installing alpine  #
+#       to dir.                       #
+#       Created by Alexey.            #
+#######################################
+set -e
+# Check options.
+if [[ -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]]; then
+  echo "Example: $0 ./bin/arch-chroot x86_64 v3.9 http://nl.alpinelinux.org/alpine /mnt htop"
+  exit 1
+fi
+
+arch_chroot_command=$1 arch=$2 version=$3 mirror=$4 dir=$5 other_arch=0 qemu_arch=""; shift 5; add_packages=$@
+[[ ! -e $arch_chroot_command ]] && echo "$arch_chroot_command not found!" && exit 1
+
+#Detect host arch, parse it and setup qemu-emulation.
+case $(uname -m) in
+  x86|i?86) host_arch=x86;;
+  x86_64|amd64) host_arch=x86_64;;
+  aarch64|arm64|armv8l) host_arch=aarch64;;
+  armhf) host_arch=arm;;
+  *) host_arch=$(uname -m);;
+esac
+
+if [[ "$host_arch" != "$arch" ]]; then
+  case $arch in
+    x86|i?86) qemu_arch=i386;;
+    x86_64|amd64) qemu_arch=x86_64;;
+    aarch64|arm64|armv8l) qemu_arch=aarch64;;
+    armhf) qemu_arch=arm;;
+    *) qemu_arch=$arch;;
+  esac
+fi
+
+#Find, download and unpack apktools-static and install system with it.
+echo "Getting link to download apk-tools-static for $host_arch..."
+apktools_name=$(wget -q -O - "$mirror/$version/main/$host_arch/" | grep apk-tools-static | sed 's#.*href="##;s#">.*##')
+[[ -z $apktools_name ]] && echo "Incorrect arch $arch or version $version or mirror $mirror!" && exit 1
+echo "Downloading..."
+wget -q -O "$dir/$apktools_name" "$mirror/$version/main/$host_arch/$apktools_name"
+echo "Extracting..."
+tar -xzvf "$dir/$apktools_name" -C "$dir" --exclude='.PKGINFO' --exclude='.SIGN.RSA*'
+echo "Installing base..."
+$dir/sbin/apk.static -X "$mirror/$version/main" -U --allow-untrusted --root $dir --arch $arch --initdb add alpine-base || echo "Don't pay attention to errors."
+rm -rf "$dir/$apktools_name" $dir/sbin/apk.static
+
+echo -e "$mirror/$version/main\n$mirror/$version/community" >> $dir/etc/apk/repositories
+
+#Make rootfs avaliable for internet connection for time while installation...
+mount --bind {,$dir}/etc/hosts
+touch $dir/etc/resolv.conf
+
+#Write some commands for ending installation.
+echo -e "#!/bin/ash\n" >> $dir/root/install.sh
+echo -e "apk update\n apk add $add_packages\nrm -rf /root/install.sh" >> $dir/root/install.sh
+chmod +x $dir/root/install.sh
+
+# Only here we use arch-chroot.
+if [[ $qemu_arch == "i386" && $host_arch == "x86_64" ]]; then
+  arch_chroot_command="linux32 $arch_chroot_command" qemu_arch=""
+else
+  [[ ! -z $qemu_arch ]] && cp /usr/bin/qemu-$qemu_arch-static $dir/usr/bin/
+fi
+[[ ! -z $qemu_arch ]] && echo "apk fix \$(apk info)" >> $dir/root/install.sh
+PATH=/usr/sbin:/usr/bin:/sbin:/bin $arch_chroot_command $dir busybox ash /root/install.sh
+if [[ ! -z $qemu_arch ]]; then
+  rm -rf $dir/usr/bin/qemu-$qemu_arch-static || echo 'OK'
+fi
+
+umount $dir/etc/hosts
+
+echo "Alpine was succesfully installed to $dir."
+
+# =)
+echo "Script succesfully ended its work. Have a nice day!"
