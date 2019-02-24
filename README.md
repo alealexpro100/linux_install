@@ -31,6 +31,7 @@ You can use bootstrap scripts for your own purposes. They work with arch-chroot 
 Now it supports:
 * Debian (and debian-based distros).
 * Archlinux.
+* Void linux.
 * Alpine (only bootstrap script).
 
 ### Contents:

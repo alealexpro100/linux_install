@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./bin/arch-bootstrap ./bin/arch-chroot $arch $mirror_archlinux $dir base sudo $preinstall
+./bin/void-bootstrap ./bin/arch-chroot $arch $version_void $mirror_voidlinux $dir base-voidstrap $preinstall
 
 echo 'First step is completed.'
 
@@ -8,14 +8,6 @@ echo 'First step is completed.'
 echo "All files from rootfs will be copied in new system."
 cp -rf ./distr/$distr/rootfs/* $dir/
 echo -e "LANG=$LANG $config_installation" >> $dir/root/configuration
-echo 'Configuring hosts...'
-echo "127.0.0.1	localhost
-127.0.1.1	$hostname
-::1		localhost ip6-localhost ip6-loopback
-ff02::1		ip6-allnodes
-ff02::2		ip6-allrouters
-
-$HOSTS_ADD" > $dir/etc/hosts
 if [[ $setup_script == 1 ]]; then
   echo "Coping installator..."
   cp -rf . $dir/root/linux_install
@@ -31,6 +23,7 @@ if [[ $fstab == 1 ]]; then
 ' >> $dir/etc/fstab
   bash ./bin/genfstab -U $dir > $dir/etc/fstab
 fi
+touch $dir/etc/resolv.conf
 echo ''
 echo 'Starting scripts for final installantion...'
 
@@ -66,6 +59,7 @@ if [[ ! -z $qemu_arch ]]; then
 fi
 
 $arch_chroot_command $dir /root/pi_s1.sh
+$arch_chroot_command $dir rm -rf /root/pi_s1.sh
 
 if [[ $grub2 == '1' ]]; then
   case $grub2_type in

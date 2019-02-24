@@ -1,9 +1,11 @@
 #!/bin/bash
 
 case $(uname -m) in
-  x86_64) debian_arch_default=amd64
+  x86_64|amd64) debian_arch_default=amd64
   ;;
-  aarch64) debian_arch_default=arm64
+  arm64|aarch64|armv8l) debian_arch_default=arm64
+  ;;
+  i[3-6]86|x86) debian_arch_default=i386
   ;;
   *) debian_arch_default=$(uname -m)
   ;;

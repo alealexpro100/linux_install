@@ -39,10 +39,10 @@ libgpg-error libidn2 libnghttp2 libpsl libssh2 libunistring libunistring lz4 ope
 
 #Detect host arch, parse it and setup qemu-emulation.
 case $(uname -m) in
-  x86|i?86) host_arch=i686;;
+  i[3-6]86|x86) host_arch=i686;;
   x86_64|amd64) host_arch=x86_64;;
   aarch64|arm64|armv8l) host_arch=aarch64;;
-  armhf) host_arch=arm;;
+  armhf|armlf) host_arch=arm;;
   *) host_arch=$(uname -m);;
 esac
 

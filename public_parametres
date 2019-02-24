@@ -14,3 +14,5 @@ repo_debian_webmin='deb [arch=$debian_arch] http:///download.webmin.com/download
 mirror_archlinux='http://mirrors.evowise.com/archlinux'
 mirror_archlinux_32='http://mirror.archlinux32.org'
 mirror_archlinux_arm='http://mirror.archlinuxarm.org'
+mirror_voidlinux='https://alpha.de.repo.voidlinux.org/current'
+version_void=glibc
