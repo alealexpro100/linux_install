@@ -41,9 +41,9 @@ echo "Installing base..."
 mv $dir/var/db/xbps/{index-meta,keys/60:ae:0c:d6:f0:95:17:80:bc:93:46:7a:89:af:a3:2d}.plist
 [[ "$version" == "musl" ]] && cp $dir/var/db/xbps/keys/{*,3d:b9:c0:50:41:a7:68:4c:2e:2c:a9:a2:5a:04:b7:3f}.plist
 case $arch in
-  x86_64|i686) mirror="$mirror"
+  aarch64) mirror="$mirror/$arch"
   ;;
-  *) mirror="$mirror/$arch"
+  *) mirror="$mirror"
   ;;
 esac
 if [[ "$version" == "musl" ]]; then
@@ -57,6 +57,8 @@ for del_file in $xbps_name.$host_arch-musl.xbps $list_del; do
 done
 
 echo "Void linux was succesfully installed to $dir."
+echo "#repository=$mirror" >> $dir/etc/xbps.d/install_repo.conf
+echo "Used mirror was written to $dir/etc/xbps.d/install_repo.conf"
 
 # =)
 echo "Script succesfully ended its work. Have a nice day!"

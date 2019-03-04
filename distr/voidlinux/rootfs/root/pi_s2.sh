@@ -11,18 +11,18 @@ else
   source /root/configuration
 fi
 
-if [[ $version == "glibc" ]]; then
+if [[ $version_void == "glibc" ]]; then
   echo "Please uncomment locales for locale-gen in nano."
   sleep 3
   nano /etc/default/libc-locales
   xbps-reconfigure -f glibc-locales
 
-  while [[ $language == '']]; do
+  while [[ $language == '' ]]; do
     echo "Enter language for your system."
     echo "Example (en_US.UTF-8/$LANG)"
     read -e -p "LANG="  -i "$LANG" language
   done
-  sed -e "1s/en_US.UTF-8/$LANG" >> /etc/locale.conf.new
+  sed -e "1s/en_US.UTF-8/$LANG/" /etc/locale.conf >> /etc/locale.conf.new
   mv /etc/locale.conf{.new,}
 fi
 

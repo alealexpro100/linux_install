@@ -49,40 +49,27 @@ if [[ "$host_arch" != "$arch" ]]; then
   esac
 fi
 
-# Fix non-mounpoint directory.
-if ! mountpoint -q "$dir"; then
-  mount --bind $dir $dir
-  change_mount=1
-fi
-
-# Only here we use arch-chroot.
-arch_chroot_command=./bin/arch-chroot
-if [[ $qemu_arch == "i386" && $host_arch == "x86_64" ]]; then
-  arch_chroot_command="linux32 $arch_chroot_command" qemu_arch=""
-fi
+# Only here we use arch-chroot-fixed.
 
 if [[ ! -z $qemu_arch ]]; then
   cp /usr/bin/qemu-$qemu_arch-static $dir/usr/bin/
 fi
 
-$arch_chroot_command $dir /root/pi_s1.sh
+arch-chroot-fixed $dir /root/pi_s1.sh
 
 if [[ $grub2 == '1' ]]; then
   case $grub2_type in
     bios)
-    $arch_chroot_command $dir /root/bios.sh
+    arch-chroot-fixed $dir /root/bios.sh
       ;;
     uefi)
-    $arch_chroot_command $dir /root/uefi.sh
+    arch-chroot-fixed $dir /root/uefi.sh
       ;;
   esac
 else
-  $arch_chroot_command $dir rm -rf /root/{bios,uefi}.sh
+  arch-chroot-fixed $dir rm -rf /root/{bios,uefi}.sh
 fi
 
 if [[ ! -z $qemu_arch ]]; then
   rm -rf $dir/usr/bin/qemu-$qemu_arch-static
 fi
-
-#Revert changes for directory.
-[[ $change_mount == 1 ]] && umount $dir

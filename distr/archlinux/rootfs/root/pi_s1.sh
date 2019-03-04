@@ -37,8 +37,6 @@ case $arch in
 esac
 
 echo "Updating and downloading addational packages..."
-pacman-key --init
-pacman-key --populate
 pacman -Suy --noconfirm
 [[ ! -z $postinstall ]] && pacman -Sw --noconfirm $postinstall
 [[ $networkmanager == 1 ]] && pacman -Sw --noconfirm networkmanager

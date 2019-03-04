@@ -107,22 +107,32 @@ sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$dir/etc/pac
 
 #Write some commands for ending installation.
 if [[ -z $add_packages ]]; then
-  command="/usr/bin/pacman -Sy --noconfirm --force base"
+  install_packages="base"
 else
-  command="/usr/bin/pacman -Sy --noconfirm --force $base_packages $add_packages"
+  install_packages="$base_packages $add_packages"
 fi
 
 # Only here we use arch-chroot.
+# Fix non-mounpoint directory.
+if ! mountpoint -q "$dir"; then
+  mount --bind $dir $dir
+  change_mount=1
+else
+  change_mount=0
+fi
 if [[ $qemu_arch == "i386" && $host_arch == "x86_64" ]]; then
   arch_chroot_command="linux32 $arch_chroot_command" qemu_arch=""
 fi
 if [[ ! -z $qemu_arch ]]; then
   cp /usr/bin/qemu-$qemu_arch-static $dir/usr/bin/
 fi
-$arch_chroot_command $dir $command
+$arch_chroot_command $dir /usr/bin/pacman -Sy --noconfirm --force $install_packages
+$arch_chroot_command $dir pacman-key --init
+$arch_chroot_command $dir pacman-key --populate
 if [[ ! -z $qemu_arch ]]; then
   rm -rf $dir/usr/bin/qemu-$qemu_arch-static
 fi
+[[ $change_mount == 1 ]] && umount $dir
 
 #Revert changes for directory.
 rm -rf $dir/etc/resolv.conf.pacnew

@@ -21,7 +21,7 @@ if ! [[ -f ./version_install ]]; then
 fi
 
 # Function to adopt arch-chroot script.
-function arch-chroot() {
+function arch-chroot-fixed() {
   # Fix non-mounpoint directory.
   if ! mountpoint -q "$dir"; then
     mount --bind $dir $dir
