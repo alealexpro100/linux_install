@@ -1,4 +1,13 @@
 #!/bin/bash
+###############################################################
+### linux_install script
+###
+### Copyright (C) 2018 Alexey Nasibulin
+###
+### By: Alexey Nasibulin (ktifhfl)
+###
+### License: GPL v3.0
+###############################################################
 
 case $(uname -m) in
   x86_64|amd64) debian_arch_default=amd64

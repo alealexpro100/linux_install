@@ -1,5 +1,13 @@
 #!/bin/bash
-
+###############################################################
+### linux_install script
+###
+### Copyright (C) 2018 Alexey Nasibulin
+###
+### By: Alexey Nasibulin (ktifhfl)
+###
+### License: GPL v3.0
+###############################################################
 
 [[ "$void_add_i386" == "1" && ! $version_void == "musl" ]] && preinstall="$preinstall void-repo-multilib void-repo-multilib-nonfree"
 ./bin/void-bootstrap ./bin/arch-chroot $arch $version_void $mirror_voidlinux $dir base-voidstrap $preinstall void-repo-nonfree

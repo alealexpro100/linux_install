@@ -1,4 +1,13 @@
 #!/bin/bash
+###############################################################
+### linux_install script
+###
+### Copyright (C) 2018 Alexey Nasibulin
+###
+### By: Alexey Nasibulin (ktifhfl)
+###
+### License: GPL v3.0
+###############################################################
 
 #######################################
 #       Initial install script.       #
@@ -41,14 +50,25 @@ function arch-chroot-fixed() {
   return 0
 }
 
-# ...and private_parametres.
+function custom_actions() {
+  [[ -d ./custom/rootfs ]] && cp -r ./custom/rootfs/* $dir/
+  if [[ -f ./custom/custom_script.sh ]]; then
+    cp {./custom,$dir/root}/custom_script.sh
+    chmod +x $dir/root/custom_script.sh
+    echo 'Executing your custom script...'
+    arch-chroot-fixed $dir /root/custom_script.sh || echo 'Something went wrong with your script!'
+    rm -rf $dir/root/custom_script.sh
+  fi
+}
+
+#Detecting private_parametres.
 if [[ -f ./private_parametres ]]; then
   source ./private_parametres
 else
   source ./public_parametres
 fi
 
-#Detecting auto_parametrers...
+#...and auto_parametrers.
 if [[ -f $1 ]]; then
   function add_var {
     config_installation="$config_installation\n$1=\"$2\""
@@ -56,6 +76,7 @@ if [[ -f $1 ]]; then
   }
   source $1 || exit 1
   source ./distr/$distr/${distr}_install.sh || echo "Ok.."
+  custom_actions
   echo "Installed $distr with $1 to $dir."
   exit 0
 fi
@@ -149,7 +170,8 @@ read_param "Do you want to copy this setup utitlity in new OS? (Y/n): " ""  setu
 
 add_option=''
 
-source ./distr/$distr/${distr}.sh
+source ./distr/$distr/$distr.sh
+custom_actions
 
 # =)
 echo "Script succesfully ended its work. Have a nice day!"

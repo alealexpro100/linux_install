@@ -1,9 +1,20 @@
 #!/bin/bash
+###############################################################
+### linux_install script
+###
+### Copyright (C) 2018 Alexey Nasibulin
+###
+### By: Alexey Nasibulin (ktifhfl)
+###
+### License: GPL v3.0
+###############################################################
+
 #######################################
 #       Pacstrap's like script for    #
 #       installing archlinux to dir.  #
 #       Created by Alexey.            #
 #######################################
+
 set -e
 
 # Check options.

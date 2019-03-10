@@ -1,4 +1,13 @@
 #!/bin/bash
+###############################################################
+### linux_install script
+###
+### Copyright (C) 2018 Alexey Nasibulin
+###
+### By: Alexey Nasibulin (ktifhfl)
+###
+### License: GPL v3.0
+###############################################################
 
 ./bin/arch-bootstrap ./bin/arch-chroot $arch $mirror_archlinux $dir base sudo $preinstall
 
