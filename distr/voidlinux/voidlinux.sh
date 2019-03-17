@@ -25,7 +25,7 @@ read_param "Enter version for installation (musl or glibc): " "$version_void" ve
 [[ $version_void == "glibc" && $arch == "x86_64" ]] && read_param "Do you want to add multilib (i386) repo? (Y/n): " '' void_add_i386 yes_or_no
 read_param "Enter packages for preinstallation: " "wget terminus-font screen htop rsync bash-completion" preinstall text_empty
 read_param "Do you want to install NetworkManager? (Y/n): " '' networkmanager yes_or_no
-read_param "Do you want to install kernel? (Y/n): " '' kernel yes_or_no
+read_param "Do you want to install kernel? (Install system tools) (Y/n): " '' kernel yes_or_no
 
 # End of asking.
 

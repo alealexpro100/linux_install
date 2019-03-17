@@ -46,8 +46,8 @@ sed -e 's/#FONT="lat9w-16"/FONT="ter-v16n"/' /etc/rc.conf >> /etc/rc.conf.new
 mv /etc/rc.conf{.new,}
 
 if [[ $kernel == "1" ]]; then
-  echo "Installing linux kernel..."
-  xbps-install -Sy linux
+  echo "Installing kernel and system tools..."
+  xbps-install -Sy linux base-system
 fi
 
 if [[ $graph == "1" ]]; then
@@ -58,7 +58,7 @@ fi
 
 if [[ $grub2 == "1" ]]; then
   xbps-install -Sy grub
-  [[ $flash_disk == 1 ]] && xbps-remove -y os-prober
+  [[ $flash_disk == 1 ]] && echo "Os-prober can't be removed"
 fi
 
 rm -rf /root/pi_s1.sh
