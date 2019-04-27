@@ -28,6 +28,18 @@ for repo_name in repo_debian_main repo_debian_updates repo_debian_security repo_
   [[ ! -z $repo_name ]] && echo "${!repo_name}" | tee -a /etc/apt/sources.list && echo '' >> /etc/apt/sources.list
 done
 
+echo "Setting up locales..."
+if [[ "$LANG" == "" ]]; then
+  sed "s/# en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen >> /etc/locale.gen.new
+  echo "LANG=en_US.UTF-8" >> /etc/default/locale
+else
+  sed "s/# en_US.UTF-8/en_US.UTF-8/;s/# $LANG/$LANG/" /etc/locale.gen >> /etc/locale.gen.new
+  echo "LANG=$LANG" >> /etc/default/locale
+fi
+mv /etc/locale.gen{.new,}
+locale-gen
+
+
 echo "Updating and upgrading $hostname..."
 apt update; apt full-upgrade -y
 
@@ -38,12 +50,18 @@ fi
 
 if [[ ! -z $postinstall ]]; then
   echo "Downloading addational packages..."
-  apt -y -d install $postinstall
+  apt -y install $postinstall
 fi
-apt -y -d install console-setup-linux
+DEBIAN_FRONTEND=noninteractive apt -y install console-setup-linux
 if [[ $networkmanager == 1 ]]; then
   echo "Downloading Network Manager..."
-  apt -y -d install network-manager
+  apt -y install network-manager
+  if [[ $debian_distr == stretch ]]; then
+    echo "Fixing wi-fi network."
+    mv /{root,etc/NetworkManager}/NetworkManager.conf
+  else
+    rm -rf /root/NetworkManager.conf
+  fi
 fi
 
 if [[ $repos == "1" ]]; then
@@ -79,13 +97,16 @@ if [[ $kernel_var == "1" ]]; then
     ;;
   esac
   apt -y $ADD_conf install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux firmware-realtek firmware-atheros firmware-brcm80211 dkms
-  apt -y -d $ADD_conf install r8168-dkms
+  apt -y $ADD_conf install r8168-dkms
 fi
 
 if [[ $graph == "1" ]]; then
   echo "Downloading graphics packages..."
-  apt -y -d install xfce4 xfce4-goodies xfwm4-themes xserver-xorg-video-all xserver-xorg-input-all xserver-xorg
-  [[ $networkmanager == "1" ]] && apt -y -d install network-manager-gnome
+  apt -y install xfce4 xfce4-goodies xfwm4-themes xserver-xorg-video-all xserver-xorg-input-all xserver-xorg
+  [[ $networkmanager == "1" ]] && apt -y install network-manager-gnome
+  [[ $lightdm_autostart == 0 ]] && systemctl disable lightdm
+  echo 'Fixing x-server...'
+  echo -e "\n#Tempory fix\nneeds_root_rights=yes" >> /etc/X11/Xwrapper.config
 fi
 
 if [[ $grub2 == "1" ]]; then

@@ -2,7 +2,7 @@ linux_install
 =============
 
 ## Requirements
-* Stable connection to mirror with packages for installing distrubution. (only for first step)
+* Stable connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (for uefi, with mounted /boot partition).
 * Installed tools: coreutils, bash, wget.
 * Optinal: perl (for debian installaion), qemu (for foreign arches).
@@ -10,12 +10,9 @@ linux_install
 ## Usage
 * Prepare directory for installation.
 * Execute `./install_sys.sh` and answer questions OR Execute `./install_sys.sh path_to_config`. (You can find them in ./auto_configs)
-* Boot to installed system (if you installed it as a core system), login to root, execute `./pi_s2.sh` and answer questions.
-* That's all. You have installed system. Good luck!
+* That's all. You have installed system. Now you can boot it. Good luck!
 
 ## About
-
-!!!ALL CODE NEEDS CLEANING!!!
 
 Install a base linux system from any GNU distro.
 ABSOLUTELY NO WARRANTY.

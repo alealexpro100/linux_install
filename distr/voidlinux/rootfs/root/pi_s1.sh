@@ -27,6 +27,19 @@ echo "Setting up sudo..."
 sed "82s/# %wheel/%wheel/" /etc/sudoers >> /etc/sudoers.new
 mv /etc/sudoers{.new,}
 
+if [[ $version_void == "glibc" ]]; then
+  echo "Setting up locales..."
+  if [[ "$LANG" == "" ]]; then
+    sed "s/#en_US.UTF-8/en_US.UTF-8/" /etc/default/libc-locales >> /etc/default/libc-locales.new
+  else
+    sed "s/#en_US.UTF-8/en_US.UTF-8/;s/#$LANG/$LANG/" /etc/default/libc-locales >> /etc/default/libc-locales.new
+    sed -e "1s/en_US.UTF-8/$LANG/" /etc/locale.conf >> /etc/locale.conf.new
+    mv /etc/locale.conf{.new,}
+  fi
+  mv /etc/default/libc-locales{.new,}
+  xbps-reconfigure -f glibc-locales
+fi
+
 echo 'Configuring xbps.d...'
 cp /usr/share/xbps.d/*-*-*.conf /etc/xbps.d/
 for file in $(ls /etc/xbps.d/); do
@@ -53,6 +66,7 @@ fi
 if [[ $graph == "1" ]]; then
   echo 'Installing graphics packages...'
   xbps-install -Sy xorg lightdm-gtk-greeter-settings xfce4 pulseaudio pavucontrol
+  [[ $lightdm_autostart == 1 ]] && ln -s /etc/sv/lightdm /etc/runit/runsvdir/default/
   [[ $networkmanager == 1 ]] && xbps-install -Sy network-manager-applet
 fi
 
@@ -61,4 +75,4 @@ if [[ $grub2 == "1" ]]; then
   [[ $flash_disk == 1 ]] && echo "Os-prober can't be removed"
 fi
 
-rm -rf /root/pi_s1.sh
+rm -rf /root/{pi_s1.sh,configuration}

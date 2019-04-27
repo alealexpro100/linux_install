@@ -34,6 +34,5 @@ read_param "You're about to start installing $distr to $dir. Do you really want 
 
 source ./distr/$distr/${distr}_install.sh
 
-echo "You'll need to run pi_s2.sh on working system."
 echo ''
 echo "Archlinux was installed to $dir."

@@ -24,7 +24,7 @@ echo "127.0.0.1	localhost
 ff02::1		ip6-allnodes
 ff02::2		ip6-allrouters
 
-$HOSTS_ADD" > $dir/etc/hosts
+$HOSTS_ADD" >> $dir/etc/hosts
 if [[ $setup_script == 1 ]]; then
   echo "Coping installator..."
   cp -rf . $dir/root/linux_install

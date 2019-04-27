@@ -14,7 +14,6 @@
 #       installing archlinux to dir.  #
 #       Created by Alexey.            #
 #######################################
-
 set -e
 
 # Check options.

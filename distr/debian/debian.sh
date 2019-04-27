@@ -66,6 +66,6 @@ read_param "You're about to start installing debian $distr to $dir. Do you reall
 
 source ./distr/$distr/${distr}_install.sh
 
-echo "You'll need to run pi_s2.sh on working system."
+echo "If you have any problems with drivers in this installed system, please, try to run command `update-initramfs -u -k all`."
 echo ''
 echo "Debian $distr was installed to $dir."
