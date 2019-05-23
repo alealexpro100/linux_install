@@ -22,8 +22,10 @@ if [[ $UID != 0 ]]; then
   exit 1
 fi
 
-#Clear vars.
+#Clear and setup vars.
 config_installation='' OLD_DIR=''
+# Messages with colors.
+warning='\n[\e[0;33mWARNING\e[m]'
 
 if ! [[ -f ./version_install ]]; then
   echo 'Please, change directory.'
@@ -116,7 +118,7 @@ function read_param() {
       pass)
       read -e -s -p "$dialog" -i "$default_var" tmp
       if [[ -z $tmp ]]; then
-        echo -e "\n[\e[0;33mWARNING\e[m] You haven't enter password. Your default password will be 'pass'."
+        echo -e "$warning You haven't enter password. Your default password will be 'pass'."
         tmp=pass
       else
         echo ''
@@ -137,15 +139,16 @@ echo 'This script supposes that directory for installantion is prepared.'
 
 # Get standart options.
 
-#Get distribution variable.
+#Get distribution variable (distr).
 echo "This is script for installing linux. Choose distribution for installing, please."
 echo -e "Avaliable distributions: \n$(ls -1 ./distr)"
-read_param "Distribution: " "" distr text
-while [[ ! -d ./distr/$distr && $distr=='' ]]; do
+while ! [[ -d ./distr/$distr &&  $distr != '' ]]; do
   read_param "Distribution: " "" distr text
 done
 
-# Getting some standart options for all distributions.
+# Getting some standart options for all distributions. They are:
+# 1.Vars with 1 or 0 symbol: fstab, grub2, flash_disk, graph, lightdm_autostart, setup_script.
+# 2.Vars with custom content: dir, hostname, user_name, passwd, grub2_type_default, grub2_type, grub2_bios_place.
 read_param "Enter the path to install $distr: " "/mnt/mnt" dir text
 read_param "Enter hostname: " "$distr" hostname text
 read_param "Enter name of user: " "alexey" user_name text
@@ -155,11 +158,13 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
   read_param "Do you want to install bootloader (grub2)? (Y/n): " '' grub2 yes_or_no
   if [[ $grub2 == 1 ]]; then
     if [[ -d /sys/firmware/efi/efivars ]]; then
-      grub2_type=uefi
+      grub2_type_default=uefi
     else
-      grub2_type=bios
+      grub2_type_default=bios
     fi
-    read_param "Enter type of bootloader (bios/uefi): " "$grub2_type" grub2_type text
+    while ! [[ $grub2_type == 'bios' || $grub2_type == 'uefi' ]]; do
+      read_param "Enter type of bootloader (bios/uefi): " "$grub2_type_default" grub2_type text
+    done
     [[ $grub2_type == bios ]] && read_param "Enter where to install bootloader: " "$(findmnt -funcevo SOURCE $dir)" grub2_bios_place text
     read_param "Do you want to install $distr to flash disk (don't create other items in GRUB2)? (N/y): " '' flash_disk no_or_yes
   fi

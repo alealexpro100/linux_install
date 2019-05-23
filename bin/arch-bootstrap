@@ -29,10 +29,10 @@ arch_chroot_command=$1 arch=$2 mirror=$3 dir=$4 qemu_arch=""; shift 4; add_packa
 
 #Get core repositories and pkg_list of core repo
 # Try first variant of mirror...
-pkg_list=$(wget -q -O - "$mirror/core/os/$arch" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+pkg_list=$(wget -q -t 3 -O - "$mirror/core/os/$arch" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
 if [[ -z $pkg_list ]]; then
   # If first is not valid, try second variant of mirror...
-  pkg_list=$(wget -q -O - "$mirror/$arch/core" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+  pkg_list=$(wget -q -t 3 -O - "$mirror/$arch/core" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
   [[ -z $pkg_list ]] && echo "Error geting pkg_list. Check $mirror!" && exit 1
   core_repo="$mirror/$arch/core"
   repo="$mirror/\$arch/\$repo"

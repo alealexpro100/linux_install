@@ -12,7 +12,7 @@ else
 fi
 
 echo "Setting up hostname..."
-echo $hostname >> /etc/hostname
+echo $hostname > /etc/hostname
 
 echo "Changing root password..."
 echo "root:$passwd" | chpasswd
@@ -97,7 +97,7 @@ if [[ $kernel_var == "1" ]]; then
     ;;
   esac
   apt -y $ADD_conf install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux firmware-realtek firmware-atheros firmware-brcm80211 dkms
-  apt -y $ADD_conf install r8168-dkms
+  apt -y -d $ADD_conf install r8168-dkms
 fi
 
 if [[ $graph == "1" ]]; then

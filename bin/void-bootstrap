@@ -37,14 +37,14 @@ esac
 #Find, download and unpack database, certificate and xbps-static and install system with it.
 echo "Getting repodata to download xbps-static for $host_arch..."
 mkdir -p $dir/var/db/xbps/keys
-wget -q -O - "$mirror/musl/$host_arch-musl-repodata" | tar -xzvf - -C $dir/var/db/xbps
+wget -q -t 3 -O - "$mirror/musl/$host_arch-musl-repodata" | tar -xzvf - -C $dir/var/db/xbps
 xbps_name=$(cat $dir/var/db/xbps/index.plist | grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
 rm -rf $dir/var/db/xbps/index.plist
 touch $dir/var/db/xbps/index-meta.plist
 [[ -z $xbps_name ]] && echo "Incorrect arch $arch or version $version or mirror $mirror!" && exit 1
 echo "Downloading..."
 mkdir -p $dir/var/cache/xbps
-wget -q -O "$dir/var/cache/xbps/$xbps_name.$host_arch-musl.xbps" "$mirror/musl/$xbps_name.$host_arch-musl.xbps"
+wget -q -t 3 -O "$dir/var/cache/xbps/$xbps_name.$host_arch-musl.xbps" "$mirror/musl/$xbps_name.$host_arch-musl.xbps"
 echo "Extracting..."
 #Getting list of files for this package and extract it.
 list_del=$(echo $(tar -xJvf "$dir/var/cache/xbps/$xbps_name.$host_arch-musl.xbps" -C "$dir" --exclude='INSTALL' --exclude='props.plist' --exclude='files.plist'))
