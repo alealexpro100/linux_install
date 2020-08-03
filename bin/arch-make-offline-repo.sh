@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+#Use library
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
+      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
+
+# Check options.
+if [[ -z $3 ]]; then
+  echo "Create custom arch repo with custom packages."
+  echo "Example: $0 /tmp/arch_offline_repo offline_repo base"
+  msg_print note "Requries installed pacman."
+  exit 1
+fi
+if ! command_exists pacman; then
+  return_err "Package pacman is not installed!"
+fi
+
+dir="$1"; name="$2"; shift 2; packages="$@"
+
+mkdir -p "$dir/used_repos_db"
+pacman --noconfirm --dbpath "$dir/used_repos_db" -Syu -w --cachedir "$dir" $packages
+find $dir/ -name "*.pkg.*" | xargs -I {} -n 50 repo-add "$dir/$name.db.tar.gz"
+
+echo "Succesfully created repo $name in $dir."
+
+# =)
+echo "Script succesfully ended its work. Have a nice day!"

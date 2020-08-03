@@ -1,75 +1,70 @@
 #!/bin/bash
 ###############################################################
-### linux_install script
-###
-### Copyright (C) 2018 Alexey Nasibulin
-###
-### By: Alexey Nasibulin (ktifhfl)
-###
+### voidlinux boostrap script 0.2.1
+### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
-#######################################
-#       Script for installing void    #
-#       to dir.                       #
-#       Created by Alexey.            #
-#######################################
-
 set -e
+
+#Use library
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
+      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
+
 # Check options.
-if [[ -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]]; then
-  echo "Example: $0 ./bin/arch-chroot x86_64 musl https://alpha.de.repo.voidlinux.org/current /mnt base-voidstrap htop"
+if [[ -z $4 ]]; then
+  echo "Void linux boostrap script. It uses only choosed mirror."
+  echo "Example: $0 x86_64 musl https://alpha.de.repo.voidlinux.org/current /mnt htop"
   exit 1
 fi
 
-arch_chroot_command=$1 arch=$2 version=$3 mirror=$4 dir=$5 other_arch=0 qemu_arch=""; shift 5; add_packages=$@
-#[[ ! -e $arch_chroot_command ]] && echo "$arch_chroot_command not found!" && exit 1
+arch=$1 version=$2 mirror=$3 dir=$(realpath -q $4); shift 4; add_packages="$@"
+parse_arch $(uname -m)
+if [[ "$void_arch" == "aarch64" ]]; then
+  repo_xbps="$mirror/$void_arch/"
+else
+  repo_xbps="$mirror/musl/"
+fi
+if [[ "$arch" == "aarch64" ]]; then
+  mirror="$mirror/$arch"
+  [[ "$version" == "musl" ]] && arch="$arch-musl"
+elif [[ "$version" == "musl" ]]; then
+  arch="$arch-musl"; mirror="$mirror/musl"
+fi
 
-#Detect host arch, parse it.
-case $(uname -m) in
-  x86|i?86) host_arch=i686;;
-  x86_64|amd64) host_arch=x86_64;;
-  aarch64|arm64|armv8l) host_arch=aarch64;;
-  armhf) host_arch=arm;;
-  *) host_arch=$(uname -m);;
-esac
+check_url "$mirror/$arch-repodata" || return_err "Incorrect arch $arch, version $version or mirror $mirror!"
+check_url "$repo_xbps/$void_arch-musl-repodata" || return_err "Check $repo_xbps/$void_arch-musl-repodata!"
+
+#if [[ ! $arch == $void_arch ]]; then
+#  if [[ ! -f /usr/bin/qemu-$qemu_arch-static ]]; then
+#    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+#  fi
+#fi
 
 #Find, download and unpack database, certificate and xbps-static and install system with it.
-echo "Getting repodata to download xbps-static for $host_arch..."
-mkdir -p $dir/var/db/xbps/keys
-wget -q -t 3 -O - "$mirror/musl/$host_arch-musl-repodata" | tar -xzvf - -C $dir/var/db/xbps
-xbps_name=$(cat $dir/var/db/xbps/index.plist | grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
-rm -rf $dir/var/db/xbps/index.plist
-touch $dir/var/db/xbps/index-meta.plist
-[[ -z $xbps_name ]] && echo "Incorrect arch $arch or version $version or mirror $mirror!" && exit 1
-echo "Downloading..."
-mkdir -p $dir/var/cache/xbps
-wget -q -t 3 -O "$dir/var/cache/xbps/$xbps_name.$host_arch-musl.xbps" "$mirror/musl/$xbps_name.$host_arch-musl.xbps"
-echo "Extracting..."
-#Getting list of files for this package and extract it.
-list_del=$(echo $(tar -xJvf "$dir/var/cache/xbps/$xbps_name.$host_arch-musl.xbps" -C "$dir" --exclude='INSTALL' --exclude='props.plist' --exclude='files.plist'))
+create_tmp_dir xbps_tmp
+echo "Getting repodata to download xbps-static for $void_arch..."
+get_file_s "$xbps_tmp/repodata" "$repo_xbps/$void_arch-musl-repodata" 
+tar --zstd -xf "$xbps_tmp/repodata" -C "$xbps_tmp"
+xbps_name=$(cat $xbps_tmp/index.plist | grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
+echo "Downloading and extracting xbps-static..."
+get_file_s "$xbps_tmp/xbps-static.xbps" "$repo_xbps/$xbps_name.$void_arch-musl.xbps" 
+tar --zstd -xf "$xbps_tmp/xbps-static.xbps" -C $xbps_tmp
 echo "Installing base..."
-mv $dir/var/db/xbps/{index-meta,keys/60:ae:0c:d6:f0:95:17:80:bc:93:46:7a:89:af:a3:2d}.plist
-[[ "$version" == "musl" ]] && cp $dir/var/db/xbps/keys/{*,3d:b9:c0:50:41:a7:68:4c:2e:2c:a9:a2:5a:04:b7:3f}.plist
-case $arch in
-  aarch64) mirror="$mirror/$arch"
-  ;;
-  *) mirror="$mirror"
-  ;;
-esac
-if [[ "$version" == "musl" ]]; then
-  arch="$arch-musl"
-  mirror="$mirror/musl"
-fi
-[[ -z $add_packages ]] && add_packages=base-voidstrap
-XBPS_ARCH=$arch $dir/usr/bin/xbps-install.static -r $dir -R $mirror -A -Suy $add_packages
-for del_file in $xbps_name.$host_arch-musl.xbps $list_del; do
-  rm -rf "$dir/$del_file"
-done
+yes | XBPS_ARCH=$arch SSL_NO_VERIFY_PEER=1 $xbps_tmp/usr/bin/xbps-install.static -r $dir -R $mirror -A -Suy base-voidstrap $add_packages
+echo "#repository=$mirror" >> $dir/etc/xbps.d/install_repo.conf
+rm -rf "$xbps_tmp"
 
 echo "Void linux was succesfully installed to $dir."
-echo "#repository=$mirror" >> $dir/etc/xbps.d/install_repo.conf
-echo "Used mirror was written to $dir/etc/xbps.d/install_repo.conf"
 
 # =)
 echo "Script succesfully ended its work. Have a nice day!"

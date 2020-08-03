@@ -1,85 +1,72 @@
 #!/bin/bash
 ###############################################################
-### linux_install script
-###
-### Copyright (C) 2018 Alexey Nasibulin
-###
-### By: Alexey Nasibulin (ktifhfl)
-###
+### alpine boostrap script 0.2.2
+### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
-#######################################
-#       Script for installing alpine  #
-#       to dir.                       #
-#       Created by Alexey.            #
-#######################################
 set -e
 
+#Use library
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
+      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
+
 # Check options.
-if [[ -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]]; then
-  echo "Example: $0 ./bin/arch-chroot x86_64 v3.9 http://nl.alpinelinux.org/alpine /mnt htop"
+if [[ -z $4 ]]; then
+  echo "Alpine linux boostrap script. It uses only choosed mirror."
+  echo "Supports CUSTOM_ALPINE_REPO flag."
+  echo "Example: $0 x86_64 v3.12 http://nl.alpinelinux.org/alpine /mnt htop"
   exit 1
 fi
 
-arch_chroot_command=$1 arch=$2 version=$3 mirror=$4 dir=$5 other_arch=0 qemu_arch=""; shift 5; add_packages=$@
-[[ ! -e $arch_chroot_command ]] && echo "$arch_chroot_command not found!" && exit 1
-
-#Detect host arch, parse it and setup qemu-emulation.
-case $(uname -m) in
-  i[3-6]86|x86) host_arch=x86;;
-  x86_64|amd64) host_arch=x86_64;;
-  aarch64|arm64|armv8l) host_arch=aarch64;;
-  armhf|armlf) host_arch=arm;;
-  *) host_arch=$(uname -m);;
-esac
-
-if [[ "$host_arch" != "$arch" ]]; then
-  case $arch in
-    i[3-6]86|x86) qemu_arch=i386;;
-    x86_64|amd64) qemu_arch=x86_64;;
-    aarch64|arm64|armv8l) qemu_arch=aarch64;;
-    armhf|armlf) qemu_arch=arm;;
-    *) qemu_arch=$arch;;
-  esac
+arch=$1 version=$2 mirror=$3 dir=$(realpath -q $4); shift 4; add_packages="$@"
+parse_arch $(uname -m)
+if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then
+  check_url "$mirror" || return_err "Incorrect mirror $mirror!"
+  download_repo="$mirror/$alpine_arch"
+  arg_repos="-X $mirror"
+else
+  check_url "$mirror/$version/main/$arch" || return_err "Incorrect arch $arch, version $version or mirror $mirror!"
+  download_repo="$mirror/$version/main/$alpine_arch"
+  arg_repos="-X $mirror/$version/main -X $mirror/$version/community"
+fi
+if [[ $arch == $alpine_arch ]]; then
+  arch_chroot_command="chroot_rootfs auto"
+else
+  if [[ -f /usr/bin/qemu-$qemu_arch-static ]]; then
+    arch_chroot_command="qemu_chroot $arch"
+  else
+    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+  fi
 fi
 
 #Find, download and unpack apktools-static and install system with it.
-echo "Getting link to download apk-tools-static for $host_arch..."
-apktools_name=$(wget -q -t 3 -O - "$mirror/$version/main/$host_arch/" | grep apk-tools-static | sed 's#.*href="##;s#">.*##')
-[[ -z $apktools_name ]] && echo "Incorrect arch $arch or version $version or mirror $mirror!" && exit 1
+create_tmp_dir apk_tmp
+echo "Getting link to download apk-tools-static for $alpine_arch..."
+apktools_name=$(get_file_s - "$download_repo/" | grep apk-tools-static | sed 's#.*href="##;s#">.*##')
 echo "Downloading..."
-wget -q -t 3 -O "$dir/$apktools_name" "$mirror/$version/main/$host_arch/$apktools_name"
-echo "Extracting..."
-tar -xzvf "$dir/$apktools_name" -C "$dir" --exclude='.PKGINFO' --exclude='.SIGN.RSA*'
-echo "Installing base..."
-$dir/sbin/apk.static -X "$mirror/$version/main" -U --allow-untrusted --root $dir --arch $arch --initdb add alpine-base || echo "Don't pay attention to errors."
-rm -rf "$dir/$apktools_name" $dir/sbin/apk.static
+get_file_s "$apk_tmp/$apktools_name" "$download_repo/$apktools_name"
+echo "Exracting..."
+tar -xzf "$apk_tmp/$apktools_name" -C "$apk_tmp" "sbin/apk.static" &>/dev/null
+echo "Installing apk-tools..."
+$apk_tmp/sbin/apk.static $arg_repos --allow-untrusted --root $dir --arch $arch --initdb add alpine-base || NEED_FIX=1
+rm -rf "$apk_tmp"
 
-echo -e "$mirror/$version/main\n$mirror/$version/community" >> $dir/etc/apk/repositories
-
-#Make rootfs avaliable for internet connection for time while installation...
-mount --bind {,$dir}/etc/hosts
-touch $dir/etc/resolv.conf
-
-#Write some commands for ending installation.
-echo -e "#!/bin/ash\n" >> $dir/root/install.sh
-echo -e "apk update\n apk add $add_packages\nrm -rf /root/install.sh" >> $dir/root/install.sh
-chmod +x $dir/root/install.sh
-
-# Only here we use arch-chroot.
-if [[ $qemu_arch == "i386" && $host_arch == "x86_64" ]]; then
-  arch_chroot_command="linux32 $arch_chroot_command" qemu_arch=""
-else
-  [[ ! -z $qemu_arch ]] && cp /usr/bin/qemu-$qemu_arch-static $dir/usr/bin/
-fi
-[[ ! -z $qemu_arch ]] && echo "apk fix \$(apk info)" >> $dir/root/install.sh
-PATH=/usr/sbin:/usr/bin:/sbin:/bin $arch_chroot_command $dir busybox ash /root/install.sh
-if [[ ! -z $qemu_arch ]]; then
-  rm -rf $dir/usr/bin/qemu-$qemu_arch-static || echo 'OK'
-fi
-
-umount $dir/etc/hosts
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+apk_command="/sbin/apk $arg_repos"
+$arch_chroot_command $dir $apk_command upgrade
+[[ ! -z $NEED_FIX ]] && $arch_chroot_command $dir $apk_command fix '*'
+[[ ! -z $add_packages ]] && $arch_chroot_command $dir $apk_command add $add_packages
+[[ $CUSTOM_ALPINE_REPO != "1" ]] && echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> $dir/etc/apk/repositories
 
 echo "Alpine was succesfully installed to $dir."
 

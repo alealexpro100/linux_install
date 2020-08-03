@@ -1,153 +1,149 @@
 #!/bin/bash
 ###############################################################
-### linux_install script
-###
-### Copyright (C) 2018 Alexey Nasibulin
-###
-### By: Alexey Nasibulin (ktifhfl)
-###
+### arch boostrap script 0.2.3
+### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
-#######################################
-#       Pacstrap's like script for    #
-#       installing archlinux to dir.  #
-#       Created by Alexey.            #
-#######################################
 set -e
 
+#Use library
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
+      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
+
 # Check options.
-if [[ -z $1 || -z $2 || -z $3 || -z $4 ]]; then
-  echo "Example: $0 ./bin/arch-chroot x86_64 http://mirrors.evowise.com/archlinux /mnt base base-devel mc htop"
-  echo "If no packages are entered, base group will be installed."
+if [[ -z $3 ]]; then
+  echo "Arch linux boostrap script. It uses only choosed mirror."
+  echo "Supports CUSTOM_ARCH_REPO flag. For custom mirror you have to enter its location and name."
+  echo "Example 1: $0 x86_64 http://mirrors.evowise.com/archlinux /mnt base-devel mc htop"
+  echo "Example 2: CUSTOM_ARCH_REPO=1 $0 x86_64 http://mirror.site/archlinux offline_repo /mnt base-devel mc htop"
   exit 1
 fi
 
-arch_chroot_command=$1 arch=$2 mirror=$3 dir=$4 qemu_arch=""; shift 4; add_packages=$@
-[[ ! -e $arch_chroot_command ]] && echo "$arch_chroot_command not found!" && exit 1
-
-
-#Get core repositories and pkg_list of core repo
-# Try first variant of mirror...
-pkg_list=$(wget -q -t 3 -O - "$mirror/core/os/$arch" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
-if [[ -z $pkg_list ]]; then
-  # If first is not valid, try second variant of mirror...
-  pkg_list=$(wget -q -t 3 -O - "$mirror/$arch/core" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
-  [[ -z $pkg_list ]] && echo "Error geting pkg_list. Check $mirror!" && exit 1
-  core_repo="$mirror/$arch/core"
-  repo="$mirror/\$arch/\$repo"
+ERROR="" arch=$1 mirror=$2 
+if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
+  repo=$3; dir=$(realpath -q $4); shift 4
 else
+  dir=$(realpath -q $3); shift 3
+fi
+install_packages="$@"
+
+parse_arch $(uname -m)
+if [[ $arch == $arch_arch ]]; then
+  arch_chroot_command="chroot_rootfs auto"
+else
+  if [[ -f /usr/bin/qemu-$qemu_arch-static ]]; then
+    arch_chroot_command="qemu_chroot $arch"
+  else
+    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+  fi
+fi
+
+# Try first variant of mirror...
+if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
+  pkg_list=$(get_file_s - "$mirror/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+  [[ -z $pkg_list ]] && return_err "Incorrect mirror $mirror!"
+  core_repo="$mirror"
+else
+  pkg_list=$(get_file_s - "$mirror/core/os/$arch/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+  if [[ -n $pkg_list ]]; then
     core_repo="$mirror/core/os/$arch"
     repo="$mirror/\$repo/os/\$arch"
+  else
+    # If first is not valid, try second variant of mirror...
+    pkg_list=$(get_file_s - "$mirror/$arch/core/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+    [[ -z $pkg_list ]] && return_err "Incorrect arch $arch or mirror $mirror!"
+    core_repo="$mirror/$arch/core"
+    repo="$mirror/\$arch/\$repo"
+  fi
 fi
 
-
-
-# Set pico complect of packages for archlinux installation.
-base_packages="acl attr bzip2 curl e2fsprogs expat filesystem gcc-libs glibc gpgme icu keyutils krb5 libarchive libassuan
-libgpg-error libidn2 libnghttp2 libpsl libssh2 libunistring libunistring lz4 openssl pacman xz zlib zstd"
-
-#Detect host arch, parse it and setup qemu-emulation.
-case $(uname -m) in
-  i[3-6]86|x86) host_arch=i686;;
-  x86_64|amd64) host_arch=x86_64;;
-  aarch64|arm64|armv8l) host_arch=aarch64;;
-  armhf|armlf) host_arch=arm;;
-  *) host_arch=$(uname -m);;
-esac
-
-if [[ "$host_arch" != "$arch" ]]; then
-  case $arch in
-    x86|i?86) qemu_arch=i386;;
-    x86_64|amd64) qemu_arch=x86_64;;
-    aarch64|arm64|armv8l) qemu_arch=aarch64;;
-    armhf) qemu_arch=arm;;
-    *) qemu_arch=$arch;;
-  esac
-fi
+# Set pico complect of packages for archlinux installation. $(pacman -Qq | sort | uniq)
+BASIC_PACKAGES=(acl attr bash bzip2
+coreutils curl e2fsprogs expat filesystem
+ca-certificates-utils ca-certificates-mozilla
+p11-kit libp11-kit libtasn1 libffi findutils
+gawk glibc gmp gnupg gnutls gpgme keyutils
+krb5 libarchive libassuan libgcrypt libgpg-error
+libidn2 libksba libnghttp2 libpsl
+libssh2 libunistring lz4 mpfr ncurses npth
+openssl pacman pinentry readline sqlite xz zlib zstd)
 
 case $arch in
-  i?86) base_packages="archlinux32-keyring $base_packages"
+  i?86) BASIC_PACKAGES=(archlinux32-keyring ${BASIC_PACKAGES[*]})
   ;;
-  x86_64) base_packages="archlinux-keyring $base_packages"
+  x86_64) BASIC_PACKAGES=(archlinux-keyring ${BASIC_PACKAGES[*]})
   ;;
-  *) base_packages="archlinuxarm-keyring $base_packages"
+  *) BASIC_PACKAGES=(archlinuxarm-keyring ${BASIC_PACKAGES[*]})
   ;;
 esac
 
 echo "Installing archlinux $arch to $dir..."
 
-echo "Creating cache dir... "
+echo "Creating cache directory and tempory rootfs... "
 cache_dir="$dir/var/cache/pacman/pkg"
 mkdir -p "$cache_dir"
+create_tmp_dir arch_tmp
 
-# Get pico complect of packages for installation to cache dir...
-echo -e "\n[\e[0;33mWARNING\e[m] Downloading packages: "
-for package in ${base_packages}; do
-  echo "I: Retriving ${package}... "
-  pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$")
+msg_print note "Downloading pico complect of packages: "
+for package in ${BASIC_PACKAGES[*]}; do
+  echo -ne "I: Retriving ${package}... "
+  pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$" -e "^${package}-[[:digit:]].*\.zst$")
   # Download packages.
-  wget -q -t 3 -O "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}"
+  if [[ ! -f "${cache_dir}/${pkg_file}" ]]; then
+    get_file_s "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}"
+  else
+    echo -ne "exists"
+  fi
+  echo ""
 done
 
-# ...and extract them.
-echo -e "\n[\e[0;33mWARNING\e[m] Unpacking packages: "
-for package in ${base_packages}; do
+msg_print note "Unpacking packages to tempory rootfs: "
+for package in ${BASIC_PACKAGES[*]}; do
   echo "I: Unpacking ${package}... "
-  pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$")
+  pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$" -e "^${package}-[[:digit:]].*\.zst$")
   # Unpack downloaded packages.
   case "${pkg_file}" in
-    *.gz) tar xzf "${cache_dir}/${pkg_file}" -C "${dir}" --exclude='./dev' --exclude='./sys' --exclude='./proc' --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
-    *.bz2) tar xjf "${cache_dir}/${pkg_file}" -C "${dir}" --exclude='./dev' --exclude='./sys' --exclude='./proc' --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO'2>/dev/null;;
-    *.xz) tar xJf "${cache_dir}/${pkg_file}" -C "${dir}" --exclude='./dev' --exclude='./sys' --exclude='./proc' --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
-    *) echo "Incorrect ${pkg_file}! Exiting..."; return 1;;
+    *.gz) tar -xzf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
+    *.bz2) tar -xjf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
+    *.xz) tar -xJf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
+    *.zst) tar --zstd -xf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null;;
+    *) return_err "Incorrect ${pkg_file}! Exiting...";;
   esac
 done
 
-echo "Ending bootstrap..."
-# Put mirror to mirrorlist with choosed repo
-mkdir -p $dir/etc/pacman.d
-echo "Server = $repo" >> $dir/etc/pacman.d/mirrorlist
+msg_print note "Preparing tempory rootfs..."
+mkdir -p $arch_tmp/etc/pacman.d
+[[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> $arch_tmp/etc/pacman.d/mirrorlist
+if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
+  sed -i 's|SigLevel    = Required DatabaseOptional|SigLevel = Never|;s|Include = /etc/pacman.d/mirrorlist||;s|\[core\]||;s|\[extra\]||;s|\[community\]||' $arch_tmp/etc/pacman.conf
+  echo -e "[$repo]\nServer = $mirror" >> $arch_tmp/etc/pacman.conf
+fi
+echo -e "update-ca-trust\npacman-key --init\npacman-key --populate\ncp -a {,/mnt}/etc/pacman.d/gnupg" >> $arch_tmp/root/run.sh
+echo "pacman -r /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm -Sy base $install_packages" >> $arch_tmp/root/run.sh
+chmod +x $arch_tmp/root/run.sh
 
-#Make tempory changes for rootfs (disable checking space and signature)...
-rm -rf $dir/etc/hosts
-cp {,$dir}/etc/hosts
-sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$dir/etc/pacman.conf"
-sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$dir/etc/pacman.conf"
-
-#Write some commands for ending installation.
-if [[ -z $add_packages ]]; then
-  install_packages="base"
-else
-  install_packages="$base_packages $add_packages"
-fi
-
-# Only here we use arch-chroot.
-# Fix non-mounpoint directory.
-if ! mountpoint -q "$dir"; then
-  mount --bind $dir $dir
-  change_mount=1
-else
-  change_mount=0
-fi
-if [[ $qemu_arch == "i386" && $host_arch == "x86_64" ]]; then
-  arch_chroot_command="linux32 $arch_chroot_command" qemu_arch=""
-fi
-if [[ ! -z $qemu_arch ]]; then
-  cp /usr/bin/qemu-$qemu_arch-static $dir/usr/bin/
-fi
-$arch_chroot_command $dir /usr/bin/pacman -Sy --noconfirm --force $install_packages
-$arch_chroot_command $dir pacman-key --init
-$arch_chroot_command $dir pacman-key --populate
-if [[ ! -z $qemu_arch ]]; then
-  rm -rf $dir/usr/bin/qemu-$qemu_arch-static
-fi
-[[ $change_mount == 1 ]] && umount $dir
-
-#Revert changes for directory.
-rm -rf $dir/etc/resolv.conf.pacnew
-mv $dir/etc/hosts{.pacnew,}
-mv $dir/etc/pacman.conf{.pacnew,}
+msg_print note "Installing to choosed directory..."
+mkdir -m 0755 -p "$dir"/var/{lib/pacman,log} "$dir"/{dev,run,etc/pacman.d}
+mkdir -m 1777 -p "$dir"/tmp
+mkdir -m 0555 -p "$dir"/{sys,proc}
+ROOTFS_DIR_NO_FIX=1
+chroot_add_mount dir "$dir" "$arch_tmp/mnt" --rbind
+chroot_setup "$arch_tmp/mnt"
+$arch_chroot_command $arch_tmp /bin/bash /root/run.sh
+rm -rf "$arch_tmp"
+mv "$dir"/etc/resolv.conf{.pacnew,} || :
+mv "$dir"/etc/hosts{.pacnew,} || :
+[[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$dir"/etc/pacman.d/mirrorlist.used
 
 echo "Archlinux was succesfully installed to $dir."
 

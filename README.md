@@ -2,38 +2,34 @@ linux_install
 =============
 
 ## Requirements
-* Stable connection to mirror with packages for installing distrubution.
-* Prepared directory for installing system (for uefi, with mounted /boot partition).
-* Installed tools: coreutils, bash, wget.
-* Optinal: perl (for debian installaion), qemu (for foreign arches).
+* Connection to mirror with packages for installing distrubution.
+* Prepared directory for installing system (if uefi, with mounted /boot partition).
+* Installed tools: coreutils, bash, wget (or curl).
+* Optinal: perl (for debootstrap), qemu-user-static (for foreign architectures).
 
 ## Usage
 * Prepare directory for installation.
 * Execute `./install_sys.sh` and answer questions OR Execute `./install_sys.sh path_to_config`. (You can find them in ./auto_configs)
-* That's all. You have installed system. Now you can boot it. Good luck!
+* That's all. You have installed system. Good luck!
 
 ## About
-
-Install a base linux system from any GNU distro.
-ABSOLUTELY NO WARRANTY.
-
+Install a base linux system from any linux distribution.
 Supported linux distros:
-* Debian (and debian-based distros).
-* Archlinux.
-* Void linux.
-* Alpine (only bootstrap script).
+* Debian-based distros
+* Archlinux
+* Void linux
 
-### Contents:
-* auto-configs/ - Directory with working example configs for auto installation.
-* bin/ - Directory with binaries for this script.
-* disr/ - Directory with distro-specific installation files.
+## Contents of project:
+* auto-configs/ - Directory with working configs for auto installation. Latest used config saved to `auto-configs/latest_used.sh`
+* bin/ - Core parts for this script. They use only `alexpro100_lib.sh`.
+* custom/ - Your custom script and files. See `custom/README_custom.md`.
+* lib/ - Installation files. Easy-to-edit install system.
 * install_sys.sh - Main script.
-* private_parametres - File with private_parametres. It's like public_parametres.
-* public_parametres - Files with public_parametres.
+* private_parametres - File with private parametres. Your parametres.
+* public_parametres - File with public parametres. Do NOT delete it.
 * version_install - Version of this script.
 
-## Thanks to...
+## Sources:
 
-* http://ftp.debian.org/debian/pool/main/d/debootstrap/ -- Bootstraping of debian.
-* https://www.archlinux.org/packages/extra/any/arch-install-scripts/download/ -- arch-chroot and genfstab scripts.
-* https://github.com/tokland/arch-bootstrap/blob/master/arch-bootstrap.sh -- Some parts of code for arch-bootstrap.
+* http://ftp.debian.org/debian/pool/main/d/debootstrap/ -- deboostrap.
+* https://www.archlinux.org/packages/extra/any/arch-install-scripts/download/ -- Parts from arch-chroot and genfstab.

@@ -1,182 +1,143 @@
 #!/bin/bash
 ###############################################################
-### linux_install script
-###
-### Copyright (C) 2018 Alexey Nasibulin
-###
-### By: Alexey Nasibulin (ktifhfl)
-###
+### Initial install script 0.2.1
+### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
-#######################################
-#       Initial install script.       #
-#       Parses dirs from ./distr      #
-#       and ask some options          #
-#######################################
 set -e
+
+if [[ -f ./version_install ]]; then
+  echo "Running linux_install $(cat ./version_install)."
+else
+  echo "Incorrect location!"; exit 1
+fi
+
+#Use library
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    if [[ -f ./bin/alexpro100_lib.sh ]]; then
+      ALEXPRO100_LIB_LOCATION=./bin/alexpro100_lib.sh
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
 
 # Only root can run this script.
 if [[ $UID != 0 ]]; then
-  echo 'This script requries root permissions!'
-  exit 1
+  return_err "This script requries root permissions!"
 fi
 
-#Clear and setup vars.
-config_installation='' OLD_DIR=''
-# Messages with colors.
-warning='\n[\e[0;33mWARNING\e[m]'
-
-if ! [[ -f ./version_install ]]; then
-  echo 'Please, change directory.'
-fi
-
-# Function to adopt arch-chroot script.
-function arch-chroot-fixed() {
-  # Fix non-mounpoint directory.
-  if ! mountpoint -q "$dir"; then
-    mount --bind $dir $dir
-    change_mount=1
-  else
-    change_mount=0
-  fi
-
-  if [[ $arch == "i686" || $debian_arch == "i386" ]]; then
-    linux32 ./bin/arch-chroot $@
-  else
-    ./bin/arch-chroot $@
-  fi
-
-  [[ $change_mount == 1 ]] && umount $dir
-
-  return 0
-}
+#Loading parametres...
+[[ -f ./public_parametres ]] && source ./public_parametres
+[[ -f ./private_parametres ]] && source ./private_parametres
 
 function custom_actions() {
-  [[ -d ./custom/rootfs ]] && cp -r ./custom/rootfs/* $dir/
-  if [[ -f ./custom/custom_script.sh ]]; then
+  if [[ -d ./custom/rootfs ]]; then
+    msg_print note "Copying custom files..."
+    cp -arf ./custom/rootfs/* $dir/
+  fi
+  if [[ -f ./custom/custom_script.sh && ! -z $arch_chroot_command ]]; then
     cp {./custom,$dir/root}/custom_script.sh
     chmod +x $dir/root/custom_script.sh
-    echo 'Executing your custom script...'
-    arch-chroot-fixed $dir /root/custom_script.sh || echo 'Something went wrong with your script!'
+    msg_print note "Executing custom script..."
+    $arch_chroot_command $dir bash /root/custom_script.sh
     rm -rf $dir/root/custom_script.sh
   fi
 }
 
-#Detecting private_parametres.
-if [[ -f ./private_parametres ]]; then
-  source ./private_parametres
-else
-  source ./public_parametres
-fi
-
-#...and auto_parametrers.
+#...Auto mode.
 if [[ -f $1 ]]; then
+  var_list=()
   function add_var {
-    config_installation="$config_installation\n$1=\"$2\""
+    var_list=("${var_list[@]}" "$1")
     export $1="$2"
   }
   source $1 || exit 1
-  source ./distr/$distr/${distr}_install.sh || echo "Ok.."
+  parse_arch $(uname -m)
+  source ./lib/distr/$distr/distr_actions.sh
   custom_actions
-  echo "Installed $distr with $1 to $dir."
+  msg_print note "Installed $distr with $1 to $dir."
   exit 0
 fi
 
-# Big function for reading option with parametres.
 # Example: *read_param 'Enter smth: ' smth yes_or_no* will add to var config smth=...
-# Plan: add ncurses support and GUI.
+# Plan: add support of ncurses and GUI.
 function read_param() {
-  dialog=$1 default_var=$2 var=$3 option=$4
+  local dialog="$1" default_var=$2 var=$3 option=$4 tmp=''
   # CLI MODE.
   if [[ $echo_mode = '' || $echo_mode = 'cli' ]]; then
     case $option in
       yes_or_no)
-      read -e -p "$dialog"  -i "$default_var" tmp
-      if [[ $tmp == 'Y' || $tmp == 'y' || $tmp == 'Yes' || $tmp == 'yes' || $tmp == '' ]]; then
-        tmp=1
-      else
-        tmp=0
-      fi
+        read -e -p "$dialog" -i "$default_var" tmp
+        if [[ $tmp == 'Y' || $tmp == 'y' || $tmp == 'Yes' || $tmp == 'yes' || $tmp == '' ]]; then
+          tmp=1
+        else
+          tmp=0
+        fi
       ;;
       no_or_yes)
-      read -e -p "$dialog"  -i "$default_var" tmp
-      if [[ $tmp == 'N' || $tmp == 'n' || $tmp == 'No' || $tmp == 'no' || $tmp == '' ]]; then
-        tmp=0
-      else
-        tmp=1
-      fi
+        read -e -p "$dialog" -i "$default_var" tmp
+        if [[ $tmp == 'N' || $tmp == 'n' || $tmp == 'No' || $tmp == 'no' || $tmp == '' ]]; then
+          tmp=0
+        else
+          tmp=1
+        fi
       ;;
       text)
-      while [[ $tmp == '' ]]; do
-        read -e -p "$dialog"  -i "$default_var" tmp
-      done
+        while [[ $tmp == '' ]]; do
+          read -e -p "$dialog" -i "$default_var" tmp
+        done
       ;;
       text_empty)
-        read -e -p "$dialog"  -i "$default_var" tmp
+        read -e -p "$dialog" -i "$default_var" tmp
       ;;
-      pass)
-      read -e -s -p "$dialog" -i "$default_var" tmp
-      if [[ -z $tmp ]]; then
-        echo -e "$warning You haven't enter password. Your default password will be 'pass'."
-        tmp=pass
-      else
-        echo ''
-      fi
+      secret)
+        while [[ $tmp == '' ]]; do
+          read -e -s -p "$dialog" -i "$default_var" tmp
+        done
+      ;;
+      secret_empty)
+        read -e -s -p "$dialog" -i "$default_var" tmp
       ;;
       *)
-      echo "Option $option is incorrect!"
-      exit 1;
+      return_err "Option $option is incorrect!"
       ;;
     esac
-    config_installation="$config_installation\n$var=\"$tmp\""
+    var_list=("${var_list[@]}" "$var")
     export $var="$tmp"
-    tmp=''
   fi
 }
 
-echo 'This script supposes that directory for installantion is prepared.'
-
-# Get standart options.
+msg_print note 'This script for installing linux supposes that directory for installantion is prepared.'
 
 #Get distribution variable (distr).
-echo "This is script for installing linux. Choose distribution for installing, please."
-echo -e "Avaliable distributions: \n$(ls -1 ./distr)"
-while ! [[ -d ./distr/$distr &&  $distr != '' ]]; do
+var_list=()
+echo "Choose distribution for installation."
+echo -e "Avaliable distributions: \n$(ls -1 ./lib/distr)"
+while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
   read_param "Distribution: " "" distr text
 done
 
-# Getting some standart options for all distributions. They are:
-# 1.Vars with 1 or 0 symbol: fstab, grub2, flash_disk, graph, lightdm_autostart, setup_script.
-# 2.Vars with custom content: dir, hostname, user_name, passwd, grub2_type_default, grub2_type, grub2_bios_place.
-read_param "Enter the path to install $distr: " "/mnt/mnt" dir text
-read_param "Enter hostname: " "$distr" hostname text
-read_param "Enter name of user: " "alexey" user_name text
-read_param "Enter password for root and $user_name: " "" passwd pass
-if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
-  read_param "Do you want to generate fstab? (Y/n): " '' fstab yes_or_no
-  read_param "Do you want to install bootloader (grub2)? (Y/n): " '' grub2 yes_or_no
-  if [[ $grub2 == 1 ]]; then
-    if [[ -d /sys/firmware/efi/efivars ]]; then
-      grub2_type_default=uefi
-    else
-      grub2_type_default=bios
-    fi
-    while ! [[ $grub2_type == 'bios' || $grub2_type == 'uefi' ]]; do
-      read_param "Enter type of bootloader (bios/uefi): " "$grub2_type_default" grub2_type text
-    done
-    [[ $grub2_type == bios ]] && read_param "Enter where to install bootloader: " "$(findmnt -funcevo SOURCE $dir)" grub2_bios_place text
-    read_param "Do you want to install $distr to flash disk (don't create other items in GRUB2)? (N/y): " '' flash_disk no_or_yes
-  fi
+source ./lib/common/common_options.sh
+source ./lib/distr/$distr/distr_options.sh
+read_param "You're about to start installing $distr to $dir. Do you really want to continue? (Y/n): " "" enter yes_or_no
+if [[ $enter == 0 ]]; then
+  return_err "Aborted by user!"
 fi
-read_param "Do you want to install graphics (X-server, XFCE desktop and lightDM)? (Y/n): " '' graph yes_or_no
-[[ $graph == 1 ]] && read_param "Do you want to add LightDM to autostart? (Y/n): " '' lightdm_autostart yes_or_no
-read_param "Do you want to copy this setup utitlity in new OS? (Y/n): " ""  setup_script yes_or_no
 
-add_option=''
-
-source ./distr/$distr/$distr.sh
+rm -rf ./auto_configs/latest_used.sh
+for var in ${var_list[@]}; do
+  echo -e "add_var $var \"${!var}\"" >> ./auto_configs/latest_used.sh
+done
+source ./lib/distr/$distr/distr_actions.sh
 custom_actions
+
+
+msg_print note "Distribution $distr was installed to $dir."
 
 # =)
 echo "Script succesfully ended its work. Have a nice day!"
