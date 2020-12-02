@@ -25,7 +25,7 @@ if [[ -z $3 ]]; then
   echo "Arch linux boostrap script. It uses only choosed mirror."
   echo "Supports CUSTOM_ARCH_REPO flag. For custom mirror you have to enter its location and name."
   echo "Example 1: $0 x86_64 http://mirrors.evowise.com/archlinux /mnt base-devel mc htop"
-  echo "Example 2: CUSTOM_ARCH_REPO=1 $0 x86_64 http://mirror.site/archlinux offline_repo /mnt base-devel mc htop"
+  echo "Example 2: CUSTOM_ARCH_REPO=1 $0 x86_64 http://mirror.site/arch_repo arch_repo /mnt base-devel mc htop"
   exit 1
 fi
 
@@ -41,14 +41,13 @@ parse_arch $(uname -m)
 if [[ $arch == $arch_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if [[ -f /usr/bin/qemu-$qemu_arch-static ]]; then
+  if qemu_chroot check $arch ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
-    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+    exit 1
   fi
 fi
 
-# Try first variant of mirror...
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   pkg_list=$(get_file_s - "$mirror/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
   [[ -z $pkg_list ]] && return_err "Incorrect mirror $mirror!"
@@ -79,7 +78,7 @@ libssh2 libunistring lz4 mpfr ncurses npth
 openssl pacman pinentry readline sqlite xz zlib zstd)
 
 case $arch in
-  i?86) BASIC_PACKAGES=(archlinux32-keyring ${BASIC_PACKAGES[*]})
+  i?86) BASIC_PACKAGES=(archlinux32-keyring archlinux-keyring ${BASIC_PACKAGES[*]})
   ;;
   x86_64) BASIC_PACKAGES=(archlinux-keyring ${BASIC_PACKAGES[*]})
   ;;
@@ -137,7 +136,7 @@ mkdir -m 0755 -p "$dir"/var/{lib/pacman,log} "$dir"/{dev,run,etc/pacman.d}
 mkdir -m 1777 -p "$dir"/tmp
 mkdir -m 0555 -p "$dir"/{sys,proc}
 ROOTFS_DIR_NO_FIX=1
-chroot_add_mount dir "$dir" "$arch_tmp/mnt" --rbind
+chroot_add_mount dir "$dir" "$arch_tmp/mnt" --rbind --make-rslave
 chroot_setup "$arch_tmp/mnt"
 $arch_chroot_command $arch_tmp /bin/bash /root/run.sh
 rm -rf "$arch_tmp"

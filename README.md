@@ -4,12 +4,13 @@ linux_install
 ## Requirements
 * Connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
-* Installed tools: coreutils, bash, wget (or curl).
+* Installed tools: coreutils, bash, wget (or curl), tar, zstd.
 * Optinal: perl (for debootstrap), qemu-user-static (for foreign architectures).
 
 ## Usage
 * Prepare directory for installation.
-* Execute `./install_sys.sh` and answer questions OR Execute `./install_sys.sh path_to_config`. (You can find them in ./auto_configs)
+* Execute `./profile_gen.sh` and answer questions OR find one of prepared in `./auto_configs`.
+* Execute `./install_sys.sh your/profile.sh` using installation profile to install system.
 * That's all. You have installed system. Good luck!
 
 ## About
@@ -17,7 +18,6 @@ Install a base linux system from any linux distribution.
 Supported linux distros:
 * Debian-based distros
 * Archlinux
-* Void linux
 
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation. Latest used config saved to `auto-configs/latest_used.sh`

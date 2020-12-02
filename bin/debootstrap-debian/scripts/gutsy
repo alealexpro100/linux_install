@@ -60,7 +60,14 @@ work_out_debs () {
 
 	case $MIRRORS in
 	    https://*)
-		base="$base apt-transport-https ca-certificates"
+		case "$CODENAME" in
+			gutsy|hardy|intrepid|jaunty|karmic|lucid|maverick|natty|oneiric|precise|quantal|raring|saucy|trusty|utopic|vivid|wily|xenial|yakkety|zesty)
+			base="$base apt-transport-https ca-certificates"
+			;;
+			*)
+			base="$base ca-certificates"
+			;;
+		esac
 		;;
 	esac
 }

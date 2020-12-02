@@ -1,5 +1,7 @@
-1. Add support of offline insallation (use local files, not a mirror)
-2. Add support of installing from custom repository of archlinux.
-3. Add support of translation (maybe).
-4. Add graphical installation support.
-5. Add live mode.
+* Add tests. (not started)
+* Add support of translation. (not started)
+* Add support of offline installation. (in progress)
+* Add variations of soft. (in progress)
+* Add graphical installation support. (not started)
+* Add live mode. (in progress)
+* Add void and alpine linux interactive install support. (in progress)

@@ -39,7 +39,7 @@ if [[ $graphics == "1" ]]; then
         msg_print note "Avaliable DEs: plasma, xfce4, cinnamon, gnome."
         read_param "Enter DE name: " "xfce4" desktop_de text
       else
-        msg_print note "Avaliable WMs: icewm, fvwm, jvm."
+        msg_print note "Avaliable WMs: icewm."
         read_param "Do you want to install addational software: " "icewm" desktop_wm text
       fi
     else

@@ -1,10 +1,11 @@
 msg_print note "Common options:"
 read_param "Enter the path to install $distr: " "/mnt/mnt" dir text
-read_param "Enter hostname: " "$distr" hostname text
+read_param "Enter hostname: " "$distr-$RANDOM" hostname text
 read_param "Enter name of user: " "$user_name" user_name text
+read_param "Enter shell for user: " "$user_shell" user_shell text
 read_param "Enter password: " '' passwd secret_empty
 if [[ -z $passwd ]]; then
-  passwd="$passwd_default"
+  var_list[passwd]="declare -gx passwd=$passwd_default"
   msg_print warning "No password entered. Password set to $passwd."
 fi
 if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then

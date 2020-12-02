@@ -42,10 +42,10 @@ fi
 if [[ $arch == $alpine_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if [[ -f /usr/bin/qemu-$qemu_arch-static ]]; then
+  if qemu_chroot check $arch ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
-    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+    exit 1
   fi
 fi
 

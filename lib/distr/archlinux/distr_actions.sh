@@ -3,14 +3,16 @@
 echo 'First step is completed.'
 
 source ./lib/common/common_actions_1.sh
+cat ./lib/common/rootfs_scripts/pacman_setup.sh >> $dir/root/pi_s1.sh
+cat ./lib/common/rootfs_scripts/arch_setup.sh >> $dir/root/pi_s1.sh
 
 if [[ $arch == $arch_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if [[ -f /usr/bin/qemu-$qemu_arch-static ]]; then
+  if qemu_chroot check $arch ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
-    return_err "No /usr/bin/qemu-$qemu_arch-static! Please install qemu-static."
+    exit 1
   fi
 fi
 $arch_chroot_command $dir bash /root/pi_s1.sh
