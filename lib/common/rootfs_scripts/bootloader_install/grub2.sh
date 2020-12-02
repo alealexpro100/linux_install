@@ -21,7 +21,7 @@ case $distr in
     grub_config
   ;;
   archlinux) 
-    to_install="grub";;
+    to_install="grub"
     [[ $bootloader_type = uefi ]] && to_install="$to_install efibootmgr"
     $pacman_install $to_install
     if [[ $removable_disk == "1" ]]; then
@@ -30,6 +30,10 @@ case $distr in
       $pacman_install os-prober
     fi
     grub_config
+  ;;
+  voidlinux)
+    xbps-install -Sy grub
+    [[ $flash_disk == 1 ]] && msg_print warning "Os-prober can't be removed"
   ;;
   *)
   msg_print error "$bootloader_name installation is not supported for $distro. Skipping."

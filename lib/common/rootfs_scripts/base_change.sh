@@ -5,9 +5,9 @@ msg_print note "Making base changes..."
 function base_setup() {
   msg_print note "Setting up hostname and configuring user..."
   echo $hostname > /etc/hostname
-  echo "root:$passwd" | chpasswd
+  echo "root:$passwd" | chpasswd -c SHA512
   useradd -m -g users -G $user_groups -s $user_shell $user_name
-  echo  "$user_name:$passwd" | chpasswd
+  echo  "$user_name:$passwd" | chpasswd -c SHA512
 }
 
 function locale_setup() {
@@ -25,6 +25,10 @@ case $distr in
   debian)
   user_groups="users,video,input,sudo"
   base_setup; locale_setup
+  ;;
+  voidlinux)
+  user_groups="users,video,input,wheel"
+  base_setup
   ;;
   *) msg_print warning "Non-standart distro $distro used. Skipping locale setup."
   user_groups="users,video,input"; base_setup;

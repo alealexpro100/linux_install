@@ -1,3 +1,7 @@
+## Version 0.2.7:
+* Bug fixes;
+* Initial support of voidlinux interactive install.
+
 ## Version 0.2.6:
 * Support of archlinux and debian install.
 * Support for any repos in debian.
