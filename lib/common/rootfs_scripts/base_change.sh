@@ -17,6 +17,15 @@ function locale_setup() {
   locale-gen
 }
 
+function locale_setup_voidlinux() {
+  if [[ $version_void == "glibc" ]]; then
+    msg_print note "Setting up locales..."
+    sed -ie "s/#en_US.UTF-8/en_US.UTF-8/;s/#$LANG/$LANG/" /etc/default/libc-locales
+    sed -ie "1s/en_US.UTF-8/$LANG/" /etc/locale.conf >> /etc/locale.conf
+    xbps-reconfigure -f glibc-locales
+  fi
+}
+
 case $distr in
   archlinux)
   user_groups="users,video,input,wheel"
@@ -28,7 +37,7 @@ case $distr in
   ;;
   voidlinux)
   user_groups="users,video,input,wheel"
-  base_setup
+  base_setup; locale_setup_voidlinux
   ;;
   *) msg_print warning "Non-standart distro $distro used. Skipping locale setup."
   user_groups="users,video,input"; base_setup;

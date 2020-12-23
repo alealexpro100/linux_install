@@ -1,6 +1,7 @@
 
-#Pacman setup.
+#XBPS setup.
 msg_print note "XBPS setup..."
+xbps_install="xbps-install -y"
 
 if [[ $version_void == "glibc" ]]; then
   msg_print note "Setting up locales..."
@@ -15,5 +16,8 @@ for file in $(ls /etc/xbps.d/); do
   sed -ie "s|https://alpha.de.repo.voidlinux.org/current|$mirror_voidlinux|" /etc/xbps.d/$file
 done
 rm -rf /etc/xbps.d/install_repo.conf
+
+to_install="$postinstall" to_enable=''
+$xbps_install $to_install
 
 msg_print note "XBPS is ready."

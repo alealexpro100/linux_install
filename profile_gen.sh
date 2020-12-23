@@ -29,7 +29,7 @@ fi
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
 
-# Example: *read_param 'Enter smth: ' smth yes_or_no* will add to var config smth=...
+# Example: *read_param 'Enter smth: ' smth yes_or_no*
 # TODO: add support of ncurses and GUI.
 function read_param() {
   local dialog="$1" default_var=$2 var=$3 option=$4 tmp=''
@@ -80,7 +80,7 @@ function read_param() {
 msg_print note 'This script for installing linux supposes that directory for installantion is prepared.'
 
 if [[ -z $1 ]]; then
-  profile_file="./auto_configs/latest_used.sh"
+  profile_file="./auto_configs/last_gen.sh"
 else
   profile_file="$1"
 fi

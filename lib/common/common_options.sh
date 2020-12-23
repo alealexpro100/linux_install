@@ -26,6 +26,6 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
 else
   bootloader=0
 fi
-read_param "Do you want to install graphics? (Y/n): " '' graphics yes_or_no
-[[ $graphics == "1" ]] && read_param "Do you want to install and add display manager to autostart? (Y/n): " '' dm_install yes_or_no
+#read_param "Do you want to install graphics? (Y/n): " '' graphics yes_or_no
+#[[ $graphics == "1" ]] && read_param "Do you want to install and add display manager to autostart? (Y/n): " '' dm_install yes_or_no
 read_param "Do you want to copy this setup utitlity to new OS? (Y/n): " '' copy_setup_script yes_or_no

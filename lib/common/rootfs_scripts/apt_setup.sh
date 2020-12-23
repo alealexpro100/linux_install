@@ -1,6 +1,8 @@
 
 #Apt config
 msg_print note "Apt setup..."
+declare -gx DEBIAN_FRONTEND=noninteractive
+apt_install="apt -y install"
 
 [[ -f /etc/apt/sources.list ]] && rm -rf /etc/apt/sources.list
 for repo_name in main updates backports security; do
@@ -8,7 +10,6 @@ for repo_name in main updates backports security; do
 done
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
 apt update
-declare -gx apt_install="apt -y install" DEBIAN_FRONTEND=noninteractive
 $apt_install ca-certificates gnupg
 for repo_name in ${!debian_repos[@]}; do
   if [[ $repo_name != "main" && $repo_name != "updates" && $repo_name != "backports" && $repo_name != "security" ]]; then
@@ -17,6 +18,7 @@ for repo_name in ${!debian_repos[@]}; do
   fi
 done
 apt update
+
 to_install="$postinstall" to_enable=''
 $apt_install $to_install
 

@@ -20,7 +20,7 @@ Supported linux distros:
 * Archlinux
 
 ## Contents of project:
-* auto-configs/ - Directory with working configs for auto installation. Latest used config saved to `auto-configs/latest_used.sh`
+* auto-configs/ - Directory with working configs for auto installation. Latest generated config saved to `auto-configs/last_gen.sh`
 * bin/ - Core parts for this script. They use only `alexpro100_lib.sh`.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit install system.

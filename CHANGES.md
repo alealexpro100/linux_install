@@ -1,3 +1,7 @@
+## Version 0.2.8:
+* Small fixes.
+* Temporary disabled extended features.
+
 ## Version 0.2.7:
 * Bug fixes;
 * Initial support of voidlinux interactive install.
