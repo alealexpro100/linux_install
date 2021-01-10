@@ -10,10 +10,21 @@ function base_setup() {
   echo  "$user_name:$passwd" | chpasswd -c SHA512
 }
 
+function base_setup_alpine() {
+  msg_print note "Setting up hostname and configuring user..."
+  echo $hostname > /etc/hostname
+  echo "root:$passwd" | chpasswd -c SHA512
+  adduser -G users -s $user_shell -D $user_name
+  for group_name in $user_groups; do
+    addgroup $user_name $group_name
+  done
+  echo  "$user_name:$passwd" | chpasswd -c SHA512
+}
+
 function locale_setup() {
   msg_print note "Setting up locales..."
   sed -i "s/#en_US.UTF-8/en_US.UTF-8;s/#$LANG/$LANG/" /etc/locale.gen
-  echo "LANG=$LANG" >> /etc/default/locale
+  echo "LANG=$LANG" >> $1
   locale-gen
 }
 
@@ -21,26 +32,31 @@ function locale_setup_voidlinux() {
   if [[ $version_void == "glibc" ]]; then
     msg_print note "Setting up locales..."
     sed -ie "s/#en_US.UTF-8/en_US.UTF-8/;s/#$LANG/$LANG/" /etc/default/libc-locales
-    sed -ie "1s/en_US.UTF-8/$LANG/" /etc/locale.conf >> /etc/locale.conf
+    sed -ie "1s/en_US.UTF-8/$LANG/" $1
     xbps-reconfigure -f glibc-locales
   fi
 }
 
 case $distr in
+  alpine)
+  user_groups="audio video input wheel"
+  base_setup_alpine; 
+  msg_print note "Alpine has no support of locales. Skipping."
+  ;;
   archlinux)
-  user_groups="users,video,input,wheel"
-  base_setup; locale_setup
+  user_groups="audio,video,input,network,storage,wheel"
+  base_setup; locale_setup /etc/locale.conf
   ;;
   debian)
-  user_groups="users,video,input,sudo"
-  base_setup; locale_setup
+  user_groups="audio,video,input,sudo"
+  base_setup; locale_setup /etc/default/locale
   ;;
   voidlinux)
-  user_groups="users,video,input,wheel"
-  base_setup; locale_setup_voidlinux
+  user_groups="audio,video,input,network,storage,wheel"
+  base_setup; locale_setup_voidlinux /etc/locale.conf
   ;;
   *) msg_print warning "Non-standart distro $distro used. Skipping locale setup."
-  user_groups="users,video,input"; base_setup;
+  user_groups="audio,video,input"; base_setup;
   ;;
 esac
 

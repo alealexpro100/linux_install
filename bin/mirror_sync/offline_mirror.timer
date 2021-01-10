@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep offline mirror updated.
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=8h
+Unit=offline_mirror.service
+
+[Install]
+WantedBy=multi-user.target

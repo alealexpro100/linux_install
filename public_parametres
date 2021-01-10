@@ -5,14 +5,19 @@ HOSTS_ADD='
 
 user_name='user' user_shell='/bin/bash' passwd_default='pass'
 debian_distr=buster
-declare -A debian_repos=([main]='deb http://deb.debian.org/debian $debian_distr main non-free contrib' 
-[updates]='deb http://deb.debian.org/debian $debian_distr-updates main non-free contrib'
-[backports]='deb http://deb.debian.org/debian $debian_distr-backports main non-free contrib'
-[security]='deb http://security.debian.org/ $debian_distr/updates main non-free contrib'
-[wine]='deb http://dl.winehq.org/wine-builds/debian/ $debian_distr main'
-[webmin]='deb [arch=$arch] http://download.webmin.com/download/repository sarge contrib')
-mirror_archlinux='http://mirrors.evowise.com/archlinux'
-mirror_archlinux_32='http://mirror.archlinux32.org'
-mirror_archlinux_arm='http://mirror.archlinuxarm.org'
-mirror_voidlinux='https://alpha.de.repo.voidlinux.org/current'
+declare -A debian_repos=([main]='deb https://deb.debian.org/debian $debian_distr main non-free contrib' 
+[updates]='deb https://deb.debian.org/debian $debian_distr-updates main non-free contrib'
+[backports]='deb https://deb.debian.org/debian $debian_distr-backports main non-free contrib'
+[security]='deb https://security.debian.org/ $debian_distr/updates main non-free contrib'
+[wine]='deb https://dl.winehq.org/wine-builds/debian/ $debian_distr main'
+[webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
+mirror_archlinux='https://mirrors.evowise.com/archlinux'
+mirror_archlinux_32='https://mirror.archlinux32.org'
+mirror_archlinux_arm='https://mirror.archlinuxarm.org'
+mirror_alpine='https://dl-cdn.alpinelinux.org/alpine'
+mirror_voidlinux='httpss://alpha.de.repo.voidlinux.org/current'
 version_void=glibc
+
+#MIRROR OPTIONS
+#MIRROR_DIR="/mnt/mirror"
+#WORK_DIR="/mnt/mirror/projects/linux_install/bin/mirror_sync"

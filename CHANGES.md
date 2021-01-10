@@ -1,3 +1,8 @@
+## Version 0.2.9:
+* Minor fixes.
+* Added scripts for mirror sync.
+* Support of alpine install.
+
 ## Version 0.2.8:
 * Small fixes.
 * Temporary disabled extended features.

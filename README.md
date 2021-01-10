@@ -1,6 +1,14 @@
 linux_install
 =============
 
+## About
+This script installs a base linux system from any linux distribution.
+Supported linux distros:
+* Alpine
+* Archlinux
+* Debian-based distros
+* Voidlinux
+
 ## Requirements
 * Connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
@@ -13,18 +21,13 @@ linux_install
 * Execute `./install_sys.sh your/profile.sh` using installation profile to install system.
 * That's all. You have installed system. Good luck!
 
-## About
-Install a base linux system from any linux distribution.
-Supported linux distros:
-* Debian-based distros
-* Archlinux
-
 ## Contents of project:
-* auto-configs/ - Directory with working configs for auto installation. Latest generated config saved to `auto-configs/last_gen.sh`
-* bin/ - Core parts for this script. They use only `alexpro100_lib.sh`.
+* auto-configs/ - Directory with working configs for auto installation.
+* bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
-* lib/ - Installation files. Easy-to-edit install system.
-* install_sys.sh - Main script.
+* lib/ - Installation files. Easy-to-edit installation system.
+* install_sys.sh - Main script. Requries profile for work.
+* profile_gen.sh - Profile generator.
 * private_parametres - File with private parametres. Your parametres.
 * public_parametres - File with public parametres. Do NOT delete it.
 * version_install - Version of this script.

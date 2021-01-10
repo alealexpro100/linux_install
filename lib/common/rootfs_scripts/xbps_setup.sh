@@ -16,6 +16,7 @@ for file in $(ls /etc/xbps.d/); do
   sed -ie "s|https://alpha.de.repo.voidlinux.org/current|$mirror_voidlinux|" /etc/xbps.d/$file
 done
 rm -rf /etc/xbps.d/install_repo.conf
+xbps-install -S
 
 to_install="$postinstall" to_enable=''
 $xbps_install $to_install

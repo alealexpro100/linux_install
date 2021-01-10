@@ -13,11 +13,12 @@ function grub_config() {
 }
 
 case $distr in
-  debian) 
-    $apt_install grub2
-    if [[ $removable_disk == "0" ]]; then
-      apt -y remove os-prober; apt -d -y install os-prober
-    fi
+  alpine)
+    to_install="grub"
+    [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-pc"
+    $apk_install $to_install
+    [[ $removable_disk == "1" ]] && msg_print warning "Os-prober can't be installed."
     grub_config
   ;;
   archlinux) 
@@ -31,12 +32,22 @@ case $distr in
     fi
     grub_config
   ;;
+  debian)
+    to_install="grub"
+    [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
+    $apt_install $to_install
+    if [[ $removable_disk == "0" ]]; then
+      apt -y remove os-prober;
+    fi
+    grub_config
+  ;;
   voidlinux)
     to_install="grub"
     [[ $bootloader_type = uefi ]] && to_install="$to_install grub-x86_64-efi grub-i386-efi"
-    [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
     $xbps_install $to_install
-    [[ $removable_disk == 1 ]] && msg_print warning "Os-prober can't be removed"
+    [[ $removable_disk == "0" ]] && msg_print warning "Os-prober can't be removed."
+    grub_config
   ;;
   *)
   msg_print error "$bootloader_name installation is not supported for $distro. Skipping."

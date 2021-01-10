@@ -15,4 +15,4 @@ for service in $to_enable; do
   systemctl enable $service
 done
 
-msg_print note "Packages installed."
+msg_print note "Packages are installed."

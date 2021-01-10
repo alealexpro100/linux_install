@@ -19,4 +19,4 @@ if [[ $networkmanager == "1" ]]; then
 fi
 $apt_install $to_install
 
-msg_print note "Packages installed."
+msg_print note "Packages are installed."

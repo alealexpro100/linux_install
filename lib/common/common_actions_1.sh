@@ -36,7 +36,7 @@ fi
 
 msg_print note "Creating config script..."
 echo -ne "#!/bin/bash\n\nset -e; cd /root/\n" >> $dir/root/pi_s1.sh
-cat ./lib/common/rootfs_scripts/lib_connect.sh >> $dir/root/pi_s1.sh
+cat ./lib/common/lib_connect.sh >> $dir/root/pi_s1.sh
 echo "
 echo 'Getting configuration...'
 if [[ -z /root/configuration ]]; then

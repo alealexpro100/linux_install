@@ -14,17 +14,8 @@ else
 fi
 
 #Use library
-if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
-  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    if [[ -f ./bin/alexpro100_lib.sh ]]; then
-      ALEXPRO100_LIB_LOCATION=./bin/alexpro100_lib.sh
-      echo "Using $ALEXPRO100_LIB_LOCATION."
-    else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
-    fi
-  fi
-  source $ALEXPRO100_LIB_LOCATION
-fi
+ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
+source ./lib/common/lib_connect.sh
 
 if [[ $UID != 0 ]]; then
   return_err "This script requries root permissions!"
@@ -48,7 +39,7 @@ function custom_actions() {
 }
 
 if [[ -z $1 ]]; then
-  echo "Main install script. Requries profile for installation"
+  echo "Main install script. Requries profile for installation."
   echo "Example: $0 profile_install.sh"
   exit 1
 fi

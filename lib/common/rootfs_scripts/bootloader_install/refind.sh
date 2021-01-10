@@ -8,12 +8,12 @@ else
   refind_options=""
 fi
 case $distr in
-  debian) 
-    $apt_install refind
-    refind-install $refind_options
-  ;;
   archlinux) 
     $pacman_install refind
+    refind-install $refind_options
+  ;;
+  debian) 
+    $apt_install refind
     refind-install $refind_options
   ;;
   *)
