@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################
-### arch boostrap script 0.2.3
-### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
+### arch boostrap script
+### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
@@ -99,11 +99,11 @@ for package in ${BASIC_PACKAGES[*]}; do
   pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$" -e "^${package}-[[:digit:]].*\.zst$")
   # Download packages.
   if [[ ! -f "${cache_dir}/${pkg_file}" ]]; then
+    echo ""
     get_file_s "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}"
   else
-    echo -ne "exists"
+    echo -e "exists!"
   fi
-  echo ""
 done
 
 msg_print note "Unpacking packages to tempory rootfs: "
@@ -120,6 +120,7 @@ for package in ${BASIC_PACKAGES[*]}; do
   esac
 done
 
+exit 1
 msg_print note "Preparing tempory rootfs..."
 mkdir -p $arch_tmp/etc/pacman.d
 [[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> $arch_tmp/etc/pacman.d/mirrorlist

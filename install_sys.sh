@@ -1,16 +1,15 @@
 #!/bin/bash
 ###############################################################
-### Initial install script 0.2.1
-### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
+### Initial install script
+### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
 set -e
 
-if [[ -f ./version_install ]]; then
-  echo "Running linux_install $(cat ./version_install)."
-else
-  echo "Incorrect location!"; exit 1
+if [[ ! -f ./version_install ]]; then
+  cd "$(dirname $(realpath ${BASH_SOURCE[0]}))"
+  echo "Location changed!"
 fi
 
 #Use library

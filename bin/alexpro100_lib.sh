@@ -1,6 +1,6 @@
 ###############################################################
 ### alexpro100 BASH LIBRARY
-### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
+### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases

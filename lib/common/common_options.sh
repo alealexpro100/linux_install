@@ -1,5 +1,6 @@
 msg_print note "Common options:"
-read_param "Enter the path to install $distr: " "/mnt/mnt" dir text
+[[ -z $default_dir ]] && default_dir="/mnt/mnt"
+read_param "Enter the path to install $distr: " "$default_dir" dir text
 read_param "Enter hostname: " "$distr-$RANDOM" hostname text
 read_param "Enter name of user: " "$user_name" user_name text
 read_param "Enter shell for user: " "$user_shell" user_shell text

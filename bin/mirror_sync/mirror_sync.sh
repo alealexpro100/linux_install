@@ -1,4 +1,9 @@
 #!/bin/bash
+###############################################################
+### Mirror sync script
+### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
+### License: GPL v3.0
+###############################################################
 
 MIRROR_DIR="/mnt/mirror"
 WORK_DIR="/mnt/mirror/projects/linux_install/bin/mirror_sync"
@@ -15,7 +20,7 @@ MXISO_MIRROR="rsync://mirrors.dotsrc.org/mx-isos"
 FEDORA_MIRROR="rsync://mirrors.dotsrc.org/fedora-buffet"
 FEDORA_VIRTIO_MIRROR="rsync://fedorapeople.org/groups/virt/virtio-win"
 CYGWIN_MIRROR="rsync://mirrors.dotsrc.org/cygwin"
-APT_MIRROR="1"
+APT_MIRROR="1" APT_MIRROR_FIX="0"
 ORACLE_MIRROR="1"
 
 function mirror_rsync() {
@@ -24,8 +29,6 @@ function mirror_rsync() {
     rsync --recursive --links --copy-unsafe-links --times --sparse --delete --delete-after --delete-excluded --progress --stats --human-readable $@
     echo -e "}\n"
 }
-
-cd 
 
 # --- ALPINELINUX MIRROR
 for al_arch in "x86_64" "x86" "aarch64" "armhf"; do
@@ -69,7 +72,7 @@ mirror_rsync --exclude "deprecated-isos*" $FEDORA_VIRTIO_MIRROR/ $MIRROR_DIR/fed
 if [[ "$APT_MIRROR" == "1" && -f $WORK_DIR/apt-mirror-fixed && $MIRROR_DIR/apt/mirror.list ]]; then
     $WORK_DIR/apt-mirror-fixed --config $MIRROR_DIR/apt/mirror.list
     $MIRROR_DIR/debian/var/clean.sh
-    $WORK_DIR/apt-mirror-fix $MIRROR_DIR/apt/mirror.list
+    [[ "$APT_MIRROR_FIX" == "1" ]] && $WORK_DIR/apt-mirror-fix $MIRROR_DIR/apt/mirror.list
 fi
 
 # --- CYGWIN MIRROR

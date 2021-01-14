@@ -1,3 +1,8 @@
+## Version 0.3.0:
+* Minor fixes.
+* Added auto mode.
+* Added unit tests.
+
 ## Version 0.2.9:
 * Minor fixes.
 * Added scripts for mirror sync.

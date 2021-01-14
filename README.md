@@ -3,7 +3,7 @@ linux_install
 
 ## About
 This script installs a base linux system from any linux distribution.
-Supported linux distros:
+Supported for installing Linux distros:
 * Alpine
 * Archlinux
 * Debian-based distros
@@ -12,7 +12,7 @@ Supported linux distros:
 ## Requirements
 * Connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
-* Installed tools: coreutils, bash, wget (or curl), tar, zstd.
+* Installed tools: coreutils, bash, wget (or curl), tar, zstd. (busybox was not tested yet)
 * Optinal: perl (for debootstrap), qemu-user-static (for foreign architectures).
 
 ## Usage
@@ -26,6 +26,8 @@ Supported linux distros:
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
+* orphaned/ - Parts not used in script, but kept for future usage.
+* tests/ - Testing scripts. See `tests/README_tests.md`.
 * install_sys.sh - Main script. Requries profile for work.
 * profile_gen.sh - Profile generator.
 * private_parametres - File with private parametres. Your parametres.
