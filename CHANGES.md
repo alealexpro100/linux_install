@@ -1,3 +1,8 @@
+## Version 0.3.1:
+* Minor fixes.
+* Fixed password enter bug.
+* Fixed debian boot issues (bootloader choose and grub2 install).
+
 ## Version 0.3.0:
 * Minor fixes.
 * Added auto mode.

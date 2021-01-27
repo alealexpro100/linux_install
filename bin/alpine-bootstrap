@@ -17,7 +17,7 @@ if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
       echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
     fi
   fi
-  source $ALEXPRO100_LIB_LOCATION
+  source "$ALEXPRO100_LIB_LOCATION"
 fi
 
 # Check options.
@@ -28,8 +28,8 @@ if [[ -z $4 ]]; then
   exit 1
 fi
 
-arch=$1 version=$2 mirror=$3 dir=$(realpath -q $4); shift 4; add_packages="$@"
-parse_arch $(uname -m)
+arch=$1 version=$2 mirror="$3"; dir="$(realpath -q "$4")"; shift 4; add_packages="$*"
+parse_arch "$(uname -m)"
 if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then
   check_url "$mirror" || return_err "Incorrect mirror $mirror!"
   download_repo="$mirror/$alpine_arch"
@@ -39,10 +39,10 @@ else
   download_repo="$mirror/$version/main/$alpine_arch"
   arg_repos="-X $mirror/$version/main -X $mirror/$version/community"
 fi
-if [[ $arch == $alpine_arch ]]; then
+if [[ $arch == "$alpine_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if qemu_chroot check $arch ok; then
+  if qemu_chroot check "$arch" ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
     exit 1
@@ -52,21 +52,21 @@ fi
 #Find, download and unpack apktools-static and install system with it.
 create_tmp_dir apk_tmp
 echo "Getting link to download apk-tools-static for $alpine_arch..."
-apktools_name=$(get_file_s - "$download_repo/" | grep apk-tools-static | sed 's#.*href="##;s#">.*##')
+apktools_name=$(get_file_s - "$download_repo/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn | grep apk-tools-static)
 echo "Downloading..."
 get_file_s "$apk_tmp/$apktools_name" "$download_repo/$apktools_name"
 echo "Exracting..."
 tar -xzf "$apk_tmp/$apktools_name" -C "$apk_tmp" "sbin/apk.static" &>/dev/null
 echo "Installing apk-tools..."
-$apk_tmp/sbin/apk.static $arg_repos --allow-untrusted --root $dir --arch $arch --initdb add alpine-base || NEED_FIX=1
+"$apk_tmp/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
 rm -rf "$apk_tmp"
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 apk_command="/sbin/apk $arg_repos"
-$arch_chroot_command $dir $apk_command upgrade
-[[ ! -z $NEED_FIX ]] && $arch_chroot_command $dir $apk_command fix '*'
-[[ ! -z $add_packages ]] && $arch_chroot_command $dir $apk_command add $add_packages
-[[ $CUSTOM_ALPINE_REPO != "1" ]] && echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> $dir/etc/apk/repositories.used
+$arch_chroot_command "$dir" $apk_command upgrade
+[[ -n $NEED_FIX ]] && $arch_chroot_command "$dir" $apk_command fix '*'
+[[ -n $add_packages ]] && $arch_chroot_command "$dir" $apk_command add $add_packages
+[[ $CUSTOM_ALPINE_REPO != "1" ]] && echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
 
 echo "Alpine was succesfully installed to $dir."
 

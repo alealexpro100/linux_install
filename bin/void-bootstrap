@@ -17,7 +17,7 @@ if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
       echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
     fi
   fi
-  source $ALEXPRO100_LIB_LOCATION
+  source "$ALEXPRO100_LIB_LOCATION"
 fi
 
 # Check options.
@@ -27,19 +27,20 @@ if [[ -z $4 ]]; then
   exit 1
 fi
 
-arch=$1 version=$2 mirror=$3 dir=$(realpath -q $4); shift 4; add_packages="$@"
+arch=$1 version=$2 mirror=$3 dir="$(realpath -q "$4")"; shift 4; add_packages="$*"
 
-parse_arch $(uname -m)
-if [[ $arch == $void_arch ]]; then
+parse_arch "$(uname -m)"
+if [[ $arch == "$void_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if qemu_chroot check $arch ok; then
+  if qemu_chroot check "$arch" ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
     exit 1
   fi
 fi
 
+[[ $arch == "i686" ]] && return_err "Arch $arch is not supported!"
 install_arch=$arch
 if [[ "$void_arch" == "aarch64" ]]; then
   repo_xbps="$mirror/$void_arch/"
@@ -61,20 +62,20 @@ create_tmp_dir xbps_tmp
 msg_print note "Getting repodata..."
 get_file_s "$xbps_tmp/repodata" "$repo_xbps/$arch-musl-repodata" 
 tar --zstd -xf "$xbps_tmp/repodata" -C "$xbps_tmp"
-xbps_name=$(cat $xbps_tmp/index.plist | grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
+xbps_name=$(< "$xbps_tmp/index.plist" grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
 msg_print note "Downloading and extracting static xbps and busybox..."
 get_file_s "$xbps_tmp/xbps-static.xbps" "$repo_xbps/$xbps_name.$arch-musl.xbps"
-tar --zstd -xf "$xbps_tmp/xbps-static.xbps" -C $xbps_tmp
+tar --zstd -xf "$xbps_tmp/xbps-static.xbps" -C "$xbps_tmp"
 
 msg_print note "(1) Installing to choosed directory..."
 ROOTFS_DIR_NO_FIX=1
 chroot_add_mount dir "$dir" "$xbps_tmp/mnt" --rbind --make-rslave
-yes | XBPS_TARGET_ARCH=$install_arch SSL_NO_VERIFY_PEER=1 $arch_chroot_command $xbps_tmp /usr/bin/xbps-install.static -r /mnt -R $mirror -A -Suy base-voidstrap $add_packages
+yes | XBPS_TARGET_ARCH=$install_arch SSL_NO_VERIFY_PEER=1 $arch_chroot_command "$xbps_tmp" /usr/bin/xbps-install.static -r /mnt -R "$mirror" -A -Suy base-voidstrap $add_packages
 rm -rf "$xbps_tmp"
 msg_print note "(2) Configuring..."
-CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() #Weird bug. One dir left here for unknown reason.
-$arch_chroot_command $dir /usr/bin/xbps-reconfigure -af
-echo "#repository=$mirror" >> $dir/etc/xbps.d/install_repo.conf
+unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED # Bug left. Dirty fix.
+$arch_chroot_command "$dir" /usr/bin/xbps-reconfigure -af
+echo "#repository=$mirror" >> "$dir/etc/xbps.d/install_repo.conf"
 
 echo "Void linux was succesfully installed to $dir."
 

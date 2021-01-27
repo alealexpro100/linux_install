@@ -31,17 +31,6 @@ if [[ $kernel == "1" && $repo_debian_backports != "" ]]; then
 fi
 read_param "Do you want to install and enable NetworkManager? (Y/n): " '' networkmanager yes_or_no
 
-if [[ $bootloader == "1" ]]; then
-  msg_print note "Choose grub2. Others are not supported yet."
-  if [[ $bootloader_type = uefi ]]; then
-    msg_print note "Avaliable bootloaders: grub2, syslinux, systemd, refind."
-    read_param "Enter name of bootloader: " "grub2" bootloader_name text
-  else
-    msg_print note "Avaliable bootloaders: grub2, syslinux."
-    read_param "Enter name of bootloader: " "grub2" bootloader_name text
-  fi
-fi
-
 [[ $debian_arch == amd64 ]] && read_param "Do you want to add i386 arch repo? (Y/n): " '' debian_add_i386 yes_or_no
 read_param "Enter addational packages for preinstallation: " "locales,rsync" preinstall text
 read_param "Enter additional packages for postinstallation: " "usbutils pciutils dosfstools software-properties-common bash-completion" postinstall text

@@ -13,7 +13,6 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
   read_param "Do you want to generate fstab? (Y/n): " '' fstab yes_or_no
   read_param "Do you want to install bootloader? (Y/n): " '' bootloader yes_or_no
   if [[ $bootloader == "1" ]]; then
-    read_param "Enter name of bootloader (grub2): " "grub2" bootloader_name text
     if [[ -d /sys/firmware/efi/efivars ]]; then
       bootloader_type_default=uefi
     else
@@ -23,6 +22,7 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
       read_param "Enter type of bootloader (bios/uefi): " "$bootloader_type_default" bootloader_type text
     done
     [[ $bootloader_type == bios ]] && read_param "Enter where to install bootloader: " "$(findmnt -funcevo SOURCE $dir)" bootloader_bios_place text
+    read_param "Enter name of bootloader (grub2/refind): " "grub2" bootloader_name text
     read_param "Do you want to install $distr to removable disk? (N/y): " '' removable_disk no_or_yes
   fi
 else

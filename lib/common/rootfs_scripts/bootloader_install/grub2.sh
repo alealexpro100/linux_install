@@ -16,7 +16,7 @@ case $distr in
   alpine)
     to_install="grub"
     [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
-    [[ $bootloader_type = bios ]] && to_install="$to_install grub-pc"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
     $apk_install $to_install
     [[ $removable_disk == "1" ]] && msg_print warning "Os-prober can't be installed."
     grub_config
@@ -35,7 +35,7 @@ case $distr in
   debian)
     to_install="grub"
     [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
-    [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-pc"
     $apt_install $to_install
     if [[ $removable_disk == "0" ]]; then
       apt -y remove os-prober;

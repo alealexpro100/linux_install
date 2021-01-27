@@ -6,9 +6,12 @@ if [[ ! -f $1 ]]; then
   echo "Example: $0 /etc/apt/mirror.list"
   exit 1
 fi
-declare -gx mirror_path=$(grep -F "set base_path" $1 | tr -s " " | cut -d' ' -f3)
+
+mirror_path=$(grep -F "set base_path" "$1" | tr -s " " | cut -d' ' -f3)
+declare -gx mirror_path
 file_hashes="$mirror_path/var/SHA256"
-declare -gx count=$(cat $file_hashes | wc -l)
+count=$(< "$file_hashes" wc -l)
+declare -gx count
 echo "Checking files..."
 echo "X - Signature is incorrect. Redownloading."
 echo "E - File not found. Skipping."
@@ -17,9 +20,9 @@ echo "Files to check: $count"
 rm -rf "$mirror_path/mirror/FIXED-FILES" "$mirror_path/mirror/download_E.sh"
 
 deb_check_file() {
-  file_sum=$@
-  sum=$(echo $file_sum | cut -d' ' -f1)
-  file=$(echo $file_sum | cut -d' ' -f2)
+  file_sum=$*
+  sum=$(echo "$file_sum" | cut -d' ' -f1)
+  file=$(echo "$file_sum" | cut -d' ' -f2)
   if [[ -f $mirror_path/mirror/$file ]]; then
     case ${#sum} in
       64) echo "$sum $mirror_path/mirror/$file" | sha256sum -c - &>> /dev/null
@@ -34,8 +37,8 @@ deb_check_file() {
     else
       echo -n 'X'
       echo -e "$file_sum" >> "$mirror_path/mirror/FIXED-FILES"
-      rm -rf $mirror_path/mirror/$file
-      wget -q -t 3 -O $mirror_path/mirror/$file https://$file
+      rm -rf "$mirror_path/mirror/$file"
+      wget -q -t 3 -O "$mirror_path/mirror/$file" "https://$file"
     fi
   else
    echo -n 'E'
@@ -45,11 +48,11 @@ deb_check_file() {
 export -f deb_check_file
 
 sp="|\-/"; s=1
-E_f=0; X_f=0; M_f=0;
+E_f=0; X_f=0;
 while IFS= read -r -n1 char; do
  [[ $char == "X" ]] && X_f=$((X_f+1))
  [[ $char == "E" ]] && E_f=$((E_f+1))
  [[ $char == "N" ]] && N_f=$((N_f+1))
  echo -ne "\e[2KProgress:$((count-N_f))[${sp:(i++)*s%${#sp}:s}]:$3; X:$((X_f)); E:$((E_f)); N:$((N_f)).\r"
-done < <(cat $file_hashes | xargs -I {} -n 1 -P $(($(nproc)*128)) bash -c 'deb_check_file "$@"' _ {})
+done < <(< "$file_hashes" xargs -I {} -n 1 -P $(($(nproc)*128)) bash -c 'deb_check_file "$@"' _ {})
 echo -e "\nComplete! Have a nice day!"

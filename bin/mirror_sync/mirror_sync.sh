@@ -32,10 +32,11 @@ function mirror_rsync() {
 
 # --- ALPINELINUX MIRROR
 for al_arch in "x86_64" "x86" "aarch64" "armhf"; do
-    for al_ver in "v3.12" "edge"; do
+    for al_ver in "v3.12" "v3.13" "edge"; do
         for al_repo in "main" "community"; do
             mirror_rsync $ALPINE_MIRROR/$al_ver/$al_repo/$al_arch/ $MIRROR_DIR/alpine/$al_ver/$al_repo/$al_arch
         done
+	[[ "$al_ver" == "edge" ]] && mirror_rsync $ALPINE_MIRROR/$al_ver/testing/$al_arch/ $MIRROR_DIR/alpine/$al_ver/testing/$al_arch
         [[ "$al_ver" != "edge" ]] && mirror_rsync $ALPINE_MIRROR/$al_ver/releases/$al_arch/ $MIRROR_DIR/alpine/$al_ver/releases/$al_arch
     done
 done

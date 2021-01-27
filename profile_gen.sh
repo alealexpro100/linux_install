@@ -63,11 +63,11 @@ function read_param() {
         ;;
         secret)
           while [[ $tmp == '' ]]; do
-            read -e -s -p "$dialog" -i "$default_var" tmp
+            read -e -s -p "$dialog" -i "$default_var" tmp; echo ""
           done
         ;;
         secret_empty)
-          read -e -s -p "$dialog" -i "$default_var" tmp
+          read -e -s -p "$dialog" -i "$default_var" tmp; echo ""
         ;;
         *)
           return_err "Option $option is incorrect!"
