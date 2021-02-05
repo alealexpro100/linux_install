@@ -27,7 +27,7 @@ if [[ -z $4 ]]; then
   exit 1
 fi
 
-arch=$1 version=$2 mirror=$3 dir="$(realpath -q "$4")"; shift 4; add_packages="$*"
+arch=$1 version=$2 mirror=$3 dir="$(realpath "$4")"; shift 4; add_packages="$*"
 
 parse_arch "$(uname -m)"
 if [[ $arch == "$void_arch" ]]; then
@@ -61,11 +61,11 @@ check_url "$repo_xbps/$arch-musl-repodata" || return_err "Check $repo_xbps/$arch
 create_tmp_dir xbps_tmp
 msg_print note "Getting repodata..."
 get_file_s "$xbps_tmp/repodata" "$repo_xbps/$arch-musl-repodata" 
-tar --zstd -xf "$xbps_tmp/repodata" -C "$xbps_tmp"
+zstd -qdcf "$xbps_tmp/repodata" | tar -xf - -C "$xbps_tmp"
 xbps_name=$(< "$xbps_tmp/index.plist" grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
 msg_print note "Downloading and extracting static xbps and busybox..."
 get_file_s "$xbps_tmp/xbps-static.xbps" "$repo_xbps/$xbps_name.$arch-musl.xbps"
-tar --zstd -xf "$xbps_tmp/xbps-static.xbps" -C "$xbps_tmp"
+zstd -qdcf "$xbps_tmp/xbps-static.xbps" | tar -xf - -C "$xbps_tmp"
 
 msg_print note "(1) Installing to choosed directory..."
 ROOTFS_DIR_NO_FIX=1

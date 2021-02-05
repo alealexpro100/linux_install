@@ -24,11 +24,11 @@ fi
 if [[ -z $4 ]]; then
   echo "Alpine linux boostrap script. It uses only choosed mirror."
   echo "Supports CUSTOM_ALPINE_REPO flag."
-  echo "Example: $0 x86_64 v3.12 http://nl.alpinelinux.org/alpine /mnt htop"
+  echo "Example: $0 x86_64 v3.13 https://nl.alpinelinux.org/alpine /mnt htop"
   exit 1
 fi
 
-arch=$1 version=$2 mirror="$3"; dir="$(realpath -q "$4")"; shift 4; add_packages="$*"
+arch=$1 version=$2 mirror="$3"; dir="$(realpath "$4")"; shift 4; add_packages="$*"
 parse_arch "$(uname -m)"
 if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then
   check_url "$mirror" || return_err "Incorrect mirror $mirror!"

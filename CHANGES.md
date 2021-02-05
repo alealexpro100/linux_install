@@ -1,3 +1,8 @@
+## Version 0.3.2:
+* Minor fixes.
+* Support for busybox use.
+* Added CUSTOM_DIR flag.
+
 ## Version 0.3.1:
 * Minor fixes.
 * Fixed password enter bug.

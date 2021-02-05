@@ -3,9 +3,9 @@
 echo 'First step is completed.'
 
 source ./lib/common/common_actions_1.sh
-cat ./lib/common/rootfs_scripts/pacman_setup.sh >> $dir/root/pi_s1.sh
-cat ./lib/common/rootfs_scripts/arch_setup.sh >> $dir/root/pi_s1.sh
-[[ $bootloader == "1" ]] && cat ./lib/common/rootfs_scripts/bootloader_install/$bootloader_name.sh >> $dir/root/pi_s1.sh
+cat ./lib/common/rootfs_scripts/pacman_setup.sh >> "$dir/root/pi_s1.sh"
+cat ./lib/common/rootfs_scripts/arch_setup.sh >> "$dir/root/pi_s1.sh"
+[[ $bootloader == "1" ]] && cat ./lib/common/rootfs_scripts/bootloader_install/$bootloader_name.sh >> "$dir/root/pi_s1.sh"
 
 if [[ $arch == $arch_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
@@ -16,7 +16,7 @@ else
     exit 1
   fi
 fi
-chmod +x $dir/root/pi_s1.sh
+chmod +x "$dir/root/pi_s1.sh"
 $arch_chroot_command $dir bash /root/pi_s1.sh
 
 rm -rf $dir/root/{pi_s1.sh,configuration,alexpro100_lib.sh}

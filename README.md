@@ -3,6 +3,7 @@ linux_install
 
 ## About
 This script installs a base linux system from any linux distribution.
+Tested on Alpinelinux (musl) and Archlinux (glibc).
 Supported for installing Linux distros:
 * Alpine
 * Archlinux
@@ -12,8 +13,9 @@ Supported for installing Linux distros:
 ## Requirements
 * Connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
-* Installed tools: coreutils, bash, wget (or curl), tar, zstd. (busybox was not tested yet)
-* Optinal: perl (for debootstrap), qemu-user-static (for foreign architectures).
+* Installed tools: `coreutils bash wget tar zstd` OR `busybox bash zstd`.
+* (Optional) For deboostrap: `perl binutils` OR `perl dpkg`.
+* (Optional) For foreign architectures and qemu test: qemu-user-static (QEMU_STATIC_BIN_DIR flag supported).
 
 ## Usage
 * Prepare directory for installation.

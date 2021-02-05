@@ -33,6 +33,7 @@ for distr_install in $(ls -1 ../lib/distr); do
   ../install_sys.sh $tmp_distr_install/used_config || msg_print error "Something went wrong!"
   umount "$tmp_distr_install/rootfs"
   rm -rf $tmp_distr_install
+  msg_print msg "Ended on $(date -u)."
 done
 
 # =)

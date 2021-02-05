@@ -194,7 +194,7 @@ function chroot_teardown() {
   if (( ${#CHROOT_ACTIVE_MOUNTS[@]} )); then
     for name in "${CHROOT_ACTIVE_MOUNTS[@]}"; do
       AP100_DBG msg_print debug "Unmounting $name..."
-      umount --lazy "$name" || msg_print warning "Not 0 code exit!"
+      umount -l "$name" || msg_print warning "Not 0 code exit!"
     done
     if [[ "$1" == "--remove-created" ]]; then
       for name in "${CHROOT_CREATED[@]}"; do

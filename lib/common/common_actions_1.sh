@@ -3,10 +3,10 @@ msg_print note "Copying files into rootfs..."
 
 msg_print note "Saving configuration..."
 [[ -z $LANG ]] && LANG="en_US.UTF-8"
-[[ ! -d $dir/root ]] && mkdir $dir/root
-cp -af $ALEXPRO100_LIB_LOCATION $dir/root/
-echo -e "LANG=$LANG" >> $dir/root/configuration
-cat $profile_path >> $dir/root/configuration
+[[ ! -d "$dir/root" ]] && mkdir "$dir/root"
+cp -af "$ALEXPRO100_LIB_LOCATION" "$dir/root/"
+echo -e "LANG=$LANG" >> "$dir/root/configuration"
+cat "$CONFIG_FILE" >> "$dir/root/configuration"
 
 msg_print note "Configuring hosts..."
 echo "127.0.0.1	localhost
@@ -24,7 +24,7 @@ fi
 
 if [[ $fstab == "1" ]]; then
   msg_print note "Generationg fstab..."
-  [[ -f $dir/etc/fstab ]] && mv $dir/etc/fstab{,.bak}
+  [[ -f $dir/etc/fstab ]] && mv "$dir/etc/fstab" "$dir/etc/fstab.bak"
   echo '# Static information about the filesystems.
 # See fstab(5) for details.
 
@@ -35,8 +35,8 @@ if [[ $fstab == "1" ]]; then
 fi
 
 msg_print note "Creating config script..."
-echo -ne "#!/bin/bash\n\nset -e; cd /root/\n" >> $dir/root/pi_s1.sh
-cat ./lib/common/lib_connect.sh >> $dir/root/pi_s1.sh
+echo -ne "#!/bin/bash\n\nset -e; cd /root/\n" >> "$dir/root/pi_s1.sh"
+cat ./lib/common/lib_connect.sh >> "$dir/root/pi_s1.sh"
 echo "
 echo 'Getting configuration...'
 if [[ -z /root/configuration ]]; then
@@ -44,7 +44,7 @@ if [[ -z /root/configuration ]]; then
 else
   source /root/configuration
 fi
-" >> $dir/root/pi_s1.sh
-cat ./lib/common/rootfs_scripts/base_change.sh >> $dir/root/pi_s1.sh
+" >> "$dir/root/pi_s1.sh"
+cat ./lib/common/rootfs_scripts/base_change.sh >> "$dir/root/pi_s1.sh"
 
 msg_print note "Starting distr step..."
