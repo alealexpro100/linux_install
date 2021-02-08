@@ -66,7 +66,10 @@ apk_command="/sbin/apk $arg_repos"
 $arch_chroot_command "$dir" $apk_command upgrade
 [[ -n $NEED_FIX ]] && $arch_chroot_command "$dir" $apk_command fix '*'
 [[ -n $add_packages ]] && $arch_chroot_command "$dir" $apk_command add $add_packages
-[[ $CUSTOM_ALPINE_REPO != "1" ]] && echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
+if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
+  echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
+  [[ $version == "edge" ]] && echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
+fi
 
 echo "Alpine was succesfully installed to $dir."
 

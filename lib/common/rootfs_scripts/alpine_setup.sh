@@ -2,6 +2,22 @@
 #Alpine setup.
 msg_print note "Installing addational packages..."
 
+#Activate services for booting
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+rc-update add mdev sysinit
+rc-update add hwdrivers sysinit
+rc-update add modloop sysinit
+rc-update add modules boot
+rc-update add sysctl boot
+rc-update add hostname boot
+rc-update add bootmisc boot
+rc-update add syslog boot
+rc-update add mount-ro shutdown
+rc-update add killprocs shutdown
+rc-update add savecache shutdown
+rc-update add firstboot default
+
 to_install='' to_enable=''
 if [[ $kernel == "1" ]]; then
   to_install="$to_install linux-firmware linux-lts"

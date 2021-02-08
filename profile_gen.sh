@@ -19,13 +19,27 @@ source ./lib/common/lib_connect.sh
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
 
-# TODO: add support of whiptail (with back option).
-function read_param() {
-  local dialog="$1" default_var=$2 var=$3 option=$4 tmp=''
-  # CLI MODE.
-  case $ECHO_MODE in
-    auto)
+case $ECHO_MODE in
+  whiptail) 
+    function print_param() {
+      local print_type=$1 text="$2" ww="10" wh="60"
+      whiptail --title "$print_type" --msgbox "$text$dialog" $ww $wh
+    }
+  ;;
+  auto|cli|*) 
+    function print_param() {
+      local print_type=$1 text="$2"
+      msg_print "$print_type" "$text"
+    }
+  ;;
+esac
+
+case $ECHO_MODE in
+  auto)
+    function read_param() {
+      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
       case $option in
+        print) echo -ne "$text$dialog";;
         yes_or_no) tmp=1;;
         no_or_yes) tmp=0;;
         text) tmp=$default_var;;
@@ -34,11 +48,52 @@ function read_param() {
         secret_empty) tmp=$default_var;;
         *) return_err "Option $option is incorrect!";;
       esac
-    ;;
-    cli|'')     
+      var_list[$var]="declare -gx $var=\"$tmp\"" 
+      declare -gx $var="$tmp"
+    }
+  ;;
+  whiptail)
+    function read_param() {
+      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+      ww="15" wh="50"
       case $option in
         yes_or_no)
-          read -e -p "$dialog" -i "$default_var" tmp
+          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "1" "Yes" "0" "No" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+        ;;
+        no_or_yes)
+          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "0" "No" "1" "Yes" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+        ;;
+        text)
+          while [[ $tmp == '' ]]; do
+            tmp=$(whiptail --inputbox "$text$dialog:" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          done
+        ;;
+        text_empty)
+          tmp=$(whiptail --inputbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+        ;;
+        secret)
+          while [[ $tmp == '' ]]; do
+            tmp=$(whiptail --passwordbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          done
+        ;;
+        secret_empty)
+          tmp=$(whiptail --passwordbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+        ;;
+        *)
+          return_err "Option $option is incorrect!"
+        ;;
+      esac
+      var_list[$var]="declare -gx $var=\"$tmp\"" 
+      declare -gx $var="$tmp"
+    }
+  ;;
+  cli|'')
+    function read_param() {
+      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+      case $option in
+        yes_or_no)
+          echo -ne "$text"
+          read -r -p "$dialog (Y/n): " -e -i "$default_var" tmp
           if [[ $tmp == 'Y' || $tmp == 'y' || $tmp == 'Yes' || $tmp == 'yes' || $tmp == '' ]]; then
             tmp=1
           else
@@ -46,7 +101,8 @@ function read_param() {
           fi
         ;;
         no_or_yes)
-          read -e -p "$dialog" -i "$default_var" tmp
+          echo -ne "$text"
+          read -r -p "$dialog (N\y): " -e -i "$default_var" tmp
           if [[ $tmp == 'N' || $tmp == 'n' || $tmp == 'No' || $tmp == 'no' || $tmp == '' ]]; then
             tmp=0
           else
@@ -55,32 +111,36 @@ function read_param() {
         ;;
         text)
           while [[ $tmp == '' ]]; do
-            read -e -p "$dialog" -i "$default_var" tmp
+            echo -ne "$text"
+            read -r -p "$dialog: " -e -i "$default_var" tmp
           done
         ;;
         text_empty)
-          read -e -p "$dialog" -i "$default_var" tmp
+          echo -ne "$text"
+          read -r -p "$dialog: " -e -p "$dialog: " -i "$default_var" tmp
         ;;
         secret)
           while [[ $tmp == '' ]]; do
-            read -e -s -p "$dialog" -i "$default_var" tmp; echo ""
+            echo -ne "$text"
+            read -r -p "$dialog: " -e -s -i "$default_var" tmp; echo ""
           done
         ;;
         secret_empty)
-          read -e -s -p "$dialog" -i "$default_var" tmp; echo ""
+          echo -ne "$text"
+          read -r -p "$dialog: " -e -s -i "$default_var" tmp; echo ""
         ;;
         *)
           return_err "Option $option is incorrect!"
         ;;
       esac
-    ;;
-    *)
-      return_err "Incorrect paramater $ECHO_MODE! Mistake?"
-    ;;
-  esac
-  var_list[$var]="declare -gx $var=\"$tmp\"" 
-  declare -gx $var="$tmp"
-}
+      var_list[$var]="declare -gx $var=\"$tmp\"" 
+      declare -gx $var="$tmp"
+    }
+  ;;
+  *)
+    return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
+  ;;
+esac
 
 msg_print note 'This script for installing linux supposes that directory for installantion is prepared.'
 
@@ -93,9 +153,8 @@ msg_print msg "Profile will be written into $profile_file"
 
 declare -A var_list=()
 echo "Choose distribution for installation."
-echo -e "Avaliable distributions: \n$(ls -1 ./lib/distr)"
 while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
-  read_param "Distribution: " "$default_distr" distr text
+  read_param "Avaliable distributions: \n$(ls -1 ./lib/distr)\n" "Distribution" "$default_distr" distr text
 done
 
 source ./lib/common/common_options.sh

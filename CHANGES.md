@@ -1,3 +1,6 @@
+## Version 0.3.3:
+* Added whiptail support.
+
 ## Version 0.3.2:
 * Minor fixes.
 * Support for busybox use.
