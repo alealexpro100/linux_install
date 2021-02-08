@@ -19,6 +19,15 @@ source ./lib/common/lib_connect.sh
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
 
+declare -a var_num=()
+declare -A var_list=()
+function add_var() {
+  local type="$1" var="$2" content="$3"
+  var_num=("${var_num[@]}" "$var")
+  var_list[$var]="$type $var=\"$content\""
+  $type $var="$content"
+}
+
 case $ECHO_MODE in
   whiptail) 
     function print_param() {
@@ -48,8 +57,7 @@ case $ECHO_MODE in
         secret_empty) tmp=$default_var;;
         *) return_err "Option $option is incorrect!";;
       esac
-      var_list[$var]="declare -gx $var=\"$tmp\"" 
-      declare -gx $var="$tmp"
+      add_var "declare -gx" "$var" "$tmp"
     }
   ;;
   whiptail)
@@ -83,8 +91,7 @@ case $ECHO_MODE in
           return_err "Option $option is incorrect!"
         ;;
       esac
-      var_list[$var]="declare -gx $var=\"$tmp\"" 
-      declare -gx $var="$tmp"
+      add_var "declare -gx" "$var" "$tmp"
     }
   ;;
   cli|'')
@@ -133,8 +140,7 @@ case $ECHO_MODE in
           return_err "Option $option is incorrect!"
         ;;
       esac
-      var_list[$var]="declare -gx $var=\"$tmp\"" 
-      declare -gx $var="$tmp"
+      add_var "declare -gx" "$var" "$tmp"
     }
   ;;
   *)
@@ -151,7 +157,7 @@ else
 fi
 msg_print msg "Profile will be written into $profile_file"
 
-declare -A var_list=()
+
 echo "Choose distribution for installation."
 while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
   read_param "Avaliable distributions: \n$(ls -1 ./lib/distr)\n" "Distribution" "$default_distr" distr text
@@ -161,11 +167,10 @@ source ./lib/common/common_options.sh
 source ./lib/distr/$distr/distr_options.sh
 
 profile_text="#Generated on $(date -u)\n#Latest generated profile."
-for var in "${!var_list[@]}"; do
+for var in "${var_num[@]}"; do
   profile_text="$profile_text\n${var_list[$var]}"
 done
-#Dirty hack.
-echo -e "$profile_text" | sort > $profile_file
+echo -e "$profile_text" > "$profile_file"
 
 msg_print msg "Profile was succesfully generated to $profile_file"
 

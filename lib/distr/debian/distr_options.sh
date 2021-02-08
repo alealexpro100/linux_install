@@ -5,7 +5,7 @@ read_param "Avaliable architectures are amd64,arm64,armel,armhf,i386,etc.\n" "En
 read_param "" "Enter distribution" "$debian_distr" debian_distr text
 print_param note "Now, You have to enter deb-* command for sources.list in debian."
 print_param note "Variable \$debian_distr is $debian_distr. You should leave it unchanged."
-var_list[deb_repos_ma]="declare -A debian_repos"
+add_var "declare -A" "debian_repos" "()"
 if [[ $debian_distr == "sid" ]]; then
   for repo_name in updates security backports; do
     unset debian_repos[$repo_name]
