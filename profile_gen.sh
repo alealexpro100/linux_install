@@ -32,7 +32,7 @@ case $ECHO_MODE in
   whiptail) 
     function print_param() {
       local print_type=$1 text="$2" ww="10" wh="60"
-      whiptail --title "$print_type" --msgbox "$text$dialog" $ww $wh
+      whiptail --msgbox "$text$dialog" $ww $wh
     }
   ;;
   auto|cli|*) 
@@ -66,10 +66,10 @@ case $ECHO_MODE in
       ww="15" wh="50"
       case $option in
         yes_or_no)
-          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "1" "Yes" "0" "No" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         no_or_yes)
-          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "0" "No" "1" "Yes" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         text)
           while [[ $tmp == '' ]]; do
@@ -148,32 +148,36 @@ case $ECHO_MODE in
   ;;
 esac
 
-msg_print note 'This script for installing linux supposes that directory for installantion is prepared.'
+#Language support.
+source ./lib/translations/messages_en.sh
+[[ -n $install_lang ]] && source ./lib/translations/messages_$install_lang.sh
 
-if [[ -z $1 ]]; then
-  profile_file="./auto_configs/last_gen.sh"
-else
-  profile_file="$1"
+print_param note "$M_WELCOME"
+
+if [[ $LIVE_MODE != "1" ]]; then
+  profile_file=${1:-"./auto_configs/last_gen.sh"}
+  print_param note "$M_PROFILE_1 $profile_file"
+  default_dir=${default_dir:-"/mnt/mnt"}
+  read_param "" "$M_PATH $distr" "$default_dir" dir text
 fi
-msg_print msg "Profile will be written into $profile_file"
 
-
-echo "Choose distribution for installation."
 while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
-  read_param "Avaliable distributions: \n$(ls -1 ./lib/distr)\n" "Distribution" "$default_distr" distr text
+  read_param "$M_DISTR_1: \n$(ls -1 ./lib/distr)\n" "$M_DISTR_2" "$default_distr" distr text
 done
 
+print_param note "$M_COMMON_OPT"
 source ./lib/common/common_options.sh
+print_param note "$M_DISTR_OPT"
 source ./lib/distr/$distr/distr_options.sh
 
-profile_text="#Generated on $(date -u)\n#Latest generated profile."
+profile_text="#Generated on $(date -u).\n"
 for var in "${var_num[@]}"; do
   profile_text="$profile_text\n${var_list[$var]}"
 done
 echo -e "$profile_text" > "$profile_file"
 
-msg_print msg "Profile was succesfully generated to $profile_file"
+[[ $LIVE_MODE != "1" ]] && print_param note "Profile was succesfully written to $profile_file"
 
 # =)
-echo "Script succesfully ended its work. Have a nice day!"
+echo "$M_NICE"
 exit 0

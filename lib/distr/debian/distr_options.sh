@@ -1,6 +1,4 @@
-print_param note "Distro-specific options:"
-parse_arch $(uname -m)
-read_param "Avaliable architectures are amd64,arm64,armel,armhf,i386,etc.\n" "Enter arch for installation" "$debian_arch" arch text
+read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
 
 read_param "" "Enter distribution" "$debian_distr" debian_distr text
 print_param note "Now, You have to enter deb-* command for sources.list in debian."

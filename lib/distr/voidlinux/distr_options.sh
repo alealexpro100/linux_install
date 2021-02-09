@@ -1,7 +1,4 @@
-print_param note "Distro-specific options:"
-parse_arch $(uname -m)
-print_param note "Arch avaliablex86_64,i686,aarch64,armv7h,etc."
-read_param "" "Enter arch for installation" "$void_arch" arch text
+read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc." "$M_ARCH_ENTER" "$void_arch" arch text
 
 read_param "" "Enter mirror" "$mirror_voidlinux" mirror_voidlinux text_empty
 

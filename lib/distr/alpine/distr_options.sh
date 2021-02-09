@@ -1,7 +1,4 @@
-msg_print note "Distro-specific options:"
-parse_arch $(uname -m)
-msg_print note "Arch avaliablex86_64,i686,aarch64,armv7h,etc."
-read_param "" "Enter arch for installation" "$alpine_arch" arch text
+read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc." "$M_ARCH_ENTER" "$alpine_arch" arch text
 
 read_param "" "Enter mirror" "$mirror_alpine" mirror_alpine text_empty
 
