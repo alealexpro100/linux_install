@@ -18,6 +18,11 @@ rc-update add killprocs shutdown
 rc-update add savecache shutdown
 rc-update add firstboot default
 
+#Network setup.
+echo -e "auto lo\n\tiface lo inet loopback\n" > /etc/network/interfaces
+echo -e "#auto eth0\n#  iface eth0 inet dhcp\n  #iface eth0 inet6 auto\n" >> /etc/network/interfaces
+
+
 to_install='' to_enable=''
 if [[ $kernel == "1" ]]; then
   to_install="$to_install linux-firmware linux-lts"
