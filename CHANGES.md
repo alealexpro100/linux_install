@@ -1,3 +1,8 @@
+## Version 0.3.4:
+* Added partial language support.
+* Fixed profile generator.
+* Alpine linux network fix.
+
 ## Version 0.3.3:
 * Added whiptail support.
 
