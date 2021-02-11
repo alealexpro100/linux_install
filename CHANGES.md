@@ -1,3 +1,6 @@
+## Version 0.3.5:
+* Minor fixes.
+
 ## Version 0.3.4:
 * Added partial language support.
 * Fixed profile generator.

@@ -23,6 +23,12 @@ Supported for installing Linux distros:
 * Execute `./install_sys.sh your/profile.sh` using installation profile to install system.
 * That's all. You have installed system. Good luck!
 
+## Supported flags:
+* `LIVE_MODE` - Used for install image.
+* `CUSTOM_DIR` - Path to custom script and files.
+* `ECHO_MODE` - Mode of interface (cli/whiptail).
+* `INSTALL_LANG` - Language for interface. (`./profile_gen.sh`)
+
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
