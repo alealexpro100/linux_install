@@ -17,6 +17,6 @@ to_install='' to_enable=''
 if [[ $networkmanager == "1" ]]; then
   to_install="$to_install network-manager"
 fi
-$apt_install $to_install
+[[ -n "$to_install" ]] && $apt_install $to_install
 
 msg_print note "Packages are installed."

@@ -10,7 +10,7 @@ if [[ $networkmanager == "1" ]]; then
   to_install="$to_install networkmanager crda"
   to_enable="$to_enable NetworkManager.service"
 fi
-$pacman_install $to_install
+[[ -n "$to_install" ]] && $pacman_install $to_install
 for service in $to_enable; do
   systemctl enable $service
 done

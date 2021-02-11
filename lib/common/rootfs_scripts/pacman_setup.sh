@@ -9,6 +9,6 @@ mv /etc/pacman.d/mirrorlist{,.pacnew}
 mv /etc/pacman.d/mirrorlist{.used,}
 
 to_install="$postinstall" to_enable=''
-$pacman_install $to_install
+[[ -n "$to_install" ]] && $pacman_install $to_install
 
 msg_print note "Pacman is ready."

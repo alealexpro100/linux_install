@@ -8,6 +8,6 @@ echo -e "$mirror_alpine/$version_alpine/main\n$mirror_alpine/$version_alpine/com
 apk update
 
 to_install="$postinstall" to_enable=''
-$apk_install $to_install
+[[ -n "$to_install" ]] && $apk_install $to_install
 
 msg_print note "Apk is ready."

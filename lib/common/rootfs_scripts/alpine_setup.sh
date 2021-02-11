@@ -31,7 +31,7 @@ if [[ $networkmanager == "1" ]]; then
   to_install="$to_install networkmanager networkmanager-openrc"
   to_enable="$to_enable networkmanager"
 fi
-$apk_install $to_install
+[[ -n "$to_install" ]] && $apk_install $to_install
 for service in $to_enable; do
   rc-update add $service default
 done

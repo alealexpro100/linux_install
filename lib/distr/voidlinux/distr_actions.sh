@@ -17,6 +17,6 @@ cat ./lib/common/rootfs_scripts/xbps_setup.sh >> "$dir/root/pi_s1.sh"
 cat ./lib/common/rootfs_scripts/void_setup.sh >> "$dir/root/pi_s1.sh"
 [[ $bootloader == "1" ]] && cat ./lib/common/rootfs_scripts/bootloader_install/$bootloader_name.sh >> "$dir/root/pi_s1.sh"
 chmod +x "$dir/root/pi_s1.sh"
-$arch_chroot_command $dir bash /root/pi_s1.sh
+$arch_chroot_command "$dir" bash /root/pi_s1.sh
 
-rm -rf $dir/root/{pi_s1.sh,configuration,alexpro100_lib.sh}
+rm -rf "$dir/root/pi_s1.sh" "$dir/root/configuration" "$dir/root/alexpro100_lib.sh"

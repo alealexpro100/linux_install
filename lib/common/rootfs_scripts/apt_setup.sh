@@ -20,6 +20,6 @@ done
 apt update
 
 to_install="$postinstall" to_enable=''
-$apt_install $to_install
+[[ -n "$to_install" ]] && $apt_install $to_install
 
 msg_print note "Apt is ready."
