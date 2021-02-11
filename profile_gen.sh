@@ -13,8 +13,17 @@ if [[ ! -f ./version_install ]]; then
 fi
 
 #Use library
-ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
-source ./lib/common/lib_connect.sh
+if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
+  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
+    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh"
+    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
+      echo "Using $ALEXPRO100_LIB_LOCATION."
+    else
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
+    fi
+  fi
+  source $ALEXPRO100_LIB_LOCATION
+fi
 
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
@@ -23,7 +32,7 @@ declare -a var_num=()
 declare -A var_list=()
 function add_var() {
   local type="$1" var="$2" content="$3"
-  var_num=("${var_num[@]}" "$var")
+  [[ -z ${var_list[$var]} ]] && var_num=("${var_num[@]}" "$var")
   var_list[$var]="$type $var=\"$content\""
   $type $var="$content"
 }
@@ -150,11 +159,12 @@ esac
 
 #Language support.
 source ./lib/translations/messages_en.sh
-[[ -n $install_lang ]] && source ./lib/translations/messages_$install_lang.sh
+[[ -n $INSTALL_LANG ]] && source ./lib/translations/messages_$INSTALL_LANG.sh
 
 print_param note "$M_WELCOME"
 
 if [[ $LIVE_MODE != "1" ]]; then
+  print_param note "$M_DIR_WARN"
   profile_file=${1:-"./auto_configs/last_gen.sh"}
   print_param note "$M_PROFILE_1 $profile_file"
   default_dir=${default_dir:-"/mnt/mnt"}
