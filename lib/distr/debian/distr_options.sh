@@ -1,33 +1,34 @@
 read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
 
-read_param "" "Enter distribution" "$debian_distr" debian_distr text
-print_param note "Now, You have to enter deb-* command for sources.list in debian."
-print_param note "Variable \$debian_distr is $debian_distr. You should leave it unchanged."
+read_param "" "$M_DISTR_VER" "$debian_distr" debian_distr text
+print_param note "$M_DEB_NOTE_1"
+print_param note "$M_DEB_NOTE_2 $debian_distr."
 add_var "declare -A" "debian_repos" "()"
 if [[ $debian_distr == "sid" ]]; then
   for repo_name in updates security backports; do
-    unset debian_repos[$repo_name]
+    unset "debian_repos[$repo_name]"
   done
 fi
-print_param note "If you don't want to add repo, just leave it empty."
-for repo_name in ${!debian_repos[@]}; do
-  read_param "" "Enter $repo_name repo command" "${debian_repos[$repo_name]}" debian_repos[$repo_name] text_empty
+print_param note "$M_DEB_REPO_1"
+for repo_name in "${!debian_repos[@]}"; do
+  read_param "" "$repo_name" "${debian_repos[$repo_name]}" debian_repos[$repo_name] text_empty
   [[ -z ${debian_repos[$repo_name]} ]] && unset debian_repos[$repo_name]
 done
-read_param "" "Do you want to add repositories?" "" repos no_or_yes
+read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
 while [[ $repos == 1 ]]; do
-  read_param "" "Enter name of repo" "" repo_name text_empty
-  [[ ! -z $repo_name ]] && read_param "" "Enter $repo_name repo command" "" debian_repos[$repo_name] text
+  read_param "" "$M_DEB_REPO_NAME" "" repo_name text_empty
+  [[ -n $repo_name ]] && read_param "" "$repo_name" "deb https://example.com/debian $debian_distr main" "debian_repos[$repo_name]" text
+  read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
   [[ -z $repo_name ]] && repos=0
 done
 
-read_param "" "Do you want to install kernel?" '' kernel yes_or_no
+read_param "" "$M_KERNEL" '' kernel yes_or_no
 if [[ $kernel == "1" && $repo_debian_backports != "" ]]; then
-  read_param "" "Do you want to install backports-kernel?" "" backports_kernel no_or_yes
-  [[ $backports_kernel == "0" ]] && print_param note "Stable kernel will be installed."
+  read_param "" "$M_DEB_BACKPORTS_KERNEL" "" backports_kernel no_or_yes
+  [[ $backports_kernel == "0" ]] && print_param note "$M_DEB_STABLE_KERNEL"
 fi
-read_param "" "Do you want to install and enable NetworkManager?" '' networkmanager yes_or_no
+read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
 
-[[ $debian_arch == amd64 ]] && read_param "" "Do you want to add i386 arch repo?" '' debian_add_i386 yes_or_no
-read_param "" "Enter addational packages for preinstallation" "locales,rsync" preinstall text
-read_param "" "Enter additional packages for postinstallation" "usbutils pciutils dosfstools software-properties-common bash-completion" postinstall text
+[[ $debian_arch == amd64 ]] && read_param "" "$M_MULTILIB" '' debian_add_i386 yes_or_no
+read_param "" "$M_PACK_PRE" "locales,rsync" preinstall text
+read_param "" "$M_PACK_POST" "usbutils pciutils dosfstools software-properties-common bash-completion" postinstall text_empty
