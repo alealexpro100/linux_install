@@ -6,8 +6,8 @@
 ###############################################################
 shopt -s expand_aliases
 
-ALEXPRO100_LIB_VERSION="0.2.4" 
-ALEXPRO100_LIB_LOCATION="$(realpath ${BASH_SOURCE[0]})"
+ALEXPRO100_LIB_VERSION="0.2.5" 
+ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -57,7 +57,7 @@ export DUnderline="\e[21m"  # Double Underlined
 #--UI--
 
 function msg_print() {
-  [[ -z $2 ]] && echo_help "Example: $FUNCNAME msg text" && return 1
+  [[ -z $2 ]] && echo_help "Example: ${0} msg text" && return 1
   local TYPE=$1; shift
     case $TYPE in
 	  alert) echo -e "$Bold$White$On_Red$*${NC}";;
@@ -78,13 +78,13 @@ function return_err() {
 export -f return_err
 
 function echo_help() {
-  msg_print note $1
+  msg_print note "$1"
   msg_print error "No arguments!"
 }
 export -f echo_help
 
 function show_progress() {
-  [[ -z $3 ]] && echo_help "Example: $FUNCNAME kit 1 text" && return 1
+  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} kit 1 text" && return 1
   case $1 in
     sp) local sp="|\-/"; s=1;;
     kit) local sp="  .   /|\  ||| <|||> |||  \|/   '  "; s=5;;
@@ -108,7 +108,7 @@ function command_exists() {
 export -f command_exists
 
 function get_file_s() {
-  [[ -z $2 ]] && echo_help "Example: $FUNCNAME file http://example.com/file" && return 1
+  [[ -z $2 ]] && echo_help "Example: ${FUNCNAME[*]} file http://example.com/file" && return 1
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
@@ -122,7 +122,7 @@ function get_file_s() {
 export -f get_file_s
 
 function check_url() {
-  [[ -z $1 ]] && echo_help "Example: $FUNCNAME http://example.com/file" && return 1
+  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} http://example.com/file" && return 1
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q --spider "$1"
@@ -135,9 +135,14 @@ function check_url() {
 }
 export -f check_url
 
+function get_file_list_html() {
+  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
+}
+export -f get_file_list_html
+
 function create_tmp_dir() {
-  [[ -z $1 ]] && echo_help "Example: $FUNCNAME var_name" && return 1
-  export $1="/tmp/.a_tmp_$RANDOM"
+  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} var_name" && return 1
+  export "$1=/tmp/.$1_tmp_$RANDOM"
   AP100_DBG msg_print debug "Created tmp dir $1=${!1}."
   mkdir -p "${!1}" &>/dev/null
 }
@@ -157,7 +162,7 @@ function chroot_add_mount() {
 export -f chroot_add_mount
 
 function chroot_setup() {
-  AP100_DBG msg_print debug "Running $FUNCNAME..."
+  AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   chroot_add_mount dir proc "$1/proc" -t proc -o nosuid,noexec,nodev
   chroot_add_mount dir sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro
   if [[ -d '/sys/firmware/efi/efivars' ]]; then
@@ -175,7 +180,7 @@ function chroot_setup() {
   done
   chroot_add_mount dir "/run" "$1/run" --bind
   chroot_add_mount dir tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid
-  AP100_DBG msg_print debug "Completed $FUNCNAME."
+  AP100_DBG msg_print debug "Completed ${FUNCNAME[*]}."
 }
 export -f chroot_setup
 
@@ -190,7 +195,7 @@ function chroot_setup_light() {
 export -f chroot_setup_light
 
 function chroot_teardown() {
-  AP100_DBG msg_print debug "Running $FUNCNAME..."
+  AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   if (( ${#CHROOT_ACTIVE_MOUNTS[@]} )); then
     for name in "${CHROOT_ACTIVE_MOUNTS[@]}"; do
       AP100_DBG msg_print debug "Unmounting $name..."
@@ -204,12 +209,12 @@ function chroot_teardown() {
     fi
   fi
   unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED
-  AP100_DBG msg_print debug "Completed $FUNCNAME."
+  AP100_DBG msg_print debug "Completed ${FUNCNAME[*]}."
 }
 export -f chroot_teardown
 
 function chroot_rootfs() {
-  [[ -z $3 ]] && echo_help "Example: $FUNCNAME main /mnt/mnt ash" && return 1
+  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} main /mnt/mnt ash" && return 1
   AP100_DBG msg_print debug "Preparing to chroot..."
   case $1 in
     light) local ADD_COMMAND=_light;;
@@ -246,7 +251,7 @@ function parse_arch() {
 export -f parse_arch
 
 function qemu_chroot() {
-  [[ -z $3 ]] && echo_help "Example: $FUNCNAME aarch64 /mnt/mnt ash" && return 1
+  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} aarch64 /mnt/mnt ash" && return 1
   [[ -z $QEMU_STATIC_BIN_DIR ]] && local QEMU_STATIC_BIN_DIR="/usr/bin"
   if [[ "$1" == "check" ]]; then
     parse_arch "$2"
@@ -267,7 +272,7 @@ function qemu_chroot() {
 export -f qemu_chroot
 
 function qemu_run_bin() {
-  [[ -z $2 ]] && echo_help "Example: $FUNCNAME aarch64 /bin/ash" && return 1
+  [[ -z $2 ]] && echo_help "Example: ${FUNCNAME[*]} aarch64 /bin/ash" && return 1
   [[ -z "$QEMU_STATIC_BIN_DIR" ]] && local QEMU_STATIC_BIN_DIR="/usr/bin"
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
     AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
@@ -279,7 +284,7 @@ function qemu_run_bin() {
 export -f qemu_run_bin
 
 function genfstab_light() {
-  [[ -z $1 ]] && echo_help "Example: $FUNCNAME /mnt/mnt" && return 1
+  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} /mnt/mnt" && return 1
   local root
   root=$(realpath -mL "$1")
   declare -A pseudofs_types=([anon_inodefs]=1 [autofs]=1 [bdev]=1 [bpf]=1 [binfmt_misc]=1 [cgroup]=1 [cgroup2]=1 [configfs]=1 [cpuset]=1 [debugfs]=1

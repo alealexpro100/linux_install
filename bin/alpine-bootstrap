@@ -10,14 +10,14 @@ set -e
 #Use library
 if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
   if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
-      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
       echo "Using $ALEXPRO100_LIB_LOCATION."
     else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
     fi
   fi
-  source "$ALEXPRO100_LIB_LOCATION"
+  source $ALEXPRO100_LIB_LOCATION
 fi
 
 # Check options.
@@ -52,7 +52,7 @@ fi
 #Find, download and unpack apktools-static and install system with it.
 create_tmp_dir apk_tmp
 echo "Getting link to download apk-tools-static for $alpine_arch..."
-apktools_name=$(get_file_s - "$download_repo/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn | grep apk-tools-static)
+apktools_name=$(get_file_s - "$download_repo/" | get_file_list_html | grep apk-tools-static)
 echo "Downloading..."
 get_file_s "$apk_tmp/$apktools_name" "$download_repo/$apktools_name"
 echo "Exracting..."

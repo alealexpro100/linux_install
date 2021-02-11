@@ -10,14 +10,14 @@ set -e
 #Use library
 if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
   if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    if [[ -f ${BASH_SOURCE[0]%/*}/alexpro100_lib.sh ]]; then
-      ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
+    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
       echo "Using $ALEXPRO100_LIB_LOCATION."
     else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; return 1
+      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
     fi
   fi
-  source "$ALEXPRO100_LIB_LOCATION"
+  source $ALEXPRO100_LIB_LOCATION
 fi
 
 # Check options.
@@ -49,17 +49,17 @@ else
 fi
 
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
-  pkg_list=$(get_file_s - "$mirror/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+  pkg_list=$(get_file_s - "$mirror/" | get_file_list_html)
   [[ -z $pkg_list ]] && return_err "Incorrect mirror $mirror!"
   core_repo="$mirror"
 else
-  pkg_list=$(get_file_s - "$mirror/core/os/$arch/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+  pkg_list=$(get_file_s - "$mirror/core/os/$arch/" | get_file_list_html)
   if [[ -n $pkg_list ]]; then
     core_repo="$mirror/core/os/$arch"
     repo="$mirror/\$repo/os/\$arch"
   else
     # If first is not valid, try second variant of mirror...
-    pkg_list=$(get_file_s - "$mirror/$arch/core/" | sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn)
+    pkg_list=$(get_file_s - "$mirror/$arch/core/" | get_file_list_html)
     [[ -z $pkg_list ]] && return_err "Incorrect arch $arch or mirror $mirror!"
     core_repo="$mirror/$arch/core"
     repo="$mirror/\$arch/\$repo"
