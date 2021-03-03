@@ -7,9 +7,8 @@
 
 set -e
 
-CONFIG_FILE="$(realpath $1)"
 if [[ ! -f ./version_install ]]; then
-  cd "$(dirname $(realpath ${BASH_SOURCE[0]}))"
+  cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
   echo "Location changed!"
 fi
 
@@ -28,7 +27,7 @@ function custom_actions() {
   [[ -d "$CUSTOM_DIR" ]] || CUSTOM_DIR=./custom
   if [[ -d $CUSTOM_DIR/rootfs ]]; then
     msg_print note "Copying custom files..."
-    cp -arf "$CUSTOM_DIR/rootfs/." "$dir"
+    cp -aRn "$CUSTOM_DIR/rootfs/." "$dir"
   fi
   if [[ -f $CUSTOM_DIR/custom_script.sh && ! -z "$arch_chroot_command" ]]; then
     cp "$CUSTOM_DIR/custom_script.sh" "$dir/root/custom_script.sh"
@@ -39,14 +38,16 @@ function custom_actions() {
   fi
 }
 
+CONFIG_FILE="$1"
+
 if [[ -z $CONFIG_FILE ]]; then
   echo "Main install script. Requries profile for installation."
   echo "Example: $0 profile_install.sh"
   exit 1
 fi
 
-if [[ -f $CONFIG_FILE ]]; then
-  source $CONFIG_FILE || return_err "Failed to use profile!"
+if [[ -f "$CONFIG_FILE" ]]; then
+  source "$CONFIG_FILE" || return_err "Failed to use profile!"
   parse_arch $(uname -m)
   source ./lib/distr/$distr/distr_actions.sh
   custom_actions

@@ -17,7 +17,7 @@ if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
       echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
     fi
   fi
-  source $ALEXPRO100_LIB_LOCATION
+  source "$ALEXPRO100_LIB_LOCATION"
 fi
 
 # Check options.

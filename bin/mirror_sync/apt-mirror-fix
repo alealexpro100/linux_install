@@ -32,7 +32,7 @@ deb_check_file() {
       *) echo "!"
       ;;
     esac
-    if [[ $? == 0 ]]; then
+    if $?; then
       echo -n 'N'
     else
       echo -n 'X'

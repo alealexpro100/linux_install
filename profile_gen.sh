@@ -8,7 +8,7 @@
 set -e
 
 if [[ ! -f ./version_install ]]; then
-  cd "$(dirname $(realpath ${BASH_SOURCE[0]}))"
+  cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
   echo "Location changed!"
 fi
 
@@ -159,15 +159,15 @@ esac
 
 #Language support.
 source ./lib/translations/messages_en.sh
-[[ -n $INSTALL_LANG ]] && source ./lib/translations/messages_$INSTALL_LANG.sh
+[[ -n $INSTALL_LANG ]] && source "./lib/translations/messages_$INSTALL_LANG.sh"
 
 print_param note "$M_WELCOME"
 
 if [[ $LIVE_MODE != "1" ]]; then
   print_param note "$M_DIR_WARN"
-  profile_file=${1:-"./auto_configs/last_gen.sh"}
+  profile_file="${1:-"./auto_configs/last_gen.sh"}"
   print_param note "$M_PROFILE_1 $profile_file"
-  default_dir=${default_dir:-"/mnt/mnt"}
+  default_dir="${default_dir:-"/mnt/mnt"}"
   read_param "" "$M_PATH $distr" "$default_dir" dir text
 fi
 
@@ -178,9 +178,10 @@ done
 print_param note "$M_COMMON_OPT"
 source ./lib/common/common_options.sh
 print_param note "$M_DISTR_OPT"
-source ./lib/distr/$distr/distr_options.sh
+source "./lib/distr/$distr/distr_options.sh"
 
 profile_text="#Generated on $(date -u).\n"
+add_var "declare -gx" LANG "$LANG"
 for var in "${var_num[@]}"; do
   profile_text="$profile_text\n${var_list[$var]}"
 done

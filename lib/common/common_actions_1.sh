@@ -5,7 +5,7 @@ msg_print note "Saving configuration..."
 [[ -z $LANG ]] && LANG="en_US.UTF-8"
 [[ ! -d "$dir/root" ]] && mkdir "$dir/root"
 cp -af "$ALEXPRO100_LIB_LOCATION" "$dir/root/"
-echo -e "LANG=$LANG" >> "$dir/root/configuration"
+echo -e "LANG=\"$LANG\"" >> "$dir/root/configuration"
 cat "$CONFIG_FILE" >> "$dir/root/configuration"
 
 msg_print note "Configuring hosts..."
