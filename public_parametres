@@ -17,7 +17,3 @@ mirror_archlinux_arm='https://mirror.archlinuxarm.org'
 mirror_alpine='https://dl-cdn.alpinelinux.org/alpine'
 mirror_voidlinux='httpss://alpha.de.repo.voidlinux.org/current'
 version_void=glibc
-
-#MIRROR OPTIONS
-#MIRROR_DIR="/mnt/mirror"
-#WORK_DIR="/mnt/mirror/projects/linux_install/bin/mirror_sync"
