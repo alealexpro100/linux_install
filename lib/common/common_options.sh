@@ -26,12 +26,12 @@ else
   bootloader=0
 fi
 
+read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no
+
 #read_param "" "$M_GRAPH" '' graphics yes_or_no
 #[[ $graphics == "1" ]] && read_param "" "$M_DM" '' dm_install yes_or_no
-#read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
-#read_param "" "$M_BLUETOOTH" '' bluetooth yes_or_no
-#read_param "" "$M_PRINTERS" '' printers yes_or_no
-
-read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no
+read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
+read_param "" "$M_BLUETOOTH" '' bluetooth yes_or_no
+read_param "" "$M_PRINTERS" '' printers yes_or_no
 
 parse_arch $(uname -m)
