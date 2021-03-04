@@ -6,7 +6,7 @@ apt_install="apt -y install"
 
 [[ -f /etc/apt/sources.list ]] && rm -rf /etc/apt/sources.list
 for repo_name in main updates backports security; do
-  [[ ! -z ${debian_repos[$repo_name]} ]] && echo -e "#$repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
+  [[ -n ${debian_repos[$repo_name]} ]] && echo -e "#$repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
 done
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
 apt update

@@ -4,27 +4,27 @@ msg_print note "Making base changes..."
 
 function base_setup() {
   msg_print note "Setting up hostname and configuring user..."
-  echo $hostname > /etc/hostname
+  echo "$hostname" > /etc/hostname
   echo "root:$passwd" | chpasswd -c SHA512
-  useradd -m -g users -G $user_groups -s $user_shell $user_name
+  useradd -m -g users -G "$user_groups" -s "$user_shell" "$user_name"
   echo  "$user_name:$passwd" | chpasswd -c SHA512
 }
 
 function base_setup_alpine() {
   msg_print note "Setting up hostname and configuring user..."
-  echo $hostname > /etc/hostname
+  echo "$hostname" > /etc/hostname
   echo "root:$passwd" | chpasswd -c SHA512
-  adduser -G users -s $user_shell -D $user_name
+  adduser -G users -s "$user_shell" -D "$user_name"
   for group_name in $user_groups; do
-    addgroup $user_name $group_name
+    addgroup "$user_name" "$group_name"
   done
   echo  "$user_name:$passwd" | chpasswd -c SHA512
 }
 
 function locale_setup() {
   msg_print note "Setting up locales..."
-  sed -i "s/#en_US.UTF-8/en_US.UTF-8;s/#$LANG/$LANG/" /etc/locale.gen
-  echo "LANG=$LANG" >> $1
+  sed -ie "s/#en_US.UTF-8/en_US.UTF-8;s/#$LANG/$LANG/" /etc/locale.gen
+  echo "LANG=\"$LANG\"" >> "$1"
   locale-gen
 }
 
@@ -32,7 +32,7 @@ function locale_setup_voidlinux() {
   if [[ $version_void == "glibc" ]]; then
     msg_print note "Setting up locales..."
     sed -ie "s/#en_US.UTF-8/en_US.UTF-8/;s/#$LANG/$LANG/" /etc/default/libc-locales
-    sed -ie "1s/en_US.UTF-8/$LANG/" $1
+    sed -ie "1s/en_US.UTF-8/$LANG/" "$1"
     xbps-reconfigure -f glibc-locales
   fi
 }

@@ -3,7 +3,9 @@ HOSTS_ADD='
 0.0.0.0	local.site  localhost
 '
 
-user_name='user' user_shell='/bin/bash' passwd_default='pass'
+user_name='user'
+user_shell='/bin/bash'
+passwd_default='pass'
 debian_distr=buster
 declare -A debian_repos=([main]='deb https://deb.debian.org/debian $debian_distr main non-free contrib' 
 [updates]='deb https://deb.debian.org/debian $debian_distr-updates main non-free contrib'

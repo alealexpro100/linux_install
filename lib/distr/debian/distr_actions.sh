@@ -24,4 +24,4 @@ cat ./lib/common/rootfs_scripts/debian_setup.sh >> "$dir/root/pi_s1.sh"
 chmod +x "$dir/root/pi_s1.sh"
 $arch_chroot_command "$dir" bash /root/pi_s1.sh
 
-rm -rf "$dir/root/pi_s1.sh" "$dir/root/configuration" "$dir/root/alexpro100_lib.sh"
+rm -rf "$dir/root/pi_s1.sh" "$dir/root/configuration" "$dir/root/alexpro100_lib.sh" "$dir/root/certs"

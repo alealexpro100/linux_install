@@ -3,7 +3,7 @@ read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$
 read_param "" "$M_DISTR_VER" "$debian_distr" debian_distr text
 print_param note "$M_DEB_NOTE_1"
 print_param note "$M_DEB_NOTE_2 $debian_distr."
-add_var "declare -A" "debian_repos" "()"
+add_var "declare -gA" "debian_repos"
 if [[ $debian_distr == "sid" ]]; then
   for repo_name in updates security backports; do
     unset "debian_repos[$repo_name]"

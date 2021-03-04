@@ -3,7 +3,7 @@ read_param "" "$M_USER" "$user_name" user_name text
 read_param "" "$M_SHELL" "$user_shell" user_shell text
 read_param "" "$M_PASS" '' passwd secret_empty
 if [[ -z $passwd ]]; then
-  var_list[passwd]="declare -gx passwd=$passwd_default" passwd="$passwd_default"
+  add_var "declare -gx" passwd "$passwd_default"
   print_param warning "$M_PASS_NO $passwd."
 fi
 if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
