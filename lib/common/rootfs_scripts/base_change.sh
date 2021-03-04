@@ -55,7 +55,7 @@ case $distr in
   user_groups="audio,video,input,network,storage,wheel"
   base_setup; locale_setup_voidlinux /etc/locale.conf
   ;;
-  *) msg_print warning "Non-standart distro $distro used. Skipping locale setup."
+  *) msg_print error "Non-standart distro $distr used. Skipping locale setup."
   user_groups="audio,video,input"; base_setup;
   ;;
 esac

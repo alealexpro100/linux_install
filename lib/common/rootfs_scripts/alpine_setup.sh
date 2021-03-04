@@ -33,8 +33,8 @@ if [[ $networkmanager == "1" ]]; then
 fi
 [[ -n "$to_install" ]] && $apk_install $to_install
 for service in $to_enable; do
-  rc-update add $service default
+  rc-update add "$service" default
 done
-[[ $networkmanager == "1" ]] &&  addgroup $user_name plugdev
+[[ $networkmanager == "1" ]] &&  addgroup "$user_name" plugdev
 
 msg_print note "Packages are installed."

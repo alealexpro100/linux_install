@@ -12,7 +12,7 @@ if [[ $networkmanager == "1" ]]; then
 fi
 [[ -n "$to_install" ]] && $pacman_install $to_install
 for service in $to_enable; do
-  systemctl enable $service
+  systemctl enable "$service"
 done
 
 msg_print note "Packages are installed."

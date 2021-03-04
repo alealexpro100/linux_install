@@ -40,7 +40,7 @@ echo_d -e "\n# DEBIAN"
 for version in '#oldstable' stable '#testing' '#stretch' buster '#bullseye' sid; do
 	echo_d -e "# -- $version"
 	for arch in amd64 i386 arm64 armhf src; do
-		echo_d "deb-$arch $mirror ${version}${repo} main non-free contrib"
+		echo_d "deb-$arch $mirror ${version} main non-free contrib"
 		[[ $version != sid ]] && echo_d "deb-$arch $mirror ${version}-updates main non-free contrib"
 		[[ $version != testing && $version != sid ]] && echo_d "deb-$arch $mirror ${version}-backports main non-free contrib"
 		[[ $version != testing && $version != sid ]] && echo_d "deb-$arch $s_mirror ${version}/updates main non-free contrib"
@@ -144,7 +144,7 @@ arch=''; version=''
 mirror='https://http.kali.org/kali'
 clean="$clean\nclean $mirror"
 echo_d -e "\n# KALI LINUX"
-for version in kali-rolling; do
+for version in kali-rolling '#kali-dev'; do
 	echo_d -e "# -- $version"
 	for arch in amd64 i386 arm64 armhf src; do
 		echo_d "deb-$arch $mirror ${version} main contrib non-free"
@@ -168,7 +168,7 @@ arch=''; version=''
 mirror='https://apt.armbian.com'
 clean="$clean\nclean $mirror"
 echo_d -e "\n# ARMBIAN"
-for version in '#focal' 'buster'; do
+for version in '#focal' buster; do
 	echo_d -e "# -- $version"
 	for arch in arm64 armhf; do
 		echo_d "deb-$arch $mirror ${version} main $version-utils $version-desktop"
@@ -184,7 +184,7 @@ echo_d -e "\n# UBUNTU"
 for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"
 	for arch in amd64 i386 src; do
-		echo_d "deb-$arch $mirror ${version}${repo} main restricted universe multiverse"
+		echo_d "deb-$arch $mirror ${version} main restricted universe multiverse"
 		echo_d "deb-$arch $mirror ${version}-backports main restricted universe multiverse"
 		echo_d "deb-$arch $mirror ${version}-proposed main restricted universe multiverse"
 		echo_d "deb-$arch $s_mirror ${version}-security main restricted universe multiverse"
@@ -200,7 +200,7 @@ echo_d -e "\n# CANONICAL PARTNER"
 for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"
 	for arch in amd64 i386 src; do
-		echo_d "deb-$arch $mirror ${version}${repo} partner"
+		echo_d "deb-$arch $mirror ${version} partner"
 		echo_d "deb-$arch $mirror ${version}-proposed partner"
 	done
 	echo_d ''
@@ -209,7 +209,7 @@ done
 arch=''; version=''
 mirror='https://ports.ubuntu.com'
 echo_d -e "\n# UBUNTU PORTS"
-for version in '#focal'; do
+for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"
 	for arch in arm64 '#armhf' src; do
 		echo_d "deb-$arch $mirror ${version} main restricted universe multiverse"

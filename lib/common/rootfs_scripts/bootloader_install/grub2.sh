@@ -50,7 +50,7 @@ case $distr in
     grub_config
   ;;
   *)
-  msg_print error "$bootloader_name installation is not supported for $distro. Skipping."
+  msg_print error "$bootloader_name installation is not supported for $distr. Skipping."
   ;;
 esac
 
