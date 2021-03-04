@@ -24,17 +24,18 @@ Supported for installing Linux distros:
 * That's all. You have installed system. Good luck!
 
 ## Supported flags:
-* `LIVE_MODE` - Used for install image.
+* `LIVE_MODE` - Will be used for live install. (No full support yet.)
 * `CUSTOM_DIR` - Path to custom script and files.
 * `ECHO_MODE` - Mode of interface (cli/whiptail).
-* `INSTALL_LANG` - Language for interface. (`./profile_gen.sh`)
+* `INSTALL_LANG` - Language for install interface. (NOT of target system!)
+* `ALEXPRO100_LIB_DEBUG` - Debug mode for alexpro100 lib.
 
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
-* orphaned/ - Parts not used in script, but kept for future usage.
+* orphaned/ - Old parts of script. Are kept for future usage.
 * tests/ - Testing scripts. See `tests/README_tests.md`.
 * install_sys.sh - Main script. Requries profile for work.
 * profile_gen.sh - Profile generator.
