@@ -12,9 +12,10 @@ if [[ ! -f ./version_install ]]; then
   echo "Location changed!"
 fi
 
-#Use library
+#Use libraries
 ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
 source ./lib/common/lib_connect.sh
+source ./lib/common/lib_var_op.sh
 
 if [[ $UID != 0 ]]; then
   return_err "This script requries root permissions!"
@@ -27,9 +28,9 @@ function custom_actions() {
   [[ -d "$CUSTOM_DIR" ]] || CUSTOM_DIR=./custom
   if [[ -d $CUSTOM_DIR/rootfs ]]; then
     msg_print note "Copying custom files..."
-    cp -aRn "$CUSTOM_DIR/rootfs/." "$dir"
+    cp -Rn --no-preserve=ownership "$CUSTOM_DIR/rootfs/." "$dir"
   fi
-  if [[ -f $CUSTOM_DIR/custom_script.sh && ! -z "$arch_chroot_command" ]]; then
+  if [[ -f $CUSTOM_DIR/custom_script.sh && -n "$arch_chroot_command" ]]; then
     cp "$CUSTOM_DIR/custom_script.sh" "$dir/root/custom_script.sh"
     chmod +x "$dir/root/custom_script.sh"
     msg_print note "Executing custom script..."

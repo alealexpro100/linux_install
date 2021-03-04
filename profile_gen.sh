@@ -12,30 +12,15 @@ if [[ ! -f ./version_install ]]; then
   echo "Location changed!"
 fi
 
-#Use library
-if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
-  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh"
-    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
-      echo "Using $ALEXPRO100_LIB_LOCATION."
-    else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
-    fi
-  fi
-  source $ALEXPRO100_LIB_LOCATION
-fi
+#Use libraries
+ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
+source ./lib/common/lib_connect.sh
+source ./lib/common/lib_var_op.sh
 
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
 
-declare -a var_num=()
-declare -A var_list=()
-function add_var() {
-  local type="$1" var="$2" content="$3"
-  [[ -z ${var_list[$var]} ]] && var_num=("${var_num[@]}" "$var")
-  var_list[$var]="$type $var=\"$content\""
-  $type $var="$content"
-}
+
 
 case $ECHO_MODE in
   whiptail) 
@@ -180,12 +165,8 @@ source ./lib/common/common_options.sh
 print_param note "$M_DISTR_OPT"
 source "./lib/distr/$distr/distr_options.sh"
 
-profile_text="#Generated on $(date -u).\n"
 add_var "declare -gx" LANG "$LANG"
-for var in "${var_num[@]}"; do
-  profile_text="$profile_text\n${var_list[$var]}"
-done
-echo -e "$profile_text" > "$profile_file"
+var_export > "$profile_file"
 
 [[ $LIVE_MODE != "1" ]] && print_param note "Profile was succesfully written to $profile_file"
 
