@@ -1,0 +1,17 @@
+#Make alpine minimal rootfs.
+
+add_var "declare -gx" "dir" "${default_dir:-/mnt/mnt}"
+add_var "declare -gx" "distr" "alpine"
+add_var "declare -gx" "hostname" "alpine"
+add_var "declare -gx" "user_name" "user"
+add_var "declare -gx" "user_shell" "/bin/ash"
+add_var "declare -gx" "passwd" "pass"
+add_var "declare -gx" "copy_setup_script" "0"
+add_var "declare -gx" "arch" "x86_64"
+add_var "declare -gx" "mirror_alpine" "$mirror_alpine"
+add_var "declare -gx" "kernel" "0"
+add_var "declare -gx" "networkmanager" "0"
+add_var "declare -gx" "version_alpine" "edge"
+add_var "declare -gx" "preinstall" ""
+add_var "declare -gx" "postinstall" ""
+add_var "declare -gx" "LANG" "en_US.UTF-8"
