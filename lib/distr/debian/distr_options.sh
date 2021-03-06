@@ -27,7 +27,6 @@ if [[ $kernel == "1" && $repo_debian_backports != "" ]]; then
   read_param "" "$M_DEB_BACKPORTS_KERNEL" "" backports_kernel no_or_yes
   [[ $backports_kernel == "0" ]] && print_param note "$M_DEB_STABLE_KERNEL"
 fi
-read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
 
 [[ $debian_arch == amd64 ]] && read_param "" "$M_MULTILIB" '' debian_add_i386 yes_or_no
 read_param "" "$M_PACK_PRE" "locales,rsync" preinstall text

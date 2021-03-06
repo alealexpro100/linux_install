@@ -7,7 +7,6 @@ while ! [[ $version_void == "musl" || $version_void == "glibc" ]]; do
 done
 
 read_param "" "$M_KERNEL" '' kernel yes_or_no
-read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
 
 [[ $version_void == "glibc" && $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' void_add_i386 yes_or_no
 read_param "" "$M_PACK_PRE" "wget terminus-font" preinstall text_empty
