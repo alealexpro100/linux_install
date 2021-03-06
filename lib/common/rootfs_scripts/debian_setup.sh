@@ -2,7 +2,7 @@
 #Debian setup.
 msg_print note "Installing addational packages..."
 
-to_install='' to_enable=''
+to_install="$postinstall" to_enable=''
 
 if [[ $kernel == "1" ]]; then
   echo "Installing linux kernel and its additions..."

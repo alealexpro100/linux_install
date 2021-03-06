@@ -12,7 +12,4 @@ done
 rm -rf /etc/xbps.d/install_repo.conf
 xbps-install -S
 
-to_install="$postinstall" to_enable=''
-[[ -n "$to_install" ]] && $xbps_install $to_install
-
 msg_print note "XBPS is ready."

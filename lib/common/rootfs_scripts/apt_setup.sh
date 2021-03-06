@@ -19,7 +19,4 @@ for repo_name in ${!debian_repos[@]}; do
 done
 apt update
 
-to_install="$postinstall" to_enable=''
-[[ -n "$to_install" ]] && $apt_install $to_install
-
 msg_print note "Apt is ready."
