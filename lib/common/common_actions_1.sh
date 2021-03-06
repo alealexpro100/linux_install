@@ -11,7 +11,6 @@ msg_print note "Creating config script..."
   echo -ne "#!/bin/bash\n\nset -e; cd /root/\n"
   cat ./lib/common/lib_connect.sh
   cat ./lib/common/lib_var_op.sh
-#  echo -e "\ndeclare -A debian_repos"
   echo -e "\nsource /root/configuration"
   cat ./lib/common/rootfs_scripts/base_change.sh
 } > "$dir/root/pi_s1.sh"
