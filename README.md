@@ -4,7 +4,7 @@ linux_install
 ## About
 This script installs a base linux system from any linux distribution.
 Tested on Alpinelinux (musl) and Archlinux (glibc).
-Supported for installing Linux distros:
+Supported Linux distros for installation:
 * Alpine
 * Archlinux
 * Debian-based distros
@@ -15,7 +15,7 @@ Supported for installing Linux distros:
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
 * Installed tools: `coreutils bash wget tar zstd` OR `busybox bash zstd`.
 * (Optional) For deboostrap: `perl binutils` OR `perl dpkg`.
-* (Optional) For foreign architectures and qemu test: qemu-user-static (QEMU_STATIC_BIN_DIR flag supported).
+* (Optional) For foreign architectures: qemu-user-static (QEMU_STATIC_BIN_DIR flag supported).
 
 ## Usage
 * Prepare directory for installation.
@@ -33,6 +33,7 @@ Supported for installing Linux distros:
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
+* bin/mirror_sync - Tools for making local mirror of packages.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
 * orphaned/ - Old parts of script. Are kept for future usage.

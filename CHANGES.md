@@ -2,6 +2,7 @@
 * Minor fixes.
 * Support for dynamic changes in profile files.
 * Initial support of soft install.
+* Significant speed up of installation.
 
 ## Version 0.3.5:
 * Minor fixes.
