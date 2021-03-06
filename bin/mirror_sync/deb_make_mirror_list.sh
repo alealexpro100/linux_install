@@ -179,7 +179,7 @@ done
 arch=''; version=''
 mirror='https://archive.ubuntu.com/ubuntu'
 s_mirror='https://security.ubuntu.com/ubuntu'
-clean="$clean\nclean $mirror\nclean $s_mirror"
+#clean="$clean\nclean $mirror\nclean $s_mirror"
 echo_d -e "\n# UBUNTU"
 for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"
@@ -195,7 +195,7 @@ done
 
 arch=''; version=''
 mirror='https://archive.canonical.com/ubuntu'
-clean="$clean\nclean $mirror\nclean $s_mirror"
+#clean="$clean\nclean $mirror"
 echo_d -e "\n# CANONICAL PARTNER"
 for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"
@@ -208,6 +208,7 @@ done
 
 arch=''; version=''
 mirror='https://ports.ubuntu.com'
+#clean="$clean\nclean $mirror"
 echo_d -e "\n# UBUNTU PORTS"
 for version in '#xenial' '#focal'; do
 	echo_d -e "# -- $version"

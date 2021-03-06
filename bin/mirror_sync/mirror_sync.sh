@@ -27,10 +27,12 @@ APT_MIRROR="1" APT_MIRROR_FIX="0"
 ORACLE_MIRROR="1"
 
 function mirror_rsync() {
-    echo " [Mirroring from ${*: -2:1} to ${*: -1}...] {"
-    [[ -d "${*: -1}" ]] || mkdir -p "${*: -1}"
-    rsync --recursive --links --copy-unsafe-links --times --sparse --delete --delete-after --delete-excluded --progress --stats --human-readable "$@"
-    echo -e "}\n"
+    if type rsync &> /dev/null; then
+        echo " [Mirroring from ${*: -2:1} to ${*: -1}...] {"
+        [[ -d "${*: -1}" ]] || mkdir -p "${*: -1}"
+        rsync --recursive --links --copy-unsafe-links --times --sparse --delete --delete-after --delete-excluded --progress --stats --human-readable "$@"
+        echo -e "}\n"
+    fi
 }
 
 function git_update() {
@@ -48,12 +50,14 @@ function git_update() {
 
 cd "$MIRROR_DIR"
 
-while IFS= read -r repo_name; do
-    git_update "$repo_name"
-done < <(cat ./list.git/alpine)
-#while IFS= read -r repo_name; do
-#    git_update "$repo_name"
-#done < <(cat ./list.git/openwrt)
+if type git &> /dev/null; then
+    while IFS= read -r repo_name; do
+        git_update "$repo_name"
+    done < <(cat ./list.git/alpine)
+#   while IFS= read -r repo_name; do
+#       git_update "$repo_name"
+#   done < <(cat ./list.git/openwrt)
+fi
 
 # --- ALPINELINUX MIRROR
 for al_arch in "x86_64" "x86" "aarch64" "armhf"; do
@@ -95,7 +99,7 @@ mirror_rsync $MXISO_MIRROR/ MX-Linux/MX-ISOs
 mirror_rsync --exclude "deprecated-isos*" $FEDORA_VIRTIO_MIRROR/ fedora/groups/virt/virtio-win
 
 # --- DEBIAN-BASED DISTROS MIRROR
-if [[ "$APT_MIRROR" == "1" && -f "$WORK_DIR/apt-mirror-fixed" && -f apt/mirror.list ]]; then
+if [[ "$APT_MIRROR" == "1" && -f "$WORK_DIR/apt-mirror-fixed" && -f apt/mirror.list && $(type wget &> /dev/null) && $(type gunzip &> /dev/null) && $(type bzip2 &> /dev/null) && $(type xz &> /dev/null) ]]; then
     "$WORK_DIR/apt-mirror-fixed" --config apt/mirror.list
     debian/var/clean.sh
     [[ "$APT_MIRROR_FIX" == "1" ]] && "$WORK_DIR/apt-mirror-fix" apt/mirror.list
