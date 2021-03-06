@@ -2,7 +2,7 @@
 
 add_var "declare -gx" "dir" "${default_dir:-/mnt/mnt}"
 add_var "declare -gx" "distr" "debian"
-add_var "declare -gx" "hostname" "debian"
+add_var "declare -gx" "hostname" "$distr"
 add_var "declare -gx" "user_name" "user"
 add_var "declare -gx" "user_shell" "/bin/bash"
 add_var "declare -gx" "passwd" "pass"

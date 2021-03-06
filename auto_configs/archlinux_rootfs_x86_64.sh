@@ -1,6 +1,6 @@
 #Make archlinux minimal rootfs.
 
-add_var "declare -gx" dir "${default_dir:-/mnt/mnt}"
+add_var "declare -gx" "dir" "${default_dir:-/mnt/mnt}"
 add_var "declare -gx" "distr" "archlinux"
 add_var "declare -gx" "hostname" "$distr"
 add_var "declare -gx" "user_name" "user"
