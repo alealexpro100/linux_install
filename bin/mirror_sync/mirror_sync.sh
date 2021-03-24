@@ -18,7 +18,7 @@ ARCH32_MIRROR="rsync://mirror.archlinux32.org/archlinux32"
 BLACKARCH_MIRROR="rsync://blackarch.org/blackarch/blackarch"
 ARCHCN_MIRROR="rsync://rsync.mirrors.ustc.edu.cn/repo/archlinuxcn"
 VOID_MIRROR="rsync://mirrors.dotsrc.org/voidlinux"
-ASTRA_MIRROR="rsync://repo.astralinux.ru/astra/astra"
+ASTRA_MIRROR="rsync://download.astralinux.ru/astra/astra"
 MXISO_MIRROR="rsync://mirrors.dotsrc.org/mx-isos"
 #FEDORA_MIRROR="rsync://mirrors.dotsrc.org/fedora-buffet"
 FEDORA_VIRTIO_MIRROR="rsync://fedorapeople.org/groups/virt/virtio-win"
@@ -27,7 +27,7 @@ APT_MIRROR="1" APT_MIRROR_FIX="0"
 ORACLE_MIRROR="1"
 
 function mirror_rsync() {
-    if type rsync &> /dev/null; then
+    if command -v rsync &> /dev/null; then
         echo " [Mirroring from ${*: -2:1} to ${*: -1}...] {"
         [[ -d "${*: -1}" ]] || mkdir -p "${*: -1}"
         rsync --recursive --links --copy-unsafe-links --times --sparse --delete --delete-after --delete-excluded --progress --stats --human-readable "$@"
@@ -50,7 +50,7 @@ function git_update() {
 
 cd "$MIRROR_DIR"
 
-if type git &> /dev/null; then
+if command -v git &> /dev/null; then
     while IFS= read -r repo_name; do
         git_update "$repo_name"
     done < <(cat ./list.git/alpine)
@@ -99,10 +99,15 @@ mirror_rsync $MXISO_MIRROR/ MX-Linux/MX-ISOs
 mirror_rsync --exclude "deprecated-isos*" $FEDORA_VIRTIO_MIRROR/ fedora/groups/virt/virtio-win
 
 # --- DEBIAN-BASED DISTROS MIRROR
-if [[ "$APT_MIRROR" == "1" && -f "$WORK_DIR/apt-mirror-fixed" && -f apt/mirror.list && $(type wget &> /dev/null) && $(type gunzip &> /dev/null) && $(type bzip2 &> /dev/null) && $(type xz &> /dev/null) ]]; then
+if [[ "$APT_MIRROR" == "1" && -f "$WORK_DIR/apt-mirror-fixed" && -f "$MIRROR_DIR/apt/mirror.list" && -x $(command -v wget) && -x $(command -v gunzip) && -x $(command -v bzip2) && -x $(command -v xz) ]]; then
     "$WORK_DIR/apt-mirror-fixed" --config apt/mirror.list
     debian/var/clean.sh
-    [[ "$APT_MIRROR_FIX" == "1" ]] && "$WORK_DIR/apt-mirror-fix" apt/mirror.list
+    if [[ "$APT_MIRROR_FIX" == "1" ]]; then
+        "$WORK_DIR/apt-mirror-fix" apt/mirror.list
+        mirror_path=$(grep -F "set base_path" "$1" | tr -s " " | cut -d' ' -f3)
+        bash "$mirror_path/mirror/download_X.sh"
+        bash "$mirror_path/mirror/download_E.sh"
+    fi
 fi
 
 # --- CYGWIN MIRROR
