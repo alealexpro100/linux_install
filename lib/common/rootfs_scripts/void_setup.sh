@@ -18,15 +18,6 @@ if [[ $add_soft == "1" ]]; then
   if [[ $pulseaudio == "1" ]]; then
     to_install="$to_install alsa-plugins-pulseaudio"
   fi
-  if [[ $bluetooth == "1" ]]; then
-    to_install="$to_install bluez"
-    to_enable="$to_enable bluetoothd"
-  fi
-  if [[ $printers == "1" ]]; then
-    to_install="$to_install cups cups-filters"
-    to_enable="$to_enable cupsd"
-    [[ $bluetooth == "1" ]] && to_install="$to_install bluez-cups"
-  fi
 fi
 
 [[ -n $to_install ]] && $xbps_install $to_install

@@ -1,3 +1,10 @@
+
+read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
+if [[ $add_soft == "1" ]]; then
+  read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
+  read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
+fi
+
 read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
 
 read_param "" "$M_DISTR_VER" "$debian_distr" debian_distr text

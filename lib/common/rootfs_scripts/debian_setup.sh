@@ -23,14 +23,6 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install pulseaudio"
     [[ $bluetooth == "1" ]] && to_install="$to_install pulseaudio-module-bluetooth"
   fi
-  if [[ $bluetooth == "1" ]]; then
-    to_install="$to_install bluetooth"
-  fi
-  if [[ $printers == "1" ]]; then
-    to_install="$to_install task-print-server"
-    to_install="$to_install foomatic-db cups-pdf"
-    [[ $bluetooth == "1" ]] && to_install="$to_install bluez-cups"
-  fi
 fi
 
 [[ -n $to_install ]] && $apt_install $to_install
