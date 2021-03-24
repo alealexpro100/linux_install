@@ -1,5 +1,5 @@
 msg_print note "Copying files into rootfs..."
-[[ -d ./lib/distr/$distr/rootfs ]] && cp -Rn --no-preserve=ownership "./lib/distr/$distr/rootfs/." "$dir"
+[[ -d ./lib/distr/$distr/rootfs ]] && $cp_safe "./lib/distr/$distr/rootfs/." "$dir"
 
 msg_print note "Saving configuration..."
 [[ -z $LANG ]] && LANG="en_US.UTF-8"
@@ -27,7 +27,7 @@ $HOSTS_ADD" >> "$dir/etc/hosts"
 
 if [[ $copy_setup_script == "1" ]]; then
   msg_print note "Copying installator..."
-  cp -aRn . "$dir/root/linux_install"
+  $cp_safe . "$dir/root/linux_install"
 fi
 
 if [[ $fstab == "1" ]]; then

@@ -50,16 +50,16 @@ else
 fi
 
 #Find, download and unpack apktools-static and install system with it.
-create_tmp_dir apk_tmp
+create_tmp_dir alpine_apk
 echo "Getting link to download apk-tools-static for $alpine_arch..."
 apktools_name=$(get_file_s - "$download_repo/" | get_file_list_html | grep apk-tools-static)
 echo "Downloading..."
-get_file_s "$apk_tmp/$apktools_name" "$download_repo/$apktools_name"
+get_file_s "$alpine_apk/$apktools_name" "$download_repo/$apktools_name"
 echo "Exracting..."
-tar -xzf "$apk_tmp/$apktools_name" -C "$apk_tmp" "sbin/apk.static" &>/dev/null
+tar -xzf "$alpine_apk/$apktools_name" -C "$alpine_apk" "sbin/apk.static" &>/dev/null
 echo "Installing apk-tools..."
-"$apk_tmp/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
-rm -rf "$apk_tmp"
+"$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
+rm -rf "$alpine_apk"
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 apk_command="/sbin/apk $arg_repos"
