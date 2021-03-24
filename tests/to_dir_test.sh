@@ -20,8 +20,12 @@ if [[ $UID != 0 ]]; then
   return_err "This script requries root permissions!"
 fi
 
-for distr_install in ../lib/distr/*; do
-  distr_install=${distr_install#../lib/distr/*}
+if [[ -z "$*" ]]; then
+  return_err "No options!"
+fi
+
+for distr_install in "$@"; do
+  [[ ! -d ../lib/distr/$distr_install ]] && return_err "Directory $distr_install not found!"
   msg_print msg "Started on $(date -u)."
   msg_print msg "Testing $distr_install..."
   create_tmp_dir tmp_distr_install
