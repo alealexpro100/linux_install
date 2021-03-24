@@ -13,7 +13,7 @@ Supported Linux distros for installation:
 ## Requirements
 * Connection to mirror with packages for installing distrubution.
 * Prepared directory for installing system (if uefi, with mounted /boot partition).
-* Installed tools: `coreutils bash wget tar zstd` OR `busybox bash zstd`.
+* Installed tools: `coreutils util-linix bash wget tar zstd` OR `busybox bash zstd findmnt lsblk`.
 * (Optional) For deboostrap: `perl binutils` OR `perl dpkg`.
 * (Optional) For foreign architectures: qemu-user-static (QEMU_STATIC_BIN_DIR flag supported).
 
