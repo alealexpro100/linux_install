@@ -11,7 +11,7 @@ ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
-[[ -z "$ALEXPRO100_LIB_DEBUG" ]] && export ALEXPRO100_LIB_DEBUG=0
+export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 alias AP100_DBG='[[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || '
 
 # Colors for text.
@@ -103,7 +103,7 @@ export -f show_progress
 
 function command_exists() {
   AP100_DBG msg_print debug "Checking $1..."
-  type "$1" &> /dev/null ;
+  command -v "$1" &> /dev/null ;
 }
 export -f command_exists
 

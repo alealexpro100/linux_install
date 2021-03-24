@@ -168,7 +168,7 @@ source "./lib/distr/$distr/distr_options.sh"
 add_var "declare -gx" LANG "$LANG"
 var_export > "$profile_file"
 
-[[ $LIVE_MODE != "1" ]] && print_param note "Profile was succesfully written to $profile_file"
+[[ $LIVE_MODE != "1" ]] && print_param note "$M_PROFILE_2 $profile_file"
 
 # =)
 echo "$M_NICE"
