@@ -25,7 +25,7 @@ fi
 [[ -f ./private_parametres ]] && source ./private_parametres
 
 
-declare -gx cp_safe="cp -Rf --no-preserve=ownership"
+declare -gx cp_safe="cp -Rf"
 function custom_actions() {
   [[ -d "$CUSTOM_DIR" ]] || CUSTOM_DIR=./custom
   if [[ -d $CUSTOM_DIR/rootfs ]]; then
