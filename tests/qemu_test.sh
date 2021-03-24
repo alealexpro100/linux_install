@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################
-### Test linux_install for directories.
-### Copyright (C) 2020 ALEXPRO100 (ktifhfl)
+### Test linux_install in qemu.
+### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
 
