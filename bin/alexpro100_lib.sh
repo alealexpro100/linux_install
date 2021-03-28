@@ -6,7 +6,7 @@
 ###############################################################
 shopt -s expand_aliases
 
-ALEXPRO100_LIB_VERSION="0.2.5" 
+ALEXPRO100_LIB_VERSION="0.2.6" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -57,18 +57,20 @@ export DUnderline="\e[21m"  # Double Underlined
 #--UI--
 
 function msg_print() {
-  [[ -z $2 ]] && echo_help "Example: ${0} msg text" && return 1
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} {alert|err|warn|note|msg|debug|prgs} [TEXT]]\nPrint decorated text."
   local TYPE=$1; shift
+  while IFS= read -r line; do
     case $TYPE in
-	  alert) echo -e "$Bold$White$On_Red$*${NC}";;
-	  err|error) echo -e "[${LRed}ERROR${NC}] $*";;
-	  warn|warning) echo -e "[${Orange}WARNING${NC}] $*";;
-	  note) echo -e "[${LBlue}NOTE${NC}] $*";;
-	  msg|meassage) echo -e "[${DGray}MSG${NC}] $*";;
-    debug) echo -e "[${LGreen}DEBUG${NC}] $*";;
-	  prgs|progress) echo -e "[${Orange}PROGRESS${NC}] $*";;
+	  alert) echo -e "$Bold$White$On_Red$line${NC}";;
+	  err|error) echo -e "[${LRed}ERROR${NC}] $line";;
+	  warn|warning) echo -e "[${Orange}WARNING${NC}] $line";;
+	  note) echo -e "[${LBlue}NOTE${NC}] $line";;
+	  msg|meassage) echo -e "[${DGray}MSG${NC}] $line";;
+    debug) echo -e "[${LGreen}DEBUG${NC}] $line";;
+	  prgs|progress) echo -e "[${Orange}PROGRESS${NC}] $line";;
 	  *);;
     esac
+  done < <(echo -e "$*")
 }
 export -f msg_print
 
@@ -80,11 +82,12 @@ export -f return_err
 function echo_help() {
   msg_print note "$1"
   msg_print error "No arguments!"
+  return 1
 }
 export -f echo_help
 
 function show_progress() {
-  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} kit 1 text" && return 1
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
     sp) local sp="|\-/"; s=1;;
     kit) local sp="  .   /|\  ||| <|||> |||  \|/   '  "; s=5;;
@@ -108,7 +111,7 @@ function command_exists() {
 export -f command_exists
 
 function get_file_s() {
-  [[ -z $2 ]] && echo_help "Example: ${FUNCNAME[*]} file http://example.com/file" && return 1
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [FILE] [URL]\nDownload to file from url."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
@@ -122,7 +125,7 @@ function get_file_s() {
 export -f get_file_s
 
 function check_url() {
-  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} http://example.com/file" && return 1
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [URL]\nCheck url to exist."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q --spider "$1"
@@ -141,7 +144,7 @@ function get_file_list_html() {
 export -f get_file_list_html
 
 function create_tmp_dir() {
-  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} var_name" && return 1
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [VARIABLE]\nCreate tempory directory and assign it to variable."
   export "$1=/tmp/.$1_tmp_$RANDOM"
   AP100_DBG msg_print debug "Created tmp dir $1=${!1}."
   mkdir -p "${!1}" &>/dev/null
@@ -214,7 +217,7 @@ function chroot_teardown() {
 export -f chroot_teardown
 
 function chroot_rootfs() {
-  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} main /mnt/mnt ash" && return 1
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
   AP100_DBG msg_print debug "Preparing to chroot..."
   case $1 in
     light) local ADD_COMMAND=_light;;
@@ -227,8 +230,12 @@ function chroot_rootfs() {
   fi
   chroot_setup"$ADD_COMMAND" "$CHROOT_DIR"
   AP100_DBG msg_print debug "Running chroot..."
-  unshare --fork $CHROOT_COMMAND "$CHROOT_DIR" "$@" || msg_print warning "Not 0 code exit!"
+  unshare --fork $CHROOT_COMMAND "$CHROOT_DIR" "$@" || local EXIT_CODE=$? 
   chroot_teardown ""
+  if [[ -n $EXIT_CODE && $EXIT_CODE != "0" ]]; then 
+    msg_print err "Something went wrong! Code exit is $EXIT_CODE."
+    return $EXIT_CODE
+  fi
 }
 export -f chroot_rootfs
 
@@ -251,7 +258,7 @@ function parse_arch() {
 export -f parse_arch
 
 function qemu_chroot() {
-  [[ -z $3 ]] && echo_help "Example: ${FUNCNAME[*]} aarch64 /mnt/mnt ash" && return 1
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu static, mounting necessary directories."
   [[ -z $QEMU_STATIC_BIN_DIR ]] && local QEMU_STATIC_BIN_DIR="/usr/bin"
   if [[ "$1" == "check" ]]; then
     parse_arch "$2"
@@ -260,7 +267,7 @@ function qemu_chroot() {
   fi
   if [[ -f $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static ]]; then
     AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
-    [[ ! "$1" == "check" ]] || return 0
+    [[ "$1" == "check" ]] && return 0
     cp "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" "$1/usr/bin/qemu-$qemu_arch-static"
     local qemu_dir=$1; shift
 	  chroot_rootfs main "$qemu_dir" "qemu-$qemu_arch-static" "$@"
@@ -272,8 +279,8 @@ function qemu_chroot() {
 export -f qemu_chroot
 
 function qemu_run_bin() {
-  [[ -z $2 ]] && echo_help "Example: ${FUNCNAME[*]} aarch64 /bin/ash" && return 1
-  [[ -z "$QEMU_STATIC_BIN_DIR" ]] && local QEMU_STATIC_BIN_DIR="/usr/bin"
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [ARCH] [BINARY]\nRun binary using qemu static."
+  local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
     AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
     shift; "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" "$@"
@@ -284,9 +291,9 @@ function qemu_run_bin() {
 export -f qemu_run_bin
 
 function genfstab_light() {
-  [[ -z $1 ]] && echo_help "Example: ${FUNCNAME[*]} /mnt/mnt" && return 1
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [DIRECTORY]\nMake fstab file for directory."
   local root
-  root=$(realpath -mL "$1")
+  root=$(realpath "$1")
   declare -A pseudofs_types=([anon_inodefs]=1 [autofs]=1 [bdev]=1 [bpf]=1 [binfmt_misc]=1 [cgroup]=1 [cgroup2]=1 [configfs]=1 [cpuset]=1 [debugfs]=1
   [devfs]=1 [devpts]=1 [devtmpfs]=1 [dlmfs]=1 [efivarfs]=1 [fuse.gvfsd-fuse]=1 [fuse.gvfs-fuse-daemon]=1 [fusectl]=1 [gvfsd-fuse]=1 [hugetlbfs]=1 [mqueue]=1 [nfsd]=1 [none]=1 [pipefs]=1
   [proc]=1 [pstore]=1 [ramfs]=1 [rootfs]=1 [rpc_pipefs]=1 [securityfs]=1 [sockfs]=1 [spufs]=1 [sysfs]=1 [tracefs]=1 [tmpfs]=1)
