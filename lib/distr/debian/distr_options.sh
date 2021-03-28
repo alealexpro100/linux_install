@@ -7,24 +7,24 @@ fi
 
 read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
 
-read_param "" "$M_DISTR_VER" "$debian_distr" debian_distr text
+read_param "" "$M_DISTR_VER" "$version_debian" version_debian text
 print_param note "$M_DEB_NOTE_1"
-print_param note "$M_DEB_NOTE_2 $debian_distr."
+print_param note "$M_DEB_NOTE_2 $version_debian."
 add_var "declare -gA" "debian_repos"
-if [[ $debian_distr == "sid" ]]; then
+if [[ $version_debian == "sid" ]]; then
   for repo_name in updates security backports; do
     unset "debian_repos[$repo_name]"
   done
 fi
 print_param note "$M_DEB_REPO_1"
 for repo_name in "${!debian_repos[@]}"; do
-  read_param "" "$repo_name" "${debian_repos[$repo_name]}" debian_repos[$repo_name] text_empty
+  read_param "" "$M_DEB_REPO_DIALOG $repo_name" "${debian_repos[$repo_name]}" debian_repos[$repo_name] text_empty
   [[ -z ${debian_repos[$repo_name]} ]] && unset debian_repos[$repo_name]
 done
 read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
 while [[ $repos == 1 ]]; do
   read_param "" "$M_DEB_REPO_NAME" "" repo_name text_empty
-  [[ -n $repo_name ]] && read_param "" "$repo_name" "deb https://example.com/debian $debian_distr main" "debian_repos[$repo_name]" text
+  [[ -n $repo_name ]] && read_param "" "$M_DEB_REPO_DIALOG $repo_name" "deb https://example.com/debian $version_debian main" "debian_repos[$repo_name]" text
   read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
   [[ -z $repo_name ]] && repos=0
 done

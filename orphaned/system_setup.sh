@@ -198,3 +198,11 @@ if [[ $graphics == "1" ]]; then
     *) return_err "Incorrect paramater desktop_dm=$desktop_dm! Mistake?";;
   esac
 fi
+
+
+#
+      msg_print note "$M_DESKTOP_SOFT"
+      read_param "" "$M_FIREFOX" '' firefox_soft yes_or_no
+      read_param "" "$M_CHROMIOUM" '' chromium_soft yes_or_no
+      read_param "" "$M_OFFICE" '' office_soft yes_or_no
+      read_param "" "$M_ADMIN_SOFT" '' admin_soft yes_or_no

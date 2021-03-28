@@ -11,12 +11,12 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE $dir) != tmpfs ]]; then
   read_param "" "$M_BOOTLOADER" '' bootloader yes_or_no
   if [[ $bootloader == "1" ]]; then
     if [[ -d /sys/firmware/efi/efivars ]]; then
-      bootloader_type_default=${bootloader_type_default:-uefi}
+      BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-uefi}
     else
-      bootloader_type_default=${bootloader_type_default:-bios}
+      BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-bios}
     fi
     while ! [[ $bootloader_type == "bios" || $bootloader_type == "uefi" ]]; do
-      read_param "" "$M_BOOTLOADER_TYPE (bios/uefi)" "$bootloader_type_default" bootloader_type text
+      read_param "" "$M_BOOTLOADER_TYPE (bios/uefi)" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type text
     done
     read_param "" "$M_BOOTLOADER_NAME (grub2/refind)" "grub2" bootloader_name text
     [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "$(findmnt -funcevo SOURCE $dir)" bootloader_bios_place text
