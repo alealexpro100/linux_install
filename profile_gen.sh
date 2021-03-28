@@ -16,131 +16,10 @@ fi
 ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
 source ./lib/common/lib_connect.sh
 source ./lib/common/lib_var_op.sh
+source ./lib/common/lib_ui.sh
 
 [[ -f ./public_parametres ]] && source ./public_parametres
 [[ -f ./private_parametres ]] && source ./private_parametres
-
-
-
-case $ECHO_MODE in
-  whiptail) 
-    function print_param() {
-      local print_type=$1 text="$2" ww="10" wh="60"
-      whiptail --msgbox "$text$dialog" $ww $wh
-    }
-  ;;
-  auto|cli|*) 
-    function print_param() {
-      local print_type=$1 text="$2"
-      msg_print "$print_type" "$text"
-    }
-  ;;
-esac
-
-case $ECHO_MODE in
-  auto)
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-      case $option in
-        print) echo -ne "$text$dialog";;
-        yes_or_no) tmp=1;;
-        no_or_yes) tmp=0;;
-        text) tmp=$default_var;;
-        text_empty) tmp=$default_var;;
-        secret) tmp=$default_var;;
-        secret_empty) tmp=$default_var;;
-        *) return_err "Option $option is incorrect!";;
-      esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  whiptail)
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-      ww="15" wh="50"
-      case $option in
-        yes_or_no)
-          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-        ;;
-        no_or_yes)
-          tmp=$(whiptail --menu "$text$dialog" $ww $wh 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-        ;;
-        text)
-          while [[ $tmp == '' ]]; do
-            tmp=$(whiptail --inputbox "$text$dialog:" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-          done
-        ;;
-        text_empty)
-          tmp=$(whiptail --inputbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-        ;;
-        secret)
-          while [[ $tmp == '' ]]; do
-            tmp=$(whiptail --passwordbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-          done
-        ;;
-        secret_empty)
-          tmp=$(whiptail --passwordbox "$text$dialog" $ww $wh "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
-        ;;
-        *)
-          return_err "Option $option is incorrect!"
-        ;;
-      esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  cli|'')
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-      case $option in
-        yes_or_no)
-          echo -ne "$text"
-          read -r -p "$dialog (Y/n): " -e -i "$default_var" tmp
-          if [[ $tmp == 'Y' || $tmp == 'y' || $tmp == 'Yes' || $tmp == 'yes' || $tmp == '' ]]; then
-            tmp=1
-          else
-            tmp=0
-          fi
-        ;;
-        no_or_yes)
-          echo -ne "$text"
-          read -r -p "$dialog (N\y): " -e -i "$default_var" tmp
-          if [[ $tmp == 'N' || $tmp == 'n' || $tmp == 'No' || $tmp == 'no' || $tmp == '' ]]; then
-            tmp=0
-          else
-            tmp=1
-          fi
-        ;;
-        text)
-          while [[ $tmp == '' ]]; do
-            echo -ne "$text"
-            read -r -p "$dialog: " -e -i "$default_var" tmp
-          done
-        ;;
-        text_empty)
-          echo -ne "$text"
-          read -r -p "$dialog: " -e -p "$dialog: " -i "$default_var" tmp
-        ;;
-        secret)
-          while [[ $tmp == '' ]]; do
-            echo -ne "$text"
-            read -r -p "$dialog: " -e -s -i "$default_var" tmp; echo ""
-          done
-        ;;
-        secret_empty)
-          echo -ne "$text"
-          read -r -p "$dialog: " -e -s -i "$default_var" tmp; echo ""
-        ;;
-        *)
-          return_err "Option $option is incorrect!"
-        ;;
-      esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  *)
-    return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
-  ;;
-esac
 
 #Language support.
 source ./lib/translations/messages_en.sh
@@ -148,25 +27,62 @@ source ./lib/translations/messages_en.sh
 
 print_param note "$M_WELCOME"
 
-if [[ $LIVE_MODE != "1" ]]; then
+if [[ $LIVE_MODE == "1" ]]; then
+  profile_file="/tmp/last_gen.sh"
+  add_var "declare -gx" "dir" "${DEFAULT_DIR:-"/mnt/mnt"}"
+else
   print_param note "$M_DIR_WARN"
   profile_file="${1:-"./auto_configs/last_gen.sh"}"
   print_param note "$M_PROFILE_1 $profile_file"
-  default_dir="${default_dir:-"/mnt/mnt"}"
-  read_param "" "$M_PATH $distr" "$default_dir" dir text
+  read_param "" "$M_PATH $distr" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
 
 while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
-  read_param "$M_DISTR_1: \n$(ls -1 ./lib/distr)\n" "$M_DISTR_2" "$default_distr" distr text
+  read_param "$M_DISTR_1: \n$(ls -1 ./lib/distr)\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text
 done
 
 print_param note "$M_COMMON_OPT"
 source ./lib/common/common_options.sh
 print_param note "$M_DISTR_OPT"
 source "./lib/distr/$distr/distr_options.sh"
+#Final menu for changes.
+var_final=''
+until [[ $var_final == "0" ]]; do
+  vars_list=("0" "$M_LIST_FINAL_END_OPTION")
+  for ((i=1; i<${#var_num[@]}; i++)); do
+    var=${var_num[i]}
+    [[ $var == "var_final" ]] && continue
+    vars_list=("${vars_list[@]}" "$i")
+    if [[ ${!var} == "0" || ${!var} == "1" ]]; then
+      if [[ ${!var} == "0" ]]; then
+        vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_YES")
+      else
+        vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_NO")
+      fi
+    else
+      vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | ${!var}")
+    fi 
+  done
+  read_param "$M_LIST_FINAL_TEXT" "$M_LIST_FINAL_DIALOG" "0" var_final menu "${vars_list[@]}"
+  if [[ $var_final != 0 ]]; then
+    var="${var_num[$((${var_final#0}))]}"
+    if [[ ${!var} == "0" || ${!var} == "1" ]]; then
+      if [[ ${!var} == "0" ]]; then
+        read_param "" "${M_VAR_DESCRIPTION[$var]:-$var}" "" "$var" no_or_yes
+      else
+        read_param "" "${M_VAR_DESCRIPTION[$var]:-$var}" "" "$var" yes_or_no
+      fi
+    else
+      read_param "" "${M_VAR_DESCRIPTION[$var]:-$var}" "${!var}" "$var" text
+    fi
+  fi
+done
 
 add_var "declare -gx" LANG "$LANG"
-var_export > "$profile_file"
+{
+  echo -e "#Generated on $(date -u).\n"
+  var_export "add_var "
+} > "$profile_file"
 
 [[ $LIVE_MODE != "1" ]] && print_param note "$M_PROFILE_2 $profile_file"
 
