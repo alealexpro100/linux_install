@@ -25,8 +25,11 @@ Supported Linux distros for installation:
 
 ## Supported flags:
 * `LIVE_MODE` - Will be used for live install. (No full support yet.)
+* `DEFAULT_DIR` - Default directory for installation.
+* `DEFAULT_DISTR` - Default distribution for installation.
+* `BOOTLOADER_TYPE_DEFAULT` - Default type of bootloader for installation.
 * `CUSTOM_DIR` - Path to custom script and files.
-* `ECHO_MODE` - Mode of interface (cli/whiptail).
+* `ECHO_MODE` - Mode of interface (auto/cli/whiptail).
 * `INSTALL_LANG` - Language for install interface. (NOT of target system!)
 * `ALEXPRO100_LIB_DEBUG` - Debug mode for alexpro100 lib.
 

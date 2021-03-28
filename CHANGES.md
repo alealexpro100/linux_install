@@ -1,3 +1,14 @@
+## Version 0.4.1:
+* Added feature to change options and the end.
+* Some rework of code.
+* Fixes for arch and debian install.
+* Library (alexpro100_lib) fixes.
+
+## Version 0.3.8:
+* Busybox support,
+* Soft install rework,
+* Debian mirror fix.
+
 ## Version 0.3.7:
 * Minor fixes.
 * Support for dynamic changes in profile files.
