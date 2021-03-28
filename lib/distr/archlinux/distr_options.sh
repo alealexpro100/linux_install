@@ -29,11 +29,6 @@ if [[ $add_soft == "1" ]]; then
       else
         return_err "Wayland is not supported now!"
       fi
-      msg_print note "$M_DESKTOP_SOFT"
-      read_param "" "$M_FIREFOX" '' firefox_soft yes_or_no
-      read_param "" "$M_CHROMIOUM" '' chromium_soft yes_or_no
-      read_param "" "$M_OFFICE" '' office_soft yes_or_no
-      read_param "" "$M_ADMIN_SOFT" '' admin_soft yes_or_no
     else
       read_param "" "$M_DESKTOP_MANUAL_PKGS" "plasma-desktop" desktop_packages text_empty
     fi
@@ -54,6 +49,6 @@ read_param "" "$M_MIRROR" "$mirror_archlinux" mirror_archlinux text_empty
 
 read_param "" "$M_KERNEL" '' kernel yes_or_no
 
-[[ $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' multilib yes_or_no
+[[ $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' arch_add_i386 yes_or_no
 read_param "" "$M_PACK_PRE" "wget nano" preinstall text_empty
 read_param "" "$M_PACK_POST" "base-devel screen htop rsync bash-completion" postinstall text_empty

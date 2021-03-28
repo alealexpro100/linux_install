@@ -7,7 +7,7 @@ function grub_config() {
     grub-install --target=i386-efi --efi-directory=/boot --removable $grub_param
     grub-install --target=x86_64-efi --efi-directory=/boot --removable $grub_param
   else
-    grub-install --target=i386-pc --debug --force $grub_param $bootloader_bios_place
+    grub-install --target=i386-pc --force $grub_param $bootloader_bios_place
   fi
   grub-mkconfig -o /boot/grub/grub.cfg
 }

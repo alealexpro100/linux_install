@@ -6,13 +6,15 @@ to_install="$postinstall" to_enable=''
 
 if [[ $kernel == "1" ]]; then
   echo "Installing linux kernel and its additions..."
-  [[ $backports_kernel == "1" ]] && ADD_conf="-t $debian_distr-backports"
   case $debian_arch in
     i386) kernel_arch=686;;
     *) kernel_arch=$debian_arch;;
   esac
-  $apt_install $ADD_conf linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux firmware-realtek firmware-atheros firmware-brcm80211 dkms
-  $apt_install -d $ADD_conf r8168-dkms
+  if [[ $backports_kernel == "1" ]]; then
+    $apt_install -t $debian_distr-backports linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux firmware-linux-nonfree dkms
+  else
+    to_install="$to_install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux firmware-linux-nonfree dkms"
+  fi
 fi
 
 if [[ $add_soft == "1" ]]; then
