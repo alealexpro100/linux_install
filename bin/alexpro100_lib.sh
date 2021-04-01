@@ -14,6 +14,8 @@ export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 alias AP100_DBG='[[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || '
 
+#NOTE: Take attention to the parentheses (() or {}). They may vary.
+
 # Colors for text.
 
 #Foreground.

@@ -118,3 +118,6 @@ mirror_rsync $CYGWIN_MIRROR/ cygwin
 if [[ "$ORACLE_MIRROR" == "1" && -f /usr/bin/reposync && -f oraclelinux/config.repo ]]; then
   /usr/bin/reposync --bugfix --enhancement --newpackage --security --download-metadata --downloadcomps --remote-time --newest-only --delete --config oraclelinux/config.repo -p oraclelinux/mirror/
 fi
+
+# =)
+echo "Script succesfully ended its work. Have a nice day!"

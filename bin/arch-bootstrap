@@ -20,6 +20,8 @@ if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
   source "$ALEXPRO100_LIB_LOCATION"
 fi
 
+[[ $UID != 0 ]] && return_err "This script requries root permissions!"
+
 # Check options.
 if [[ -z $3 ]]; then
   echo "Arch linux boostrap script. It uses only choosed mirror."

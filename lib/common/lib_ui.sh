@@ -1,6 +1,6 @@
 
 #Weight and height parametres of terminal for UI.
-ui_terminal_weight=$(($(tput lines)*5/10)) ui_terminal_height=$(($(tput cols)*5/10))
+ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
 
 #Print info
 case $ECHO_MODE in
