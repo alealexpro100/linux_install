@@ -1,3 +1,7 @@
+## Version 0.4.2:
+* Fixed busybox dialog.
+* Added image maker.
+
 ## Version 0.4.1:
 * Added feature to change options and the end.
 * Some rework of code.

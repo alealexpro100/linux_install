@@ -37,6 +37,7 @@ Supported Linux distros for installation:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
 * bin/mirror_sync - Tools for making local mirror of packages.
+* bin/make_images - Create image with linux_install script.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
 * orphaned/ - Old parts of script. Are kept for future usage.
@@ -51,3 +52,4 @@ Supported Linux distros for installation:
 
 * http://ftp.debian.org/debian/pool/main/d/debootstrap/ -- deboostrap.
 * https://www.archlinux.org/packages/extra/any/arch-install-scripts/download/ -- Parts from arch-chroot and genfstab.
+* https://alpinelinux.org/downloads/ -- Distro used for iso and netboot.
