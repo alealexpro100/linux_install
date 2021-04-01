@@ -4,7 +4,7 @@ sed -i "s/#//g" /etc/apk/repositories
 apk update
 
 #Network setup.
-echo -e "auto lo\n  iface lo inet loopback\n" > /etc/network/interfaces
+sed -i 's/#auto/auto/;s/#  /  /g' /etc/network/interfaces
 
 #Extended fonts for console
 apk add terminus-font
@@ -48,7 +48,7 @@ rc-update add udev-postmount default
 echo "root:pass" | chpasswd -c SHA512
 echo alpine_pxe > /etc/hostname
 sed -i "/You may change/d" /etc/motd
-echo -e "SSH is working on port 22.\nPassword for root is pass.\n" >> /etc/motd
+echo -e "Please, ignore errors. It is normal.\nSSH is working on port 22.\nPassword for root is pass.\n" >> /etc/motd
 sed -i "8s/tty1/#tty1/" /etc/inittab
 echo -e "\ntty1::respawn:/bin/login -f root" >> /etc/inittab
 sed -i "1s/ash/bash/" /etc/passwd
