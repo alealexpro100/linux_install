@@ -13,8 +13,10 @@ msg_print note "Creating config script..."
   cat ./lib/common/lib_var_op.sh
   echo -e "\nsource /root/configuration"
   cat ./lib/common/rootfs_scripts/base_change.sh
+  cat ./lib/distr/$distr/rootfs_script.sh
+  [[ $bootloader == "1" ]] && cat ./lib/common/rootfs_scripts/$bootloader_name.sh
 } > "$dir/root/pi_s1.sh"
-
+chmod +x "$dir/root/pi_s1.sh"
 
 msg_print note "Configuring hosts..."
 echo "127.0.0.1	localhost

@@ -1,4 +1,13 @@
- 
+#Apk config
+msg_print note "Apk setup..."
+apk_install="apk add"
+
+[[ -f /etc/apk/repositories ]] && rm -rf /etc/apk/repositories
+echo -e "$mirror_alpine/$version_alpine/main\n$mirror_alpine/$version_alpine/community" >> /etc/apk/repositories
+apk update
+
+msg_print note "Apk is ready."
+
 #Alpine setup.
 msg_print note "Installing addational packages..."
 
@@ -19,7 +28,7 @@ rc-update add savecache shutdown
 rc-update add firstboot default
 
 #Network setup.
-echo -e "auto lo\n\tiface lo inet loopback\n" > /etc/network/interfaces
+echo -e "auto lo\n  iface lo inet loopback\n" > /etc/network/interfaces
 echo -e "#auto eth0\n#  iface eth0 inet dhcp\n#  iface eth0 inet6 auto\n" >> /etc/network/interfaces
 
 
