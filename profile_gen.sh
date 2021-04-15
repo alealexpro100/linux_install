@@ -41,13 +41,14 @@ while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
   read_param "$M_DISTR_1: \n$(ls -1 ./lib/distr)\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text
 done
 
-print_param note "$M_COMMON_OPT"
+AP100_DBG print_param note "$M_COMMON_OPT"
 source ./lib/common/common_options.sh
-print_param note "$M_DISTR_OPT"
+AP100_DBG print_param note "$M_DISTR_OPT"
 source "./lib/distr/$distr/distr_options.sh"
 #Final menu for changes.
 var_final=''
 until [[ $var_final == "0" ]]; do
+  #Make menu, We use array to make parametres.
   vars_list=("0" "$M_LIST_FINAL_END_OPTION")
   for ((i=1; i<${#var_num[@]}; i++)); do
     var=${var_num[i]}
@@ -63,7 +64,9 @@ until [[ $var_final == "0" ]]; do
       vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | ${!var}")
     fi 
   done
+  #Print menu.
   read_param "$M_LIST_FINAL_TEXT" "$M_LIST_FINAL_DIALOG" "0" var_final menu "${vars_list[@]}"
+  #Decide what we have to do: change param and show menu again or end selection.
   if [[ $var_final != 0 ]]; then
     var="${var_num[$((${var_final#0}))]}"
     if [[ ${!var} == "0" || ${!var} == "1" ]]; then

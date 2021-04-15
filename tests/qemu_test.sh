@@ -38,7 +38,6 @@ for distr_install in "$@"; do
   mkdir -p "$tmp_distr_install/rootfs"
   mount "${disk_id}"p1 "$tmp_distr_install/rootfs"
   BOOTLOADER_TYPE_DEFAULT=bios DEFAULT_DISTR=$distr_install DEFAULT_DIR="$tmp_distr_install/rootfs" ECHO_MODE=auto bash ../profile_gen.sh "$tmp_distr_install/used_config"
-  sed -ie "s|\"${disk_id}p1\"|\"${disk_id}\"|" "$tmp_distr_install/used_config"
   msg_print warn "Start of profile file."
   cat "$tmp_distr_install/used_config"
   msg_print warn "End of profile file."
