@@ -5,13 +5,15 @@
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases
+set -e
 
-ALEXPRO100_LIB_VERSION="0.2.6" 
+ALEXPRO100_LIB_VERSION="0.2.7" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
+#Add this for debug messages.
 alias AP100_DBG='[[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || '
 
 #NOTE: Take attention to the parentheses (() or {}). They may vary.
@@ -77,14 +79,13 @@ function msg_print() {
 export -f msg_print
 
 function return_err() {
-  msg_print error "$1"; return 1
+  msg_print error "$1"; return "${2:-1}"
 }
 export -f return_err
 
 function echo_help() {
   msg_print note "$1"
-  msg_print error "No arguments!"
-  return 1
+  return_err "No arguments!"
 }
 export -f echo_help
 
@@ -152,6 +153,50 @@ function create_tmp_dir() {
   mkdir -p "${!1}" &>/dev/null
 }
 export -f create_tmp_dir
+
+function archive_extract() (
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [FILE] [DIR]\nExtract archive to directory."
+  local file
+  file="$(realpath "$1")"
+  cd "$2" || return_err "Directory $2 does not exist!"
+  case $file in
+    *.tar.bz2)  tar xvjf "$1";;
+    *.tar.gz)  tar xvzf "$file";;
+    *.tar.xz)  tar xvJf "$file";;
+    *.tar.zst)  zstd -qdcf "$file"| tar -xf -;;
+    *.lzma)  unlzma "$file";;
+    *.bz2)  bunzip2 "$file";;
+    *.rar)  unrar x -ad "$file";;
+    *.gz)  gunzip "$file";;
+    *.tar)  tar xvf "$file";;
+    *.tbz2)  tar xvjf "$file";;
+    *.tgz)  tar xvzf "$file";;
+    *.zip)  unzip "$file";;
+    *.Z)  uncompress "$file";;
+    *.7z)  7z x "$file";;
+    *.xz)  unxz "$file";;
+    *.exe|*.cab)  cabextract "$file";;
+    *)  return_err "$file - Unknown archive type.";;
+  esac
+)
+
+function unpack_initfs_gz() (
+  cd -- "$2" || return_err "No directory $2!"
+  gunzip -d < "$1" | cpio -iv
+)
+export -f unpack_initfs_gz
+
+function pack_initfs_cpio() (
+  cd -- "$1" || return_err "No directory $1!"
+  find . | cpio --quiet -H newc -o
+)
+export -f pack_initfs_cpio
+
+function squashfs_rootfs_pack() (
+  cd -- "$1" || return_err "No directory $1!"
+  mksquashfs . "$2" -noappend -comp "$3"
+)
+export -f squashfs_rootfs_pack
 
 #--- ROOTFS MOUNT: BEGIN
 function chroot_add_mount() {
