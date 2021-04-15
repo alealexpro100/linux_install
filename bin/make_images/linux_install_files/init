@@ -4,9 +4,7 @@
 # Edited to boot squashfs
 # Taken most parts from original init
 VERSION=3.5.0-r0
-SINGLEMODE=no
 sysroot=/sysroot
-splashfile=/.splash.ctrl
 repofile=/tmp/repositories
 
 if [ -z "$rootfs_net" ]; then
@@ -18,19 +16,19 @@ fi
 ebegin() {
 	last_emsg="$*"
 	echo "$last_emsg..." > /dev/kmsg
-	[ "$KOPT_quiet" = yes ] && return 0
+	[ "$quiet" = yes ] && return 0
 	echo -n " * $last_emsg: "
 }
 eend() {
 	local msg
 	if [ "$1" = 0 ] || [ $# -lt 1 ] ; then
 		echo "$last_emsg: ok." > /dev/kmsg
-		[ "$KOPT_quiet" = yes ] && return 0
+		[ "$quiet" = yes ] && return 0
 		echo "ok."
 	else
 		shift
 		echo "$last_emsg: failed. $*" > /dev/kmsg
-		if [ "$KOPT_quiet" = "yes" ]; then
+		if [ "$quiet" = "yes" ]; then
 			echo -n "$last_emsg "
 		fi
 		echo "failed. $*"
@@ -42,8 +40,8 @@ eend() {
 # determine the default interface to use if ip=dhcp is set
 # uses the first "eth" interface with operstate 'up'.
 ip_choose_if() {
-	if [ -n "$KOPT_BOOTIF" ]; then
-		mac=$(printf "%s\n" "$KOPT_BOOTIF"|sed 's/^01-//;s/-/:/g')
+	if [ -n "$BOOTIF" ]; then
+		mac=$(printf "%s\n" "$BOOTIF"|sed 's/^01-//;s/-/:/g')
 		dev=$(grep -l $mac /sys/class/net/*/address|head -n 1)
 		dev=${dev%/*}
 		[ -n "$dev" ] && echo "${dev##*/}" && return
@@ -79,7 +77,7 @@ configure_ip() {
 	[ -n "$MAC_ADDRESS" ] && return
 
 	local IFS=':'
-	set -- ${KOPT_ip:-dhcp}
+	set -- ${ip:-dhcp}
 	unset IFS
 
 	local client_ip="$1"
@@ -175,91 +173,12 @@ mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
 # acpi_osi="!Windows 2006" xen-pciback.hide=(01:00.0)
 set -- $(cat /proc/cmdline)
 
-myopts="alpine_dev autodetect autoraid chart cryptroot cryptdm cryptheader cryptoffset
-	cryptdiscards cryptkey debug_init dma init init_args keep_apk_new modules ovl_dev
-	pkgs quiet root_size root usbdelay ip alpine_repo apkovl alpine_start splash
-	blacklist overlaytmpfs rootfstype rootflags nbd resume s390x_net dasd ssh_key
-	BOOTIF zfcp"
-
-for opt; do
-	case "$opt" in
-	s|single|1)
-		SINGLEMODE=yes
-		continue
-		;;
-	console=*)
-		opt="${opt#*=}"
-		KOPT_consoles="${opt%%,*} $KOPT_consoles"
-		continue
-		;;
-	esac
-
-	for i in $myopts; do
-		case "$opt" in
-		$i=*)	eval "KOPT_${i}"='${opt#*=}';;
-		$i)	eval "KOPT_${i}=yes";;
-		no$i)	eval "KOPT_${i}=no";;
-		esac
-	done
-done
-
-echo "Alpine Init $VERSION" > /dev/kmsg
-[ "$KOPT_quiet" = yes ] || echo "Alpine Init $VERSION"
-
-# enable debugging if requested
-[ -n "$KOPT_debug_init" ] && set -x
-
-# set default values
-: ${KOPT_init:=/sbin/init}
-
-# pick first keymap if found
-for map in /etc/keymap/*; do
-	if [ -f "$map" ]; then
-		ebegin "Setting keymap ${map##*/}"
-		zcat "$map" | loadkmap
-		eend
-		break
-	fi
-done
+echo "Linux_install Init $VERSION"
 
 # load available drivers to get access to modloop media
 ebegin "Loading boot drivers"
-
-modprobe -a $(echo "$KOPT_modules $rootfstype" | tr ',' ' ' ) loop squashfs 2> /dev/null
-if [ -f /etc/modules ] ; then
-	sed 's/\#.*//g' < /etc/modules |
-	while read module args; do
-		modprobe -q $module $args
-	done
-fi
+modprobe -a $(echo "$rootfstype" | tr ',' ' ' ) loop squashfs 2> /dev/null
 eend 0
-
-if [ -n "$KOPT_cryptroot" ]; then
-	cryptopts="-c ${KOPT_cryptroot}"
-	if [ "$KOPT_cryptdiscards" = "yes" ]; then
-		cryptopts="$cryptopts -D"
-	fi
-	if [ -n "$KOPT_cryptdm" ]; then
-		cryptopts="$cryptopts -m ${KOPT_cryptdm}"
-	fi
-	if [ -n "$KOPT_cryptheader" ]; then
-		cryptopts="$cryptopts -H ${KOPT_cryptheader}"
-	fi
-	if [ -n "$KOPT_cryptoffset" ]; then
-		cryptopts="$cryptopts -o ${KOPT_cryptoffset}"
-	fi
-	if [ "$KOPT_cryptkey" = "yes" ]; then
-		cryptopts="$cryptopts -k /crypto_keyfile.bin"
-	elif [ -n "$KOPT_cryptkey" ]; then
-		cryptopts="$cryptopts -k ${KOPT_cryptkey}"
-	fi
-fi
-
-if [ -n "$KOPT_nbd" ]; then
-	# TODO: Might fail because nlplug-findfs hasn't plugged eth0 yet
-	configure_ip
-	setup_nbd || echo "Failed to setup nbd device."
-fi
 
 # zpool reports /dev/zfs missing if it can't read /etc/mtab
 ln -s /proc/mounts /etc/mtab
@@ -285,8 +204,7 @@ else
     mkdir -p /tmp
 	# locate boot media and mount it
 	ebegin "Mounting boot media"
-	nlplug-findfs $cryptopts -p /sbin/mdev ${KOPT_debug_init:+-d} \
-		${KOPT_usbdelay:+-t $(( $KOPT_usbdelay * 1000 ))} \
+	nlplug-findfs -p /sbin/mdev \
 		-b $repofile -a /tmp/apkovls
 	repo_dir=$(head -n 1 $repofile)
 	if [ -f $repo_dir/$rootfs_net ]; then
@@ -297,7 +215,9 @@ else
 fi
 : ${init:=/sbin/init}
 if [ -f $sysroot/$init ]; then
-	cp /etc/resolv.conf $sysroot/etc/resolv.conf
+	if [ -f /etc/resolv.conf ]; then
+		cp /etc/resolv.conf $sysroot/etc/resolv.conf
+	fi
 	cat /proc/mounts | while read DEV DIR TYPE OPTS ; do
 		if [ "$DIR" != "/" -a "$DIR" != "$sysroot" -a -d "$DIR" ]; then
 			mkdir -p $sysroot/$DIR

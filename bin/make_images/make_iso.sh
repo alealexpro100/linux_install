@@ -20,21 +20,6 @@ if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
   source "$ALEXPRO100_LIB_LOCATION"
 fi
 
-function unpack_initfs() (
-    cd -- "$2" || return_err "No directory $2!"
-    gunzip -d < "$1" | cpio -iv
-)
-
-function pack_initfs_zstd() (
-    cd -- "$1" || return_err "No directory $1!"
-    find . | cpio --quiet -H newc -o | zstd -T12 -10 > "$2"
-)
-
-function squashfs_rootfs_pack() (
-    cd -- "$1" || return_err "No directory $1!"
-    mksquashfs . "$2" -noappend -comp "$3"
-)
-
 function make_bootable_iso() (
     cd -- "$1" || return_err "No directory $1!"
     mkisofs -o "$2"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -lJR -boot-info-table .; 
@@ -59,14 +44,13 @@ mount "$orig_iso" "$make_iso/orig_iso"
 cp -a "$make_iso/orig_iso/." "$make_iso/final_iso"
 umount "$make_iso/orig_iso"
 initramfs_name="$(find "$make_iso/final_iso/boot" -name "*initramfs-*" | head -n 1)"
-unpack_initfs "$initramfs_name" "$make_iso/initfs"
+unpack_initfs_gz "$initramfs_name" "$make_iso/initfs"
 mv "$make_iso/initfs/init" "$make_iso/initfs/init_orig"
 cp "$iso_files/init" "$make_iso/initfs/init"
-pack_initfs_zstd "$make_iso/initfs" "$initramfs_name"
+pack_initfs_cpio "$make_iso/initfs" | zstd -T12 -10 > "$initramfs_name"
 mount -t tmpfs tmpfs "$make_iso/rootfs"
-cp "./auto_configs/alpine_rootfs_$arch.sh" "$make_iso/config.sh"
-echo "add_var \"declare -gx\" \"copy_setup_script\" \"1\"" >> "$make_iso/config.sh"
-CUSTOM_DIR="$make_iso/custom" default_dir="$make_iso/rootfs" "./install_sys.sh" "$make_iso/config.sh" || return_err "Something went wrong!"
+cp "./auto_configs/linux_install_$arch.sh" "$make_iso/config.sh"
+CUSTOM_DIR="$make_iso/custom" default_dir="$make_iso/rootfs" "./install_sys.sh" "$make_iso/config.sh"
 squashfs_rootfs_pack "$make_iso/rootfs" "$make_iso/final_iso/apks/rootfs.img" xz
 umount "$make_iso/rootfs"
 sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_iso/final_iso/boot/syslinux/syslinux.cfg"
