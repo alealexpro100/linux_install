@@ -7,14 +7,12 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.2.7" 
+ALEXPRO100_LIB_VERSION="0.2.8" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
-#Add this for debug messages.
-alias AP100_DBG='[[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || '
 
 #NOTE: Take attention to the parentheses (() or {}). They may vary.
 
@@ -57,6 +55,13 @@ export Blink="\e[5m"        # Blink (might not work)
 export Reverse="\e[7m"      # Negative text
 export Crossout="\e[9m"     # Crossed out
 export DUnderline="\e[21m"  # Double Underlined
+
+#--DEBUG--
+
+function AP100_DBG() {
+  [[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || "$@"
+}
+export -f AP100_DBG
 
 #--UI--
 
