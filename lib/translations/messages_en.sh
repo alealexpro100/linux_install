@@ -1,5 +1,5 @@
 #Messages for english language.
-
+M_PROJECT_NAME="Linux install script."
 M_YES="Yes"
 M_NO="No"
 M_EXIT_BUTTON="Exit"

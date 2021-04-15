@@ -9,6 +9,7 @@ fi
 
 mirror_path=$(grep -F "set base_path" "$1" | tr -s " " | cut -d' ' -f3)
 declare -gx mirror_path
+threads="$(nproc)"
 file_hashes="$mirror_path/var/SHA256"
 count=$(< "$file_hashes" wc -l)
 declare -gx count
@@ -27,7 +28,7 @@ deb_check_file() {
     case ${#sum} in
       64) echo "$sum $mirror_path/mirror/$file" | sha256sum -c - &>> /dev/null
       ;;
-      32) echo "$sum $mirror_path/mirror/$file" | md5sum -c - &>> /dev/null;
+      32) echo "$sum $mirror_path/mirror/$file" | md5sum -c - &>> /dev/null
       ;;
       *) echo "!"
       ;;
@@ -46,13 +47,13 @@ deb_check_file() {
 }
 export -f deb_check_file
 
-sp="|\-/"; s=1
-E_f=0; X_f=0;
+sp="|\-/" s=1 E_f=0; X_f=0 SECONDS=0
 while IFS= read -r -n1 char; do
  [[ $char == "X" ]] && X_f=$((X_f+1))
  [[ $char == "E" ]] && E_f=$((E_f+1))
  [[ $char == "N" ]] && N_f=$((N_f+1))
  [[ $char == "!" ]] && echo "Someting went wrong!"
- echo -ne "\e[2KProgress:$((count-N_f))[${sp:(i++)*s%${#sp}:s}]:$3; X:$((X_f)); E:$((E_f)); N:$((N_f)).\r"
-done < <(< "$file_hashes" xargs -I {} -n 1 -P $(($(nproc)*1024)) bash -c 'deb_check_file "$@"' _ {})
+ time=$SECONDS
+ echo -ne "\e[2KProgress:$((count-N_f))[${sp:(i++)*s%${#sp}:s}]:$3; X:$((X_f)); E:$((E_f)); N:$((N_f)). $((time/60)) Min $((time%60)) Sec elapsed.\r"
+done < <(< "$file_hashes" xargs -I {} -n 1 -P "$threads" bash -c 'deb_check_file "$@"' _ {})
 echo -e "\nComplete! Have a nice day!"

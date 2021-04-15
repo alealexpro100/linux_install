@@ -26,6 +26,8 @@ else
   bootloader=0
 fi
 
-read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no
+if [[ $LIVE_MODE != "1" ]]; then
+  read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no
+fi
 
 parse_arch $(uname -m)

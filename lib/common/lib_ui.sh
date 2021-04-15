@@ -7,8 +7,8 @@ case $ECHO_MODE in
   whiptail|dialog) 
     function print_param() {
       local print_type=$1 text="$2"
-      local options="$ECHO_MODE --cancel-button $M_EXIT_BUTTON"
-      $options --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
+      local options=("$ECHO_MODE" "--cancel-button" "$M_EXIT_BUTTON" "--backtitle" "$M_PROJECT_NAME")
+      "${options[@]}" --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
     }
   ;;
   auto|cli|*) 
@@ -41,33 +41,33 @@ case $ECHO_MODE in
   whiptail|dialog)
     function read_param() {
       local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-      local options="$ECHO_MODE --cancel-button $M_EXIT_BUTTON"
+      local options=("$ECHO_MODE" "--cancel-button" "$M_EXIT_BUTTON" "--backtitle" "$M_PROJECT_NAME")
       shift 5 #See 'menu' section
       case $option in
         yes_or_no)
-          tmp=$($options --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$("${options[@]}" --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         no_or_yes)
-          tmp=$($options --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$("${options[@]}" --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         text)
           while [[ $tmp == '' ]]; do
-            tmp=$($options --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+            tmp=$("${options[@]}" --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
           done
         ;;
         text_empty)
-          tmp=$($options --inputbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$("${options[@]}" --inputbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         secret)
           while [[ $tmp == '' ]]; do
-            tmp=$($options --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+            tmp=$("${options[@]}" --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
           done
         ;;
         secret_empty)
-          tmp=$($options --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$("${options[@]}" --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         menu)
-          tmp=$($options --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "$@" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          tmp=$("${options[@]}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "$@" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
         ;;
         *)
           return_err "Option $option is incorrect!"

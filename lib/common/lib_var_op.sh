@@ -8,9 +8,9 @@ function add_var() {
   var_list[$var]="\"$type\" \"$var\""
   if [[ -n $content ]]; then
     var_list[$var]="${var_list[$var]} \"$content\""
-    $type $var="$content"
+    $type "$var"="$content"
   else
-    $type $var
+    $type "$var"
   fi
 }
 

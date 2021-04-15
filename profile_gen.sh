@@ -23,7 +23,7 @@ source ./lib/common/lib_ui.sh
 
 #Language support.
 source ./lib/translations/messages_en.sh
-[[ -n $INSTALL_LANG ]] && source "./lib/translations/messages_$INSTALL_LANG.sh"
+[[ -n $LANG_INSTALLER ]] && source "./lib/translations/messages_$LANG_INSTALLER.sh"
 
 print_param note "$M_WELCOME"
 
@@ -54,7 +54,7 @@ until [[ $var_final == "0" ]]; do
     [[ $var == "var_final" ]] && continue
     vars_list=("${vars_list[@]}" "$i")
     if [[ ${!var} == "0" || ${!var} == "1" ]]; then
-      if [[ ${!var} == "0" ]]; then
+      if [[ ${!var} == "1" ]]; then
         vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_YES")
       else
         vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_NO")

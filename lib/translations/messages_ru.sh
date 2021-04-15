@@ -1,5 +1,5 @@
-#Messages for english language.
-
+#Messages for russian language.
+M_PROJECT_NAME="Скрипт устанвки Linux."
 M_YES="Да"
 M_NO="Нет"
 M_EXIT_BUTTON="Выход"
