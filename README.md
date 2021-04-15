@@ -30,7 +30,7 @@ Supported Linux distros for installation:
 * `BOOTLOADER_TYPE_DEFAULT` - Default type of bootloader for installation.
 * `CUSTOM_DIR` - Path to custom script and files.
 * `ECHO_MODE` - Mode of interface (auto/cli/whiptail).
-* `INSTALL_LANG` - Language for install interface. (NOT of target system!)
+* `LANG_INSTALLER` - Language for install interface. (NOT of target system!)
 * `ALEXPRO100_LIB_DEBUG` - Debug mode for alexpro100 lib.
 
 ## Contents of project:
