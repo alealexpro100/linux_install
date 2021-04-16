@@ -22,8 +22,12 @@ source ./lib/common/lib_ui.sh
 [[ -f ./private_parametres ]] && source ./private_parametres
 
 #Language support.
-source ./lib/translations/messages_en.sh
-[[ -n $LANG_INSTALLER ]] && source "./lib/translations/messages_$LANG_INSTALLER.sh"
+msg_dir="${msg_dir:-./lib/msg/}"
+msg_file_list="$(find "$msg_dir" | sed "s|$msg_dir||g;s|.sh||g;/^$/d")"
+[[ -f "$msg_dir/$LANG_INSTALLER.sh" ]] || LANG_INSTALLER=en
+source "$msg_dir/$LANG_INSTALLER.sh"
+read_param "$M_MSG_M: \n$msg_file_list\n" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER text_check "$(echo "$msg_file_list" | tr '\n' ',')"
+source "$msg_dir/$LANG_INSTALLER.sh"
 
 print_param note "$M_WELCOME"
 
@@ -31,15 +35,14 @@ if [[ $LIVE_MODE == "1" ]]; then
   profile_file="/tmp/last_gen.sh"
   add_var "declare -gx" "dir" "${DEFAULT_DIR:-"/mnt/mnt"}"
 else
-  print_param note "$M_DIR_WARN"
   profile_file="${1:-"./auto_configs/last_gen.sh"}"
-  print_param note "$M_PROFILE_1 $profile_file"
+  print_param note "$M_DIR_WARN\n$M_PROFILE_1 $profile_file"
   read_param "" "$M_PATH $distr" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
 
-while ! [[ -d ./lib/distr/$distr &&  $distr != '' ]]; do
-  read_param "$M_DISTR_1: \n$(ls -1 ./lib/distr)\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text
-done
+profile_dir="${profile_dir:-./lib/distr/}"
+distr_list="$(find "$profile_dir" -maxdepth 1 -type d | sed "s|$profile_dir||g;/^$/d")"
+read_param "$M_DISTR_1: \n$distr_list\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text_check "$(echo "$distr_list" | tr '\n' ',')"
 
 AP100_DBG print_param note "$M_COMMON_OPT"
 source ./lib/common/common_options.sh

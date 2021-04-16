@@ -13,8 +13,7 @@ if [[ $WORK_MODE == "install" ]]; then
     while ! [[ $ECHO_MODE == "dialog" || $ECHO_MODE == "cli" ]]; do
         read_param "dialog - Use dialog while installation.\ncli - use console while installation." "Choose echo mode (dialog/cli)" "dialog" ECHO_MODE text
     done
-    LIVE_MODE=1 INSTALL_LANG=ru ./linux_install/profile_gen.sh
-    mkdir /mnt/mnt
+    LIVE_MODE=1 ./linux_install/profile_gen.sh
     ./linux_install/install_sys.sh /tmp/last_gen.sh
 fi
 
