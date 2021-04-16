@@ -29,6 +29,7 @@ case $ECHO_MODE in
         yes_or_no) tmp=1;;
         no_or_yes) tmp=0;;
         text) tmp=$default_var;;
+        text_check) tmp=$default_var;;
         text_empty) tmp=$default_var;;
         secret) tmp=$default_var;;
         secret_empty) tmp=$default_var;;
@@ -42,7 +43,7 @@ case $ECHO_MODE in
     function read_param() {
       local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
       local options=("$ECHO_MODE" "--cancel-button" "$M_EXIT_BUTTON" "--backtitle" "$M_PROJECT_NAME")
-      shift 5 #See 'menu' section
+      shift 5 #For additional parametres.
       case $option in
         yes_or_no)
           tmp=$("${options[@]}" --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
@@ -53,6 +54,20 @@ case $ECHO_MODE in
         text)
           while [[ $tmp == '' ]]; do
             tmp=$("${options[@]}" --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+          done
+        ;;
+        text_check)
+          local check_list=$(echo "$@" | tr ',' '\n') correct=0
+          while [[ $correct != "1" ]]; do
+            tmp=$("${options[@]}" --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
+            if [[ $tmp != '' ]]; then
+              while IFS= read -r line; do
+                if [[ $line == "$tmp" ]]; then
+                  correct=1
+                  break
+                fi
+              done <<< "$check_list"
+            fi
           done
         ;;
         text_empty)
@@ -79,7 +94,7 @@ case $ECHO_MODE in
   cli|'')
     function read_param() {
       local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-      shift 5 #See 'menu' section
+      shift 5 #For additional parametres.
       case $option in
         yes_or_no)
           while [[ $tmp == '' ]]; do
@@ -107,6 +122,21 @@ case $ECHO_MODE in
           while [[ $tmp == '' ]]; do
             echo -ne "$text"
             read -r -p "$dialog: " -e -i "$default_var" tmp
+          done
+        ;;
+        text_check)
+          local check_list=$(echo "$@" | tr ',' '\n') correct=0
+          while [[ $correct != "1" ]]; do
+            echo -ne "$text"
+            read -r -p "$dialog: " -e -i "$default_var" tmp
+            if [[ $tmp != '' ]]; then
+              while IFS= read -r line; do
+                if [[ $line == "$tmp" ]]; then
+                  correct=1
+                  break
+                fi
+              done <<< "$check_list"
+            fi
           done
         ;;
         text_empty)

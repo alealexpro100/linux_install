@@ -15,15 +15,13 @@ if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE "$dir") != tmpfs ]]; the
     else
       BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-bios}
     fi
-    while ! [[ $bootloader_type == "bios" || $bootloader_type == "uefi" ]]; do
-      read_param "" "$M_BOOTLOADER_TYPE (bios/uefi)" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type text
-    done
+    read_param "" "$M_BOOTLOADER_TYPE (bios/uefi)" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type text_check bios,uefi
     if [[ $bootloader_type == "uefi" && $(findmnt -funcevo FSTYPE "$dir/boot") != vfat ]]; then
       print_param warning "No vfat partition found on \"$dir/boot\"!\nWithout it system won't be installed!"
     fi
     read_param "" "$M_BOOTLOADER_NAME (grub2/refind)" "grub2" bootloader_name text
     #Get parent disk of partition.
-    [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "/dev/$(lsblk -no pkname "$(findmnt -funcevo SOURCE "$dir")")" bootloader_bios_place text
+    [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "/dev/$(lsblk --noheadings --output pkname "$(findmnt -funcevo SOURCE "$dir")")" bootloader_bios_place text
     [[ $LIVE_MODE == "1" ]] || read_param "" "$M_BOOTLOADER_REMOVABLE" '' removable_disk no_or_yes
   fi
 else
