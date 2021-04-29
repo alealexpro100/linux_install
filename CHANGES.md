@@ -1,3 +1,8 @@
+## Version 0.4.3:
+* Continued work on live mode.
+* Reduced size of code,
+* Added language choose.
+
 ## Version 0.4.2:
 * Fixed busybox dialog.
 * Added image maker.
