@@ -84,7 +84,6 @@ until [[ $var_final == "0" ]]; do
   fi
 done
 
-add_var "declare -gx" LANG "$LANG"
 {
   echo -e "#Generated on $(date -u).\n"
   var_export "add_var "

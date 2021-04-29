@@ -23,40 +23,43 @@ function base_setup_alpine() {
 
 function locale_setup() {
   msg_print note "Setting up locales..."
-  sed -ie "s/#en_US.UTF-8/en_US.UTF-8;s/#$LANG/$LANG/" /etc/locale.gen
-  echo "LANG=\"$LANG\"" >> "$1"
+  sed -ie "s/#$LANG_SYSTEM/$LANG_SYSTEM/" /etc/locale.gen
+  echo "LANG=\"$LANG_SYSTEM\"" >> "$1"
   locale-gen
 }
 
 function locale_setup_voidlinux() {
-  if [[ $version_void == "glibc" ]]; then
-    msg_print note "Setting up locales..."
-    sed -ie "s/#en_US.UTF-8/en_US.UTF-8/;s/#$LANG/$LANG/" /etc/default/libc-locales
-    sed -ie "1s/en_US.UTF-8/$LANG/" "$1"
-    xbps-reconfigure -f glibc-locales
-  fi
+  msg_print note "Setting up locales..."
+  sed -ie "s/#$LANG_SYSTEM/$LANG_SYSTEM/" /etc/default/libc-locales
+  sed -ie "1s/en_US.UTF-8/$LANG_SYSTEM/" "$1"
+  xbps-reconfigure -f glibc-locales
 }
 
 case $distr in
   alpine)
-  user_groups="audio video input wheel"
-  base_setup_alpine; 
-  msg_print note "Alpine has no support of locales. Skipping."
+    user_groups="audio video input wheel"
+    base_setup_alpine
+    msg_print note "Alpine has no support of locales. Skipping."
   ;;
   archlinux)
-  user_groups="audio,video,input,network,storage,wheel"
-  base_setup; locale_setup /etc/locale.conf
+    user_groups="audio,video,input,network,storage,wheel"
+    base_setup
+    locale_setup /etc/locale.conf
   ;;
   debian)
-  user_groups="audio,video,input,sudo"
-  base_setup; locale_setup /etc/default/locale
+    user_groups="audio,video,input,sudo"
+    base_setup
+    locale_setup /etc/default/locale
   ;;
   voidlinux)
-  user_groups="audio,video,input,network,storage,wheel"
-  base_setup; locale_setup_voidlinux /etc/locale.conf
+    user_groups="audio,video,input,network,storage,wheel"
+    base_setup
+    [[ $version_void == "glibc" ]] && locale_setup_voidlinux /etc/locale.conf
   ;;
-  *) msg_print error "Non-standart distro $distr used. Skipping locale setup."
-  user_groups="audio,video,input"; base_setup;
+  *)
+    msg_print error "Non-standart distro $distr used. Skipping locale setup."
+    user_groups="audio,video,input"
+    base_setup
   ;;
 esac
 

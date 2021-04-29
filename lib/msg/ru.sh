@@ -1,3 +1,6 @@
+#Default variables for translation.
+LANG_SYSTEM="ru_RU.UTF-8"
+
 #Messages for russian language.
 M_PROJECT_NAME="Скрипт устанвки Linux."
 M_YES="Да"
@@ -20,6 +23,7 @@ M_LIST_FINAL_DIALOG="Выберите опцию"
 M_CHANGE_FINAL_DIALOG="Изменить опцию"
 M_NICE="Скрипт успешно завершил работу. Хорошего дня!"
 
+M_LANG_SYSTEM="Язык (локаль) системы"
 M_HOSTNAME="Имя хоста"
 M_USER="Имя пользователя"
 M_SHELL="Интерпретатор командной строки"
@@ -79,6 +83,7 @@ M_DEB_STABLE_KERNEL="Будет установлено стабильное яд
 declare -A M_VAR_DESCRIPTION=(
     [dir]="$M_PATH"
     [distr]="$M_DISTR_2"
+    [LANG_SYSTEM]="$M_LANG_SYSTEM"
     [hostname]="$M_HOSTNAME"
     [user_name]="$M_USER"
     [user_shell]="$M_SHELL"

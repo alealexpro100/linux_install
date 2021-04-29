@@ -2,7 +2,6 @@ msg_print note "Copying files into rootfs..."
 [[ -d ./lib/distr/$distr/rootfs ]] && $cp_safe "./lib/distr/$distr/rootfs/." "$dir"
 
 msg_print note "Saving configuration..."
-[[ -z $LANG ]] && LANG="en_US.UTF-8"
 [[ ! -d "$dir/root" ]] && mkdir "$dir/root"
 cp -af "$ALEXPRO100_LIB_LOCATION" "$dir/root/"
 var_export "add_var " > "$dir/root/configuration"

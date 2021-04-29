@@ -1,3 +1,4 @@
+read_param "" "$M_LANG_SYSTEM" "$LANG_SYSTEM" LANG_SYSTEM text_check "en_US.UTF-8,$LANG_SYSTEM"
 read_param "" "$M_HOSTNAME" "$distr-$RANDOM" hostname text
 read_param "" "$M_USER" "$user_name" user_name text
 read_param "" "$M_SHELL" "$user_shell" user_shell text
@@ -6,7 +7,7 @@ if [[ -z $passwd ]]; then
   add_var "declare -gx" passwd "$passwd_default"
   print_param warning "$M_PASS_NO $passwd."
 fi
-if mountpoint -q "$dir" && [[ $(findmnt -funcevo SOURCE "$dir") != tmpfs ]]; then
+if [[ -n $(genfstab_light "$dir") ]]; then
   read_param "" "$M_FSTAB" '' fstab yes_or_no
   read_param "" "$M_BOOTLOADER" '' bootloader yes_or_no
   if [[ $bootloader == "1" ]]; then
