@@ -23,8 +23,8 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install networkmanager crda"
     to_enable="$to_enable NetworkManager.service"
   fi
-  if [[ $pulseaudio == "1" ]]; then
-    to_install="$to_install pulseaudio pulseaudio-alsa"
+  if [[ $pipewire == "1" ]]; then
+    to_install="$to_install pipewire pipewire-pulse pipewire-alsa"
     [[ $bluetooth == "1" ]] && to_install="$to_install pulseaudio-bluetooth"
   fi
   if [[ $bluetooth == "1" ]]; then
@@ -40,7 +40,7 @@ fi
 
 if [[ $graphics == "1" ]]; then
   case $graphics_type in
-    xorg)
+    xorg|wayland)
       to_install="$to_install xorg xorg-drivers"
       case $desktop_type in
         DE)
@@ -51,7 +51,7 @@ if [[ $graphics == "1" ]]; then
             gnome) to_install="$to_install gnome gnome-extra";;
             *) return_err "Incorrect paramater desktop_de=$desktop_de! Mistake?";;
           esac
-          if [[ $pulseaudio == "1" ]]; then
+          if [[ $pipewire == "1" ]]; then
             case $desktop_de in 
               xfce4|cinnamon|gnome) to_install="$to_install pavucontrol";;
             esac
@@ -62,21 +62,30 @@ if [[ $graphics == "1" ]]; then
             esac
           fi
         ;;
-        WM)
-          to_install="$to_install archlinux-xdg-menu"
-          case $desktop_wm in
-            icewm) to_install="$to_install icewm";;
-            *) msg_print error "Incorrect paramater $desktop_de! Mistake?";;
-          esac
-          [[ $pulseaudio == "1" ]] && to_install="$to_install pulsemixer"
-        ;;
         *)
           return_err "Wrong parameter desktop_type=$desktop_type. Mistake?"
         ;;
       esac
     ;;
     wayland)
-      return_err "WAYLAND IS NOT SUPPORTED! Mistake?"
+      to_install="$to_install egl-wayland"
+      case $desktop_type in
+        DE)
+          case $desktop_de in
+            plasma) to_install="$to_install plasma kde-applications plasma-wayland-session";;
+            gnome) to_install="$to_install gnome gnome-extra";;
+            *) return_err "Incorrect paramater desktop_de=$desktop_de! Mistake?";;
+          esac
+          if [[ $pipewire == "1" ]]; then
+            case $desktop_de in 
+              gnome) to_install="$to_install pavucontrol";;
+            esac
+          fi
+        ;;
+        *)
+          return_err "Wrong parameter desktop_type=$desktop_type. Mistake?"
+        ;;
+      esac
     ;;
     *)
       return_err "Wrong parameter graphics_type=$graphics_type. Mistake?"

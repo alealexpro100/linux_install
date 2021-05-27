@@ -2,7 +2,7 @@
 read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
-  read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
+  read_param "" "$M_PIPEWIRE" '' pipewire yes_or_no
 fi
 
 read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$void_arch" arch text

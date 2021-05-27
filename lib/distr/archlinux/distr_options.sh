@@ -2,7 +2,7 @@
 read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
-  read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
+  read_param "" "$M_PIPEWIRE" '' pipewire yes_or_no
   read_param "" "$M_BLUETOOTH" '' bluetooth yes_or_no
   read_param "" "$M_PRINTERS" '' printers yes_or_no
 fi
@@ -10,16 +10,12 @@ if [[ $add_soft == "1" ]]; then
   read_param "" "$M_GRAPH" '' graphics yes_or_no
   if [[ $graphics == "1" ]]; then
     read_param "$M_GRAPH_TYPE_M" "$M_GRAPH_TYPE (xorg/wayland)" "xorg" graphics_type text_check xorg,wayland
-    read_param "$M_DESKTOP_TYPE_M" "$M_DESKTOP_TYPE (DE/WM/M)" "DE" desktop_type text_check DE,WM,M
+    read_param "$M_DESKTOP_TYPE_M" "$M_DESKTOP_TYPE (DE/M)" "DE" desktop_type text_check DE,M
     if [[ $desktop_type != "M" ]]; then
       if [[ $graphics_type == "xorg" ]]; then
-        if [[ $desktop_type == "DE" ]]; then
-          read_param "$M_DESKTOP_DE_M: plasma, xfce4, cinnamon, gnome.\n" "$M_DESKTOP_DE" "plasma" desktop_de text_check plasma,xfce4,cinnanmon,gnome
-        else
-          read_param "$M_DESKTOP_WM_M: icewm.\n" "$M_DESKTOP_WM" "icewm" desktop_wm text_check icewm
-        fi
+        read_param "$M_DESKTOP_DE_M: plasma, xfce4, cinnamon, gnome.\n" "$M_DESKTOP_DE" "plasma" desktop_de text_check plasma,xfce4,cinnanmon,gnome
       else
-        return_err "Wayland is not supported now!"
+        read_param "$M_DESKTOP_DE_M: plasma, gnome.\n" "$M_DESKTOP_DE" "plasma" desktop_de text_check plasma,gnome
       fi
     else
       read_param "" "$M_DESKTOP_MANUAL_PKGS" "plasma-desktop" desktop_packages text_empty

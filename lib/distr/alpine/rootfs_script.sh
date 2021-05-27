@@ -44,9 +44,18 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install networkmanager networkmanager-openrc"
     to_enable="$to_enable networkmanager"
   fi
-  if [[ $pulseaudio == "1" ]]; then
-    to_install="$to_install pulseaudio pulseaudio-alsa"
+  if [[ $pipewire == "1" ]]; then
+    to_install="$to_install pipewire pipewire-pulse"
     [[ $bluetooth == "1" ]] && to_install="$to_install pulseaudio-bluez"
+  fi
+  if [[ $bluetooth == "1" ]]; then
+    to_install="$to_install bluez"
+    to_enable="$to_enable bluetooth"
+  fi
+  if [[ $printers == "1" ]]; then
+    to_install="$to_install cups cups-filters"
+    to_enable="$to_enable cupsd"
+    [[ $bluetooth == "1" ]] && to_install="$to_install bluez-cups"
   fi
 fi
 

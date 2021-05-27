@@ -46,6 +46,69 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install pulseaudio"
     [[ $bluetooth == "1" ]] && to_install="$to_install pulseaudio-module-bluetooth"
   fi
+  if [[ $bluetooth == "1" ]]; then
+    to_install="$to_install bluetooth"
+  fi
+  if [[ $printers == "1" ]]; then
+    to_install="$to_install task-print-server printer-driver-all"
+    to_install="$to_install foomatic-db cups-pdf"
+    [[ $bluetooth == "1" ]] && to_install="$to_install bluez-cups"
+  fi
+fi
+
+if [[ $graphics == "1" ]]; then
+  case $graphics_type in
+    xorg|wayland)
+      to_install="$to_install xorg"
+      case $desktop_type in
+        DE)
+          case $desktop_de in
+            plasma) to_install="$to_install task-kde-desktop";;
+            xfce4) to_install="$to_install task-xfce-desktop";;
+            cinnamon) to_install="$to_install task-cinnamon-desktop";;
+            gnome) to_install="$to_install task-gnome-desktop";;
+            *) return_err "Incorrect paramater desktop_de=$desktop_de! Mistake?";;
+          esac
+          if [[ $pulseaudio == "1" ]]; then
+            case $desktop_de in 
+              xfce4|cinnamon|gnome) to_install="$to_install pavucontrol";;
+            esac
+          fi
+          if [[ $bluetooth == "1" ]]; then
+            case $desktop_de in 
+              xfce4|cinnamon) to_install="$to_install blueman";;
+            esac
+          fi
+        ;;
+        *)
+          return_err "Wrong parameter desktop_type=$desktop_type. Mistake?"
+        ;;
+      esac
+    ;;
+    wayland)
+      to_install="$to_install egl-wayland"
+      case $desktop_type in
+        DE)
+          case $desktop_de in
+            plasma) to_install="$to_install task-kde-desktop plasma-workspace-wayland";;
+            gnome) to_install="$to_install task-gnome-desktop";;
+            *) return_err "Incorrect paramater desktop_de=$desktop_de! Mistake?";;
+          esac
+          if [[ $pulseaudio == "1" ]]; then
+            case $desktop_de in 
+              gnome) to_install="$to_install pavucontrol";;
+            esac
+          fi
+        ;;
+        *)
+          return_err "Wrong parameter desktop_type=$desktop_type. Mistake?"
+        ;;
+      esac
+    ;;
+    *)
+      return_err "Wrong parameter graphics_type=$graphics_type. Mistake?"
+    ;;
+  esac
 fi
 
 [[ -n $to_install ]] && $apt_install $to_install

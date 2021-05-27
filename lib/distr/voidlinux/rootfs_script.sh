@@ -29,8 +29,8 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install NetworkManager"
     to_enable="$to_enable NetworkManager"
   fi
-  if [[ $pulseaudio == "1" ]]; then
-    to_install="$to_install alsa-plugins-pulseaudio"
+  if [[ $pipewire == "1" ]]; then
+    to_install="$to_install pipewire alsa-pipewire"
   fi
 fi
 
