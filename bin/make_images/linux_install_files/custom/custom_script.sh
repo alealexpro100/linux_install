@@ -14,6 +14,7 @@ sed -i "92s/NO/YES/;92s/#//" /etc/rc.conf
 
 #For linux_install
 apk add bash zstd perl dpkg findmnt lsblk dialog
+mkdir /mnt/mnt
 
 #Disk change tools
 apk add cfdisk e2fsprogs

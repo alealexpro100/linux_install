@@ -3,7 +3,7 @@ Description=Keep offline mirror updated.
 
 [Timer]
 OnBootSec=1min
-OnUnitActiveSec=8h
+OnUnitActiveSec=4h
 Unit=offline_mirror.service
 
 [Install]
