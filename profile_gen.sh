@@ -13,21 +13,21 @@ if [[ ! -f ./version_install ]]; then
 fi
 
 #Use libraries
-ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
-source ./lib/common/lib_connect.sh
+# shellcheck disable=SC1091
+ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh" source ./lib/common/lib_connect.sh
+# shellcheck disable=SC1091
 source ./lib/common/lib_var_op.sh
+# shellcheck disable=SC1091
 source ./lib/common/lib_ui.sh
 
+# shellcheck disable=SC1091
 [[ -f ./public_parametres ]] && source ./public_parametres
+# shellcheck disable=SC1091
 [[ -f ./private_parametres ]] && source ./private_parametres
 
 #Language support.
-msg_dir="${msg_dir:-./lib/msg/}"
-msg_file_list="$(find "$msg_dir" | sort | sed "s|$msg_dir||g;s|.sh||g;/^$/d")"
-[[ -f "$msg_dir/$LANG_INSTALLER.sh" ]] || LANG_INSTALLER=en
-source "$msg_dir/$LANG_INSTALLER.sh"
-read_param "$M_MSG_M: \n$msg_file_list\n" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER text_check "$(echo "$msg_file_list" | tr '\n' ',')"
-source "$msg_dir/$LANG_INSTALLER.sh"
+# shellcheck disable=SC1090
+source "${msg_dir:-./lib/msg/}/${LANG_INSTALLER:-en}.sh"
 
 print_param note "$M_WELCOME"
 
@@ -45,14 +45,17 @@ distr_list="$(find "$profile_dir" -maxdepth 1 -type d | sort | sed "s|$profile_d
 read_param "$M_DISTR_1: \n$distr_list\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text_check "$(echo "$distr_list" | tr '\n' ',')"
 
 AP100_DBG print_param note "$M_COMMON_OPT"
+# shellcheck disable=SC1091
 source ./lib/common/common_options.sh
 AP100_DBG print_param note "$M_DISTR_OPT"
-source "./lib/distr/$distr/distr_options.sh"
+# shellcheck disable=SC1090
+source "./lib/distr/${distr:?}/distr_options.sh"
 #Final menu for changes.
 var_final=''
 until [[ $var_final == "0" ]]; do
   #Make menu, We use array to make parametres.
   vars_list=("0" "$M_LIST_FINAL_END_OPTION")
+  # shellcheck disable=SC2154
   for ((i=1; i<${#var_num[@]}; i++)); do
     var=${var_num[i]}
     [[ $var == "var_final" ]] && continue

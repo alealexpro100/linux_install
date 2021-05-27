@@ -80,6 +80,22 @@ M_DEB_REPO_TEXT="Reposistories"
 M_DEB_BACKPORTS_KERNEL="Install backports-kernel?"
 M_DEB_STABLE_KERNEL="Stable kernel will be installed."
 
+#Messages for installer.
+M_WORK_MODE_M="install - run integrated installer\nconsole - switch to console mode.\n"
+M_WORK_MODE="Work mode"
+M_PART="Partition disk?"
+M_PART_D_M="Detected partition scheme"
+M_PART_D="Disk"
+M_PART_P="Partition"
+M_PART_I_M="Partition where to install linux system. It will be formatted to ext4 filesystem."
+M_PART_B_M="Partition where to install bootloader. It its filesystem is not vfat, it will be formatted to vfat."
+M_CHANGE_DO="Do changes?"
+M_FORMAT="Formatting"
+M_MOUNT="Mounting"
+M_CHANGE_C="Complete!"
+M_ECHO_MODE_M="dialog - pseudographic mode.\ncli - console mode."
+M_ECHO_MODE="Echo mode"
+
 
 declare -A M_VAR_DESCRIPTION=(
     [dir]="$M_PATH"

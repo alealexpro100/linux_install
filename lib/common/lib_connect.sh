@@ -1,3 +1,4 @@
+#!/bin/bash
 
 #Use library
 if [[ -z $ALEXPRO100_LIB_VERSION ]]; then

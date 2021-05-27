@@ -1,29 +1,28 @@
+#!/bin/bash
 
 #Weight and height parametres of terminal for UI.
 ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
 
 #Print info
+function print_param() {
 case $ECHO_MODE in
-  whiptail|dialog) 
-    function print_param() {
+    whiptail|dialog) 
       local print_type=$1 text="$2"
       local options=("$ECHO_MODE" "--cancel-button" "$M_EXIT_BUTTON" "--backtitle" "$M_PROJECT_NAME")
       "${options[@]}" --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
-    }
-  ;;
-  auto|cli|*) 
-    function print_param() {
-      local print_type=$1 text="$2"
-      msg_print "$print_type" "$text"
-    }
-  ;;
-esac
+    ;;
+    auto|cli|*) 
+        local print_type=$1 text="$2"
+        msg_print "$print_type" "$text"
+    ;;
+  esac
+}
 
 #Enter parametres. Needs rework!
-case $ECHO_MODE in
-  auto)
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+function read_param() {
+  local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+  case $ECHO_MODE in
+    auto)
       case $option in
         print) echo -ne "$text$dialog";;
         yes_or_no) tmp=1;;
@@ -36,12 +35,8 @@ case $ECHO_MODE in
         menu) tmp=$default_var;;
         *) return_err "Option $option is incorrect!";;
       esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  whiptail|dialog)
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+    ;;
+    whiptail|dialog)
       local options=("$ECHO_MODE" "--cancel-button" "$M_EXIT_BUTTON" "--backtitle" "$M_PROJECT_NAME")
       shift 5 #For additional parametres.
       case $option in
@@ -57,7 +52,8 @@ case $ECHO_MODE in
           done
         ;;
         text_check)
-          local check_list=$(echo "$@" | tr ',' '\n') correct=0
+          local check_list correct=0
+          check_list=$(echo "$@" | tr ',' '\n')
           while [[ $correct != "1" ]]; do
             tmp=$("${options[@]}" --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
             if [[ $tmp != '' ]]; then
@@ -88,12 +84,8 @@ case $ECHO_MODE in
           return_err "Option $option is incorrect!"
         ;;
       esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  cli|'')
-    function read_param() {
-      local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
+    ;;
+    cli|'')
       shift 5 #For additional parametres.
       case $option in
         yes_or_no)
@@ -125,7 +117,8 @@ case $ECHO_MODE in
           done
         ;;
         text_check)
-          local check_list=$(echo "$@" | tr ',' '\n') correct=0
+          local check_list correct=0
+          check_list=$(echo "$@" | tr ',' '\n')
           while [[ $correct != "1" ]]; do
             echo -ne "$text"
             read -r -p "$dialog: " -e -i "$default_var" tmp
@@ -167,10 +160,10 @@ case $ECHO_MODE in
           return_err "Option $option is incorrect!"
         ;;
       esac
-      add_var "declare -gx" "$var" "$tmp"
-    }
-  ;;
-  *)
-    return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
-  ;;
-esac
+    ;;
+    *)
+      return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
+    ;;
+    esac
+  add_var "declare -gx" "$var" "$tmp"
+}
