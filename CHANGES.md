@@ -1,3 +1,7 @@
+# Version 0.4.5:
+* Minor fixes.
+* Removed errors on start of live installer.
+
 # Version 0.4.4:
 * Added disk operations to live mode.
 * Replaced pulseaudio with pipewire (temporaly except debian).
