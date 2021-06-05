@@ -22,6 +22,8 @@ case $distr in
     fi
     $apk_install $to_install
     [[ $removable_disk == "1" ]] && msg_print warning "Os-prober can't be installed."
+    #Quick dirty fix to make system loading.
+    echo "GRUB_CMDLINE_LINUX_DEFAULT=\"modules=sd-mod,usb-storage,ext4\"" >> /etc/default/grub
     grub_config
   ;;
   archlinux) 

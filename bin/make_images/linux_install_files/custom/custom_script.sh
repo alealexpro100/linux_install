@@ -1,4 +1,9 @@
 #!/bin/bash
+
+#Enable loading of drivers
+rc-update add firstboot default
+rc-update add modloop sysinit
+
 #Apk setup
 sed -i "s/#//g" /etc/apk/repositories
 apk update
@@ -29,8 +34,7 @@ rc-update add dropbear boot
 #Some other.
 echo "root:pass" | chpasswd -c SHA512
 echo alpine_pxe > /etc/hostname
-sed -i "/You may change/d" /etc/motd
-echo -e "Please, ignore errors. It is normal.\nSSH is working on port 22.\nPassword for root is pass.\n" >> /etc/motd
+echo -e "\n### Welcome to linux_install script! ###\nSSH is working on port 22.\nPassword for root is pass.\n" > /etc/motd
 sed -i "8s/tty1/#tty1/" /etc/inittab
 echo -e "\ntty1::respawn:/bin/login -f root" >> /etc/inittab
 sed -i "1s/ash/bash/" /etc/passwd
