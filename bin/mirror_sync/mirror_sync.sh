@@ -77,7 +77,7 @@ for al_repo in "core" "extra" "community"; do
 done
 mirror_rsync $ARCH_MIRROR/multilib/os/x86_64/ archlinux/multilib/os/x86_64
 mirror_rsync $BLACKARCH_MIRROR/os/x86_64/ archlinux/blackarch/os/x86_64
-mirror_rsync $ARCHCN_MIRROR/x86_64/ archlinuxcn/x86_64
+mirror_rsync $ARCHCN_MIRROR/x86_64/ archlinux/archlinuxcn/os/x86_64
 mirror_rsync $ARCH32_MIRROR/archisos/ archlinux/archisos
 mirror_rsync $ARCH_SOURCE_MIRROR/ arch_sources
 

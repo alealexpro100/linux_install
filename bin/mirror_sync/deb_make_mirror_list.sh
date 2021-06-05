@@ -221,5 +221,11 @@ for version in '#xenial' '#focal'; do
 	echo_d ''
 done
 
+arch=''; version='buster'
+mirror='http://download.proxmox.com/debian/pve'
+clean="$clean\nclean http://download.proxmox.com/debian/pve"
+echo_d -e "\n# PROXMOX"
+echo_d -e "deb-amd64 $mirror $version pve-no-subscription pvetest"
+
 echo -e "\n$clean"
 
