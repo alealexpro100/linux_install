@@ -7,7 +7,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.2.8" 
+ALEXPRO100_LIB_VERSION="0.2.9" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -364,8 +364,11 @@ function genfstab_light() {
     fi
     dump=0 pass=0
     (( fsck_types["$fstype"] )) && pass=2
-    findmnt "$src" "$root" >/dev/null && pass=1
-    [[ $fstype == fuseblk ]] && fstype=$(lsblk -no FSTYPE "$src")
+    case $fstype in
+      fuseblk) fstype=$(lsblk -no FSTYPE "$src");; #For ntfs-3g
+      fuse*) continue;; #We just ignore fuse mounts.
+      *) findmnt "$src" "$root" >/dev/null && pass=1;;
+    esac
     echo -ne "\n#$src"; label=$(lsblk -rno LABEL "$src" 2>/dev/null); [[ -n $label ]] && echo -ne " LABEL=$label"
     echo -ne "\nUUID=$(lsblk -rno UUID "$src" 2>/dev/null)\t/${target#/}\t$fstype\t$opts\t$dump $pass\n"
   done
