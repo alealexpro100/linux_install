@@ -1,5 +1,5 @@
+#!/bin/bash
 
-read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
   read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
@@ -47,8 +47,7 @@ while [[ $repos == 1 ]]; do
   [[ -z $repo_name ]] && repos=0
 done
 
-read_param "" "$M_KERNEL" '' kernel yes_or_no
-if [[ $kernel == "1" && $repo_debian_backports != "" ]]; then
+if [[ $kernel == "1" && -n ${debian_repos[backports]} ]]; then
   read_param "" "$M_DEB_BACKPORTS_KERNEL" "" backports_kernel no_or_yes
   [[ $backports_kernel == "0" ]] && print_param note "$M_DEB_STABLE_KERNEL"
 fi

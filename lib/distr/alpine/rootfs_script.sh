@@ -14,22 +14,24 @@ msg_print note "Installing addational packages..."
 #Activate services for booting
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
-rc-update add mdev sysinit
 rc-update add hwdrivers sysinit
-rc-update add modloop sysinit
-rc-update add modules boot
-rc-update add sysctl boot
-rc-update add hostname boot
+rc-update add mdev sysinit
 rc-update add bootmisc boot
+rc-update add hostname boot
+rc-update add hwclock boot
+rc-update add modules boot
+rc-update add networking boot
+#rc-update add swap boot
+rc-update add sysctl boot
 rc-update add syslog boot
+rc-update add urandom boot
 rc-update add mount-ro shutdown
 rc-update add killprocs shutdown
 rc-update add savecache shutdown
-rc-update add firstboot default
 
 #Network setup.
 echo -e "auto lo\n  iface lo inet loopback\n" > /etc/network/interfaces
-echo -e "#auto eth0\n#  iface eth0 inet dhcp\n#  iface eth0 inet6 auto\n" >> /etc/network/interfaces
+echo -e "#auto eth0\n#\tiface eth0 inet dhcp\n#\t\thostname $hostname\n" >> /etc/network/interfaces
 
 
 to_install="$postinstall" to_enable=''

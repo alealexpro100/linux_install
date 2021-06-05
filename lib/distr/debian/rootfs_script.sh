@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #Apt config
 msg_print note "Apt setup..."
 declare -gx DEBIAN_FRONTEND=noninteractive
@@ -10,7 +12,7 @@ done
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
 apt update
 $apt_install ca-certificates gnupg
-for repo_name in ${!debian_repos[@]}; do
+for repo_name in "${!debian_repos[@]}"; do
   if [[ $repo_name != "main" && $repo_name != "updates" && $repo_name != "backports" && $repo_name != "security" ]]; then
     echo -e "\n#$repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
     [[ -f "/root/certs/$repo_name.key" ]] && apt-key add "/root/certs/$repo_name.key"
@@ -32,7 +34,7 @@ if [[ $kernel == "1" ]]; then
     *) kernel_arch=$debian_arch;;
   esac
   if [[ $backports_kernel == "1" ]]; then
-    $apt_install -t $debian_distr-backports linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux dkms
+    $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" "linux-headers-$kernel_arch" firmware-linux dkms
   else
     to_install="$to_install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux dkms"
   fi
@@ -58,7 +60,7 @@ fi
 
 if [[ $graphics == "1" ]]; then
   case $graphics_type in
-    xorg|wayland)
+    xorg)
       to_install="$to_install xorg"
       case $desktop_type in
         DE)
@@ -111,9 +113,9 @@ if [[ $graphics == "1" ]]; then
   esac
 fi
 
-[[ -n $to_install ]] && $apt_install $to_install
+[[ -n $to_install ]] && $apt_install "$to_install"
 for service in $to_enable; do
-  systemctl enable $service
+  systemctl enable "$service"
 done
 
 msg_print note "Packages are installed."

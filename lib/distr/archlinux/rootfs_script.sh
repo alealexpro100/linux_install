@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #Pacman setup.
 msg_print note "Pacman setup..."
 pacman_install="pacman -Suy --needed --noconfirm"
@@ -40,7 +42,7 @@ fi
 
 if [[ $graphics == "1" ]]; then
   case $graphics_type in
-    xorg|wayland)
+    xorg)
       to_install="$to_install xorg xorg-drivers"
       case $desktop_type in
         DE)
@@ -110,7 +112,7 @@ if [[ $graphics == "1" ]]; then
   esac
 fi
 
-[[ -n "$to_install" ]] && $pacman_install $to_install
+[[ -n "$to_install" ]] && $pacman_install "$to_install"
 for service in $to_enable; do
   systemctl enable "$service"
 done

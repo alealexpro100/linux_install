@@ -1,5 +1,5 @@
+#!/bin/bash
 
-read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
   read_param "" "$M_PIPEWIRE" '' pipewire yes_or_no
@@ -33,7 +33,6 @@ read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$ar
 [[ "$arch" == "aarch64" || "$arch" == "arm*" ]] && mirror_archlinux=$mirror_archlinux_arm
 read_param "" "$M_MIRROR" "$mirror_archlinux" mirror_archlinux text_empty
 
-read_param "" "$M_KERNEL" '' kernel yes_or_no
 
 [[ $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' arch_add_i386 yes_or_no
 read_param "" "$M_PACK_PRE" "wget nano" preinstall text_empty

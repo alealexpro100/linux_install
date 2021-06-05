@@ -16,6 +16,7 @@ if mountpoint -q "${dir:?}"; then
   fi
   read_param "" "$M_FSTAB" '' fstab yes_or_no
   read_param "" "$M_BOOTLOADER" '' bootloader yes_or_no
+  # shellcheck disable=SC2154
   if [[ $bootloader == "1" ]]; then
     if [[ -d /sys/firmware/efi/efivars ]]; then
       BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-uefi}
@@ -35,9 +36,13 @@ if mountpoint -q "${dir:?}"; then
     else
       read_param "" "$M_BOOTLOADER_REMOVABLE" '' removable_disk no_or_yes
     fi
+    read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
+    read_param "" "$M_KERNEL" '' kernel yes_or_no
   fi
 else
-  bootloader=0
+  add_var "declare -gx" "bootloader" "0"
+  read_param "" "$M_ADD_SOFT" '' add_soft no_or_yes
+  read_param "" "$M_KERNEL" '' kernel no_or_yes
 fi
 
 [[ $LIVE_MODE == "1" ]] || read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no

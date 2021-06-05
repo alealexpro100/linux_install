@@ -1,5 +1,5 @@
+#!/bin/bash
 
-read_param "" "$M_ADD_SOFT" '' add_soft yes_or_no
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
   read_param "" "$M_PIPEWIRE" '' pipewire yes_or_no
@@ -12,8 +12,6 @@ read_param "" "$M_MIRROR" "$mirror_voidlinux" mirror_voidlinux text_empty
 while ! [[ $version_void == "musl" || $version_void == "glibc" ]]; do
   read_param "" "$M_DISTR_VER (musl/glibc)" "$version_void" version_void text
 done
-
-read_param "" "$M_KERNEL" '' kernel yes_or_no
 
 [[ $version_void == "glibc" && $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' void_add_i386 yes_or_no
 read_param "" "$M_PACK_PRE" "wget terminus-font" preinstall text_empty
