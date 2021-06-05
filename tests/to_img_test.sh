@@ -14,6 +14,7 @@ fi
 
 #Use library
 export ALEXPRO100_LIB_LOCATION="../bin/alexpro100_lib.sh"
+# shellcheck disable=SC1091
 source ../lib/common/lib_connect.sh
 
 [[ $UID != 0 ]] && return_err "This script requries root permissions!"
@@ -25,7 +26,7 @@ for distr_install in "$@"; do
   msg_print msg "Started on $(date -u)."
   msg_print msg "Testing $distr_install..."
   create_tmp_dir tmp_distr_install
-  dd if=/dev/zero of="$tmp_distr_install/disk.img" bs=1M count=4096 status=progress
+  dd if=/dev/zero of="${tmp_distr_install:?}/disk.img" bs=1M count=4096 status=progress
   mkfs.ext4 "$tmp_distr_install/disk.img"
   mkdir -p "$tmp_distr_install/rootfs"
   mount "$tmp_distr_install/disk.img" "$tmp_distr_install/rootfs" 

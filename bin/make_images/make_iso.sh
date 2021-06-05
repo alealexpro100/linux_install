@@ -7,18 +7,9 @@
 
 set -e
 
-#Use library
-if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
-  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/../alexpro100_lib.sh"
-    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
-      echo "Using $ALEXPRO100_LIB_LOCATION."
-    else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
-    fi
-  fi
-  source "$ALEXPRO100_LIB_LOCATION"
-fi
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/../alexpro100_lib.sh}"
+# shellcheck disable=SC1091
+source "${BASH_SOURCE[0]%/*}/../../lib/common/lib_connect.sh"
 
 function make_bootable_iso() (
     cd -- "$1" || return_err "No directory $1!"

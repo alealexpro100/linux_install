@@ -190,6 +190,7 @@ mount -t tmpfs root-tmpfs $overlayfs/root-rw
 mkdir -p $overlayfs/root-ro $overlayfs/root-rw/root $overlayfs/root-rw/work
 
 if is_url "$rootfs_net"; then
+	ebegin "Downloading rootfs"
     #Load network
     nlplug-findfs -p /sbin/mdev -n
     configure_ip

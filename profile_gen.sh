@@ -13,8 +13,9 @@ if [[ ! -f ./version_install ]]; then
 fi
 
 #Use libraries
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
-ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh" source ./lib/common/lib_connect.sh
+source ./lib/common/lib_connect.sh
 # shellcheck disable=SC1091
 source ./lib/common/lib_var_op.sh
 # shellcheck disable=SC1091

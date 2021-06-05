@@ -13,15 +13,19 @@ if [[ ! -f ./version_install ]]; then
 fi
 
 #Use libraries
-ALEXPRO100_LIB_LOCATION="./bin/alexpro100_lib.sh"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh}"
+# shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
+# shellcheck disable=SC1091
 source ./lib/common/lib_var_op.sh
 
 if [[ $UID != 0 ]]; then
   return_err "This script requries root permissions!"
 fi
 
+# shellcheck disable=SC1091
 [[ -f ./public_parametres ]] && source ./public_parametres
+# shellcheck disable=SC1091
 [[ -f ./private_parametres ]] && source ./private_parametres
 
 
@@ -30,13 +34,13 @@ function custom_actions() {
   [[ -d "$CUSTOM_DIR" ]] || CUSTOM_DIR=./custom
   if [[ -d $CUSTOM_DIR/rootfs ]]; then
     msg_print note "Copying custom files..."
-    $cp_safe "$CUSTOM_DIR/rootfs/." "$dir"
+    $cp_safe "$CUSTOM_DIR/rootfs/." "${dir:?}"
   fi
   if [[ -f $CUSTOM_DIR/custom_script.sh && -n "$arch_chroot_command" ]]; then
     cp "$CUSTOM_DIR/custom_script.sh" "$dir/root/custom_script.sh"
     chmod +x "$dir/root/custom_script.sh"
     msg_print note "Executing custom script..."
-    $arch_chroot_command "$dir" bash /root/custom_script.sh
+    $arch_chroot_command "${dir:?}" bash /root/custom_script.sh
     rm -rf "$dir/root/custom_script.sh"
   fi
 }
@@ -50,9 +54,11 @@ if [[ -z $CONFIG_FILE ]]; then
 fi
 
 if [[ -f "$CONFIG_FILE" ]]; then
+  # shellcheck disable=SC1090
   source "$CONFIG_FILE" || return_err "Failed to use profile!"
-  parse_arch $(uname -m)
-  source ./lib/distr/$distr/distr_actions.sh
+  parse_arch "$(uname -m)"
+  # shellcheck disable=SC1090
+  source "./lib/distr/${distr:?}/distr_actions.sh"
   custom_actions
   msg_print note "Installed $distr with $CONFIG_FILE to $dir."
 else
