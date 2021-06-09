@@ -37,7 +37,7 @@ if [[ $WORK_MODE == "install" ]]; then
         else
             read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT text_check "$(list_disks_get)"
             if [[ -d /sys/firmware/efi/efivars ]]; then
-                BOOTLOADER_TYPE_DEFAULT=bios
+                BOOTLOADER_TYPE_DEFAULT=uefi
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
                 read_param "$M_PART_B_M\n" "$M_PART_P" "" PART_BOOT text_check "$(list_disks_get)"
                 [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && msg_print warning "Partition $PART_BOOT is NOT a vfat filesystem." 
@@ -60,7 +60,7 @@ if [[ $WORK_MODE == "install" ]]; then
                     fi
                     msg_print note "$M_MOUNT $PART_BOOT..."
                     mkdir -p /mnt/mnt/boot
-                    mount -t vfat "$PART_ROOT" /mnt/mnt/boot
+                    mount -t vfat "$PART_BOOT" /mnt/mnt/boot
                 else
                     # shellcheck disable=SC2034
                     bootloader_bios_place=$PART_BOOT
