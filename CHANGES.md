@@ -1,3 +1,8 @@
+# Version 0.4.6:
+* Minor fixes.
+* Fixed live uefi installation.
+* Library (alexpro100_lib) fixes.
+
 # Version 0.4.5:
 * Minor fixes.
 * Removed errors on start of live installer.
