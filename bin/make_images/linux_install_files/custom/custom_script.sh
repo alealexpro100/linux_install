@@ -40,4 +40,4 @@ echo -e "\ntty1::respawn:/bin/login -f root" >> /etc/inittab
 sed -i "1s/ash/bash/" /etc/passwd
 
 #Bash profile fix for busybox.
-sed -i "s/dircolors/#dircolors/" /root/.bashrc
+[[ -f /root/.bashrc ]] && sed -i "s/dircolors/#dircolors/" /root/.bashrc

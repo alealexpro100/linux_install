@@ -9,14 +9,13 @@ set -e
 
 #Use library
 if [[ -z $ALEXPRO100_LIB_VERSION ]]; then
-  if [[ -z $ALEXPRO100_LIB_LOCATION ]]; then
-    ALEXPRO100_LIB_LOCATION="${BASH_SOURCE[0]%/*}/alexpro100_lib.sh"
-    if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
-      echo "Using $ALEXPRO100_LIB_LOCATION."
-    else
-      echo -e "ALEXPRO100_LIB_LOCATION is not set!"; exit 1
-    fi
+  ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/alexpro100_lib.sh}"
+  if [[ -f $ALEXPRO100_LIB_LOCATION ]]; then
+    echo "Using $ALEXPRO100_LIB_LOCATION."
+  else
+   echo -e "$ALEXPRO100_LIB_LOCATION not found!"; exit 1
   fi
+  # shellcheck disable=SC1090
   source "$ALEXPRO100_LIB_LOCATION"
 fi
 
@@ -46,7 +45,7 @@ else
   if qemu_chroot check "$arch" ok; then
     arch_chroot_command="qemu_chroot $arch"
   else
-    exit 1
+    return_err "Qemu emulation is not supported by your system. Aboring."
   fi
 fi
 
@@ -60,7 +59,7 @@ else
     core_repo="$mirror/core/os/$arch"
     repo="$mirror/\$repo/os/\$arch"
   else
-    # If first is not valid, try second variant of mirror...
+    # If first is invalid (empty), try second variant of mirror...
     pkg_list=$(get_file_s - "$mirror/$arch/core/" | get_file_list_html)
     [[ -z $pkg_list ]] && return_err "Incorrect arch $arch or mirror $mirror!"
     core_repo="$mirror/$arch/core"
@@ -68,7 +67,8 @@ else
   fi
 fi
 
-# Set pico complect of packages for archlinux installation. $(pacman -Qq | sort | uniq)
+# Set pico complect of packages for archlinux installation.
+# You can get this list by running $(pacman -Qq | sort | uniq) on newly installed system.
 BASIC_PACKAGES=(acl attr bash bzip2
 coreutils curl e2fsprogs expat filesystem
 ca-certificates-utils ca-certificates-mozilla
@@ -95,34 +95,37 @@ cache_dir="$dir/var/cache/pacman/pkg"
 mkdir -p "$cache_dir"
 create_tmp_dir arch_tmp
 
-msg_print note "Downloading pico complect of packages: "
+msg_print note "(1) Downloading pico complect of packages: "
 for package in ${BASIC_PACKAGES[*]}; do
   echo -ne "I: Retriving ${package}... "
   pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$" -e "^${package}-[[:digit:]].*\.zst$")
   # Download packages.
   if [[ ! -f "${cache_dir}/${pkg_file}" ]]; then
-    echo ""
-    get_file_s "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}" || return_err "Failed to download ${pkg_file}!"
+    if get_file_s "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}"; then
+      echo ""
+    else
+      rm -rf "${cache_dir:?}/${pkg_file}"
+      return_err "Failed to download ${pkg_file}!"
+    fi
   else
     echo -e "exists!"
   fi
 done
 
-msg_print note "Unpacking packages to tempory rootfs: "
+msg_print note "(2) Unpacking packages to temporary rootfs: "
 for package in ${BASIC_PACKAGES[*]}; do
   echo "I: Unpacking ${package}... "
   pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^${package}-[[:digit:]].*\.xz$" -e "^${package}-[[:digit:]].*\.gz$" -e "^${package}-[[:digit:]].*\.zst$")
-  # Unpack downloaded packages.
   case "${pkg_file}" in
     *.gz) tar -xzf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
     *.bz2) tar -xjf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
     *.xz) tar -xJf "${cache_dir}/${pkg_file}" -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
     *.zst) zstd -qdcf "${cache_dir}/${pkg_file}" | tar -xf - -C "${arch_tmp}" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
-    *) return_err "Incorrect ${pkg_file}! Exiting...";;
+    *) return_err "Incorrect format of archive ${pkg_file}! Exiting...";;
   esac
 done
 
-msg_print note "Preparing tempory rootfs..."
+msg_print note "(3) Preparing tempory rootfs..."
 mkdir -p "$arch_tmp/etc/pacman.d"
 [[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$arch_tmp/etc/pacman.d/mirrorlist"
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
@@ -133,15 +136,17 @@ echo -e "update-ca-trust\npacman-key --init\npacman-key --populate\ncp -a {,/mnt
 echo "pacman -r /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm -Sy base $install_packages" >> "$arch_tmp/root/run.sh"
 chmod +x "$arch_tmp/root/run.sh"
 
-msg_print note "Installing to choosed directory..."
+msg_print note "(4) Installing to choosed directory..."
 mkdir -m 0755 "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d"
 mkdir -m 1777 "$dir/tmp"
 mkdir -m 0555 "$dir/sys" "$dir/proc"
+#Avoid "fixing" directory in order to mount filesystems normally (requried by pacman).
 ROOTFS_DIR_NO_FIX=1
 chroot_add_mount dir "$dir" "$arch_tmp/mnt" --rbind --make-rslave
 chroot_setup "$arch_tmp/mnt"
 $arch_chroot_command "$arch_tmp" /bin/bash /root/run.sh
 rm -rf "$arch_tmp"
+# Failsafe (file may does not exist)
 mv "$dir"/etc/resolv.conf{.pacnew,} || :
 mv "$dir"/etc/hosts{.pacnew,} || :
 [[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$dir"/etc/pacman.d/mirrorlist.used

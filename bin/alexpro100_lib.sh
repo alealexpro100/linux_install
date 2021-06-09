@@ -5,9 +5,9 @@
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases
-set -e
+#set -e
 
-ALEXPRO100_LIB_VERSION="0.2.9" 
+ALEXPRO100_LIB_VERSION="0.3.0" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -160,30 +160,29 @@ function create_tmp_dir() {
 export -f create_tmp_dir
 
 function archive_extract() (
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [FILE] [DIR]\nExtract archive to directory."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} [TYPE] [FILE] [DIR]\nExtract archive to directory."
+  cd "$3" || return_err "Directory $3 does not exist!"
   local file
-  file="$(realpath "$1")"
-  cd "$2" || return_err "Directory $2 does not exist!"
-  case $file in
-    *.tar.bz2)  tar xvjf "$1";;
-    *.tar.gz)  tar xvzf "$file";;
-    *.tar.xz)  tar xvJf "$file";;
-    *.tar.zst)  zstd -qdcf "$file"| tar -xf -;;
-    *.lzma)  unlzma "$file";;
-    *.bz2)  bunzip2 "$file";;
-    *.rar)  unrar x -ad "$file";;
-    *.gz)  gunzip "$file";;
-    *.tar)  tar xvf "$file";;
-    *.tbz2)  tar xvjf "$file";;
-    *.tgz)  tar xvzf "$file";;
-    *.zip)  unzip "$file";;
-    *.Z)  uncompress "$file";;
-    *.7z)  7z x "$file";;
-    *.xz)  unxz "$file";;
-    *.exe|*.cab)  cabextract "$file";;
+  [[ -f "$2" ]] && file="$(realpath "$2")" || file="$2"
+  case $1 in
+    tar.bz2|tbz2)  tar xjf "$file";;
+    tar.gz|tgz)  tar xzf "$file";;
+    tar.xz)  tar xJf "$file";;
+    tar.zst)  tar -I zstd -xf "$file";;
+    lzma)  unlzma "$file";;
+    bz2)  bunzip2 "$file";;
+    rar)  unrar x -ad "$file";;
+    gz)  gunzip "$file";;
+    tar)  tar xf "$file";;
+    zip)  unzip "$file";;
+    Z)  uncompress "$file";;
+    7z)  7z x "$file";;
+    xz)  unxz "$file";;
+    exe|cab)  cabextract "$file";;
     *)  return_err "$file - Unknown archive type.";;
   esac
 )
+export -f archive_extract
 
 function unpack_initfs_gz() (
   cd -- "$2" || return_err "No directory $2!"

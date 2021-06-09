@@ -113,7 +113,7 @@ if [[ $graphics == "1" ]]; then
   esac
 fi
 
-[[ -n $to_install ]] && $apt_install "$to_install"
+[[ -n $to_install ]] && $apt_install $to_install
 for service in $to_enable; do
   systemctl enable "$service"
 done
