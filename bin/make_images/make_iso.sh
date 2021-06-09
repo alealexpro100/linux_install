@@ -25,7 +25,7 @@ if [[ -z $4 ]]; then
   exit 1
 fi
 
-orig_iso="$1" iso_files="$2" arch="$3" iso_file="$4"
+orig_iso="$1" iso_files="$2" arch="$3" iso_file="$(realpath "$4")"
 
 create_tmp_dir make_iso
 mkdir "$make_iso/orig_iso" "$make_iso/final_iso" "$make_iso/initfs" "$make_iso/rootfs" "$make_iso/custom"

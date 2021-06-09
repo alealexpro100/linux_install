@@ -20,7 +20,7 @@ if [[ -z $5 ]]; then
   exit 1
 fi
 
-orig_netboot="$1" iso_files="$2" arch="$3" version="$4" netboot_final="$5"
+orig_netboot="$1" iso_files="$2" arch="$3" version="$4" netboot_final="$(realpath "$5")"
 
 create_tmp_dir make_netboot
 mkdir "$make_netboot/final_netboot" "$make_netboot/rootfs"

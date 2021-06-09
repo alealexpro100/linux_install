@@ -190,21 +190,19 @@ mount -t tmpfs root-tmpfs $overlayfs/root-rw
 mkdir -p $overlayfs/root-ro $overlayfs/root-rw/root $overlayfs/root-rw/work
 
 if is_url "$rootfs_net"; then
-	ebegin "Downloading rootfs"
-    #Load network
+	ebegin "Configuring network"
     nlplug-findfs -p /sbin/mdev -n
     configure_ip
-	wget --spider "$rootfs_net"
-	if [ $? -eq 0 ]; then
-		wget -O $overlayfs/root-rw/squashfs.img "$rootfs_net"
-		mount -o loop,ro $overlayfs/root-rw/squashfs.img $overlayfs/root-ro
-		mount -t overlay -o lowerdir=$overlayfs/root-ro,upperdir=$overlayfs/root-rw/root,workdir=$overlayfs/root-rw/work LIVE_OS $sysroot
-	fi
+	eend $?
+	ebegin "Downloading and mounting rootfs"
+	wget -O $overlayfs/root-rw/squashfs.img "$rootfs_net"
+	mount -o loop,ro $overlayfs/root-rw/squashfs.img $overlayfs/root-ro
+	mount -t overlay -o lowerdir=$overlayfs/root-ro,upperdir=$overlayfs/root-rw/root,workdir=$overlayfs/root-rw/work LIVE_OS $sysroot
 	eend $?
 else
     mkdir -p /tmp
 	# locate boot media and mount it
-	ebegin "Mounting boot media"
+	ebegin "Finding and mounting boot media"
 	nlplug-findfs -p /sbin/mdev \
 		-b $repofile -a /tmp/apkovls
 	repo_dir=$(head -n 1 $repofile)
