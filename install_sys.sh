@@ -9,8 +9,8 @@ set -e
 
 if [[ ! -f ./version_install ]]; then
   cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
-  echo "Location changed!"
 fi
+echo "Startring ${BASH_SOURCE[0]} v$(cat ./version_install)"
 
 #Use libraries
 export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh}"

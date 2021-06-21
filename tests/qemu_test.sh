@@ -13,18 +13,13 @@ if [[ ! -f ../version_install ]]; then
 fi
 
 #Use library
-export ALEXPRO100_LIB_LOCATION="../bin/alexpro100_lib.sh"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-../bin/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
 source ../lib/common/lib_connect.sh
 
 [[ $UID != 0 ]] && return_err "This script requries root permissions!"
 
 [[ -z "$*" ]] && return_err "No options!"
-
-function create_raw_image() {
-  [[ -z "$*" ]] && return_err "Example: ${FUNCNAME[*]} dos "
-
-}
 
 for distr_install in "$@"; do
   [[ ! -d ../lib/distr/$distr_install ]] && return_err "Directory $distr_install not found!"

@@ -9,7 +9,7 @@ sed -i "s/#//g" /etc/apk/repositories
 apk update
 
 #Network setup.
-sed -i 's/#auto/auto/;s/#  /  /g' /etc/network/interfaces
+sed -i 's/#auto/auto/;s/#[ ,\t]*/  /g' /etc/network/interfaces
 
 #Extended fonts for console
 apk add terminus-font
