@@ -190,12 +190,11 @@ mount -t tmpfs root-tmpfs $overlayfs/root-rw
 mkdir -p $overlayfs/root-ro $overlayfs/root-rw/root $overlayfs/root-rw/work
 
 if is_url "$rootfs_net"; then
-	ebegin "Configuring network"
     nlplug-findfs -p /sbin/mdev -n
     configure_ip
-	eend $?
-	ebegin "Downloading and mounting rootfs"
+	echo "Downloading rootfs"
 	wget -O $overlayfs/root-rw/squashfs.img "$rootfs_net"
+	ebegin "Mounting rootfs"
 	mount -o loop,ro $overlayfs/root-rw/squashfs.img $overlayfs/root-ro
 	mount -t overlay -o lowerdir=$overlayfs/root-ro,upperdir=$overlayfs/root-rw/root,workdir=$overlayfs/root-rw/work LIVE_OS $sysroot
 	eend $?

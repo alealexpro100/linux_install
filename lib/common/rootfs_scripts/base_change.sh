@@ -23,14 +23,14 @@ function base_setup_alpine() {
 
 function locale_setup() {
   msg_print note "Setting up locales..."
-  sed -ie "s/#$LANG_SYSTEM/$LANG_SYSTEM/" /etc/locale.gen
+  sed -ie "s/#[ ,\t]*$LANG_SYSTEM/$LANG_SYSTEM/" /etc/locale.gen
   echo "LANG=\"$LANG_SYSTEM\"" >> "$1"
   locale-gen
 }
 
 function locale_setup_voidlinux() {
   msg_print note "Setting up locales..."
-  sed -ie "s/#$LANG_SYSTEM/$LANG_SYSTEM/" /etc/default/libc-locales
+  sed -ie "s/#[ ,\t]*$LANG_SYSTEM/$LANG_SYSTEM/" /etc/default/libc-locales
   sed -ie "1s/en_US.UTF-8/$LANG_SYSTEM/" "$1"
   xbps-reconfigure -f glibc-locales
 }
