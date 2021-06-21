@@ -5,9 +5,9 @@
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases
-#set -e
+set -e
 
-ALEXPRO100_LIB_VERSION="0.3.0" 
+ALEXPRO100_LIB_VERSION="0.3.1" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -66,7 +66,7 @@ export -f AP100_DBG
 #--UI--
 
 function msg_print() {
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} {alert|err|warn|note|msg|debug|prgs} [TEXT]]\nPrint decorated text."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} {alert|err|warn|note|msg|debug|prgs} [TEXT]]\nPrint decorated text."
   local TYPE=$1; shift
   while IFS= read -r line; do
     case $TYPE in
@@ -95,7 +95,7 @@ function echo_help() {
 export -f echo_help
 
 function show_progress() {
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
     sp) local sp="|\-/"; s=1;;
     kit) local sp="  .   /|\  ||| <|||> |||  \|/   '  "; s=5;;
@@ -119,7 +119,7 @@ function command_exists() {
 export -f command_exists
 
 function get_file_s() {
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [FILE] [URL]\nDownload to file from url."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [FILE] [URL]\nDownload to file from url."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
@@ -133,7 +133,7 @@ function get_file_s() {
 export -f get_file_s
 
 function check_url() {
-  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [URL]\nCheck url to exist."
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to exist."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
     wget -q --spider "$1"
@@ -152,7 +152,7 @@ function get_file_list_html() {
 export -f get_file_list_html
 
 function create_tmp_dir() {
-  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [VARIABLE]\nCreate tempory directory and assign it to variable."
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate tempory directory and assign it to variable."
   export "$1=/tmp/.$1_tmp_$RANDOM"
   AP100_DBG msg_print debug "Created tmp dir $1=${!1}."
   mkdir -p "${!1}" &>/dev/null
@@ -160,7 +160,7 @@ function create_tmp_dir() {
 export -f create_tmp_dir
 
 function archive_extract() (
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} [TYPE] [FILE] [DIR]\nExtract archive to directory."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE] [DIR]\nExtract archive to directory."
   cd "$3" || return_err "Directory $3 does not exist!"
   local file
   [[ -f "$2" ]] && file="$(realpath "$2")" || file="$2"
@@ -268,7 +268,8 @@ function chroot_teardown() {
 export -f chroot_teardown
 
 function chroot_rootfs() {
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
+  [[ -d $2 ]] || return_err "$2 is not a directory!"
   AP100_DBG msg_print debug "Preparing to chroot..."
   case $1 in
     light) local ADD_COMMAND=_light;;
@@ -309,16 +310,14 @@ function parse_arch() {
 export -f parse_arch
 
 function qemu_chroot() {
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[*]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu static, mounting necessary directories."
-  [[ -z $QEMU_STATIC_BIN_DIR ]] && local QEMU_STATIC_BIN_DIR="/usr/bin"
-  if [[ "$1" == "check" ]]; then
-    parse_arch "$2"
-  else
-    parse_arch "$1"; shift
-  fi
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu static, mounting necessary directories."
+  local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
+  # If arch set to check, we just check ability to use qemu static.
+  [[ "$1" == "check" ]] && shift
+  parse_arch "$1"; shift
   if [[ -f $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static ]]; then
-    AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
-    [[ "$1" == "check" ]] && return 0
+    AP100_DBG msg_print debug "Using $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
+    [[ "$#" == 1 ]] && return 0
     cp "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" "$1/usr/bin/qemu-$qemu_arch-static"
     local qemu_dir=$1; shift
 	  chroot_rootfs main "$qemu_dir" "qemu-$qemu_arch-static" "$@"
@@ -330,7 +329,7 @@ function qemu_chroot() {
 export -f qemu_chroot
 
 function qemu_run_bin() {
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[*]} [ARCH] [BINARY]\nRun binary using qemu static."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu static."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
     AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
@@ -342,33 +341,32 @@ function qemu_run_bin() {
 export -f qemu_run_bin
 
 function genfstab_light() {
-  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[*]} [DIRECTORY]\nMake fstab file for directory."
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [DIRECTORY]\nMake fstab file for directory."
   local root
   root=$(realpath "$1")
   declare -A pseudofs_types=([anon_inodefs]=1 [autofs]=1 [bdev]=1 [bpf]=1 [binfmt_misc]=1 [cgroup]=1 [cgroup2]=1 [configfs]=1 [cpuset]=1 [debugfs]=1
   [devfs]=1 [devpts]=1 [devtmpfs]=1 [dlmfs]=1 [efivarfs]=1 [fuse.gvfsd-fuse]=1 [fuse.gvfs-fuse-daemon]=1 [fusectl]=1 [gvfsd-fuse]=1 [hugetlbfs]=1 [mqueue]=1 [nfsd]=1 [none]=1 [pipefs]=1
   [proc]=1 [pstore]=1 [ramfs]=1 [rootfs]=1 [rpc_pipefs]=1 [securityfs]=1 [sockfs]=1 [spufs]=1 [sysfs]=1 [tracefs]=1 [tmpfs]=1)
   declare -A fsck_types=([cramfs]=1 [exfat]=1 [ext2]=1 [ext3]=1 [ext4]=1 [ext4dev]=1 [jfs]=1 [minix]=1 [msdos]=1 [reiserfs]=1 [vfat]=1 [xfs]=1)
-  findmnt -Recvruno SOURCE,TARGET,FSTYPE,OPTIONS,FSROOT "$1" |
+  findmnt -Recvruno SOURCE,TARGET,FSTYPE,OPTIONS,FSROOT "$root" |
   while read -r src target fstype opts fsroot; do
     (( pseudofs_types["$fstype"] )) && continue
-    target=${target#$root}
-    if [[ $fsroot != / ]]; then
-      if [[ $fstype = btrfs ]]; then
-        echo "#Warning! BTRFS was not tested!"
-        opts+=,subvol=${fsroot#/}
-      else
-        [[ $(findmnt -funcevo TARGET "$src")$fsroot != "$target" ]] && continue
-      fi
-    fi
     dump=0 pass=0
+    target=${target#$root}
+    if [[ $fsroot != "/" && $fstype != "btrfs" ]]; then
+      src=$(findmnt -funcevo TARGET "$src")$fsroot #bind mount
+      [[ ! $src -ef "$target" ]] && echo -ne "\n# $src\n$src\t/${target#/}\tnone\t$opts,bind\t$dump $pass\n"
+      continue
+    fi
     (( fsck_types["$fstype"] )) && pass=2
     case $fstype in
       fuseblk) fstype=$(lsblk -no FSTYPE "$src");; #For ntfs-3g
       fuse*) continue;; #We just ignore fuse mounts.
       *) findmnt "$src" "$root" >/dev/null && pass=1;;
     esac
-    echo -ne "\n#$src"; label=$(lsblk -rno LABEL "$src" 2>/dev/null); [[ -n $label ]] && echo -ne " LABEL=$label"
+    echo -ne "\n# $src"; 
+    label=$(lsblk -rno LABEL "$src" 2>/dev/null)
+    [[ -n $label ]] && echo -ne " LABEL=$label"
     echo -ne "\nUUID=$(lsblk -rno UUID "$src" 2>/dev/null)\t/${target#/}\t$fstype\t$opts\t$dump $pass\n"
   done
 }
