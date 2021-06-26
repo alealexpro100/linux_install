@@ -1,3 +1,5 @@
+#!/bin/bash
+
 msg_print note "Copying files into rootfs..."
 [[ -d ./lib/distr/$distr/rootfs ]] && $cp_safe "./lib/distr/$distr/rootfs/." "$dir"
 
@@ -34,12 +36,9 @@ fi
 if [[ $fstab == "1" ]]; then
   msg_print note "Generationg fstab..."
   [[ -f $dir/etc/fstab ]] && mv "$dir/etc/fstab" "$dir/etc/fstab.bak"
-  echo '# Static information about the filesystems.
-# See fstab(5) for details.
-
-# <file system> <dir> <type> <options> <dump> <pass>
-
-' >> $dir/etc/fstab
+  echo -e '# Static information about the filesystems.
+# See fstab(5) for details.\n
+# <file system> <dir> <type> <options> <dump> <pass>' >> "$dir/etc/fstab"
   genfstab_light "$dir" >> "$dir/etc/fstab"
 fi
 

@@ -36,7 +36,11 @@ fi
 
 [[ -n $to_install ]] && $xbps_install $to_install
 for service in $to_enable; do
-    [[ ! -d "/etc/runit/runsvdir/default/$service" ]] && ln -s "/etc/sv/$service" /etc/runit/runsvdir/default/
+    if [[ -d "/etc/runit/runsvdir/default/$service" ]]; then
+      ln -s "/etc/sv/$service" /etc/runit/runsvdir/default/
+    else
+      msg_print warning "Service $service not found!"
+    fi
 done
 
 msg_print note "Packages installed."
