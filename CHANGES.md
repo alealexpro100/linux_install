@@ -1,3 +1,6 @@
+# Version 0.4.7:
+* Minor fixes.
+
 # Version 0.4.6:
 * Minor fixes.
 * Fixed live uefi installation.
