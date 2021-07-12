@@ -44,7 +44,7 @@ if [[ $WORK_MODE == "install" ]]; then
             else
                 BOOTLOADER_TYPE_DEFAULT=bios
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
-                read_param "" "$M_BOOTLOADER_PATH" "" PART_BOOT text_check "$(list_disks_get)"
+                read_param "" "$M_BOOTLOADER_PATH" "/dev/$(lsblk --noheadings --output pkname "$PART_ROOT")" PART_BOOT text_check "$(list_disks_get)"
             fi
             read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
             if [[ $PART_DO == "1" ]]; then
