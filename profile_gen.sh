@@ -42,7 +42,7 @@ else
 fi
 
 profile_dir="${profile_dir:-./lib/distr/}"
-distr_list="$(find "$profile_dir" -maxdepth 1 -type d | sort | sed "s|$profile_dir||g;/^$/d")"
+distr_list="$(list_files "$profile_dir" -type d)"
 read_param "$M_DISTR_1: \n$distr_list\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text_check "$(echo "$distr_list" | tr '\n' ',')"
 
 AP100_DBG print_param note "$M_COMMON_OPT"

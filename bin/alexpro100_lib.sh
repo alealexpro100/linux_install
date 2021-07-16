@@ -125,6 +125,7 @@ function try_exec() {
     fi
   fi 
 }
+export -f try_exec
 
 function command_exists() {
   AP100_DBG msg_print debug "Checking $1..."
