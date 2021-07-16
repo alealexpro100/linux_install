@@ -18,6 +18,13 @@ Supported Linux distros for installation:
 * (Optional) For foreign architectures: qemu-user-static (QEMU_STATIC_BIN_DIR flag supported).
 
 ## Usage
+### Installer
+* Dwonload latest `.iso` file from releases.
+* Boot from it. UEFI and BIOS systems are both supported.
+* Follow install instructions.
+* That's all. You have installed system. Good luck!
+
+### Script
 * Prepare directory for installation.
 * Execute `./profile_gen.sh` and answer questions OR find one of prepared in `./auto_configs`.
 * Execute `./install_sys.sh your/profile.sh` using installation profile to install system.
@@ -36,16 +43,14 @@ Supported Linux distros for installation:
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
-* bin/mirror_sync - Tools for making local mirror of packages.
 * bin/make_images - Create image with linux_install script.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
-* orphaned/ - Old parts of script. Are kept for future usage.
 * tests/ - Testing scripts. See `tests/README_tests.md`.
-* install_sys.sh - Main script. Requries profile for work.
+* install_sys.sh - Install script. Requries profile for work.
 * profile_gen.sh - Profile generator.
-* private_parametres - File with private parametres. Your parametres.
-* public_parametres - File with public parametres. Do NOT delete it.
+* private_parametres - File with private parametres.
+* public_parametres - File with public parametres. Do NOT remove it.
 * version_install - Version of this script.
 
 ## Sources:
