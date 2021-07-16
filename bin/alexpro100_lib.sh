@@ -7,7 +7,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.1" 
+ALEXPRO100_LIB_VERSION="0.3.2" 
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -112,11 +112,45 @@ export -f show_progress
 
 #--SYS--
 
+function try_exec() {
+  [[ -z $2 || ( $1 != "0" && $1 != "1" ) ]] && echo_help "Usage: ${FUNCNAME[0]} {0|1} [COMMAND]\nTry to execute command."
+  local RETURN_ERR=$1; shift
+  if "$@"; then
+    AP100_DBG msg_print debug "Succesfully executed command: $*"
+  else
+    if [[ $RETURN_ERR == "1" ]]; then
+      return_err "Failed to execute command: $*." $?
+    else
+      msg_print warning "Failed to execute command: $*."
+    fi
+  fi 
+}
+
 function command_exists() {
   AP100_DBG msg_print debug "Checking $1..."
   command -v "$1" &> /dev/null ;
 }
 export -f command_exists
+
+function list_files() {
+  local DIR_SEARCH="$1"; shift
+  find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d" #Hack for busybox.
+}
+export -f list_files
+
+function check_online() {
+  local offline=1
+  while IFS= read -r interface; do
+    AP100_DBG msg_print debug "Checking $interface for carrier."
+    if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
+      AP100_DBG msg_print debug "Found carrier on $interface."
+      offline=0;
+      break;
+    fi
+  done < <(list_files /sys/class/net/ -type l | sed '/lo/d')
+  return $offline;
+}
+export -f check_online
 
 function get_file_s() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [FILE] [URL]\nDownload to file from url."
