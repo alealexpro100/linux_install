@@ -26,19 +26,19 @@ read_param "$M_MSG_M: \n$msg_file_list\n" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" L
 source "$msg_dir/$LANG_INSTALLER.sh"
 
 while ! check_online; do
-    msg_print error "Host is offline!"
+    msg_print error "$M_HOST_OFFLINE"
     msg_print warning "You need to connect to network manually."
     NETWORK_INTERFACES="$(list_files "/sys/class/net/" -type l | sed '/lo/d')"
-    msg_print note "Detected network devices: \n$NETWORK_INTERFACES"
-    read_param "" "Choose interface to setup" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE text_check "$(echo -e "$NETWORK_INTERFACES" | tr '\n' ',')"
+    msg_print note "$M_NET_DETECTED_INTERFACES: \n$NETWORK_INTERFACES"
+    read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE text_check "$(echo -e "$NETWORK_INTERFACES" | tr '\n' ',')"
     case $INTERFACE in
         wlan*)
             ip link set "$INTERFACE" up
             SSID_LIST="$(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g')"
-            msg_print note "Scan result: \n$SSID_LIST"
-            read_param "" "Choose SSID" "" SSID text_check "$(echo -e "$SSID_LIST" | tr '\n' ',')"
+            msg_print note "$M_NET_WIFI_SCAN_RESULT: \n$SSID_LIST"
+            read_param "" "$M_NET_WIFI_SSID_CHOOSE" "" SSID text_check "$(echo -e "$SSID_LIST" | tr '\n' ',')"
             iwconfig "$INTERFACE" essid "$SSID"
-            read_param "Enter password for $SSID.\n" "Password" "" SSID_PASS secret
+            read_param "$M_NET_WIFI_SSID_PASS $SSID.\n" "$M_PASS" "" SSID_PASS secret
             if wpa_passphrase "$SSID" "$SSID_PASS" > "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"; then
                 if wpa_supplicant -B -i "$INTERFACE" -c "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"; then
                     timeout 10 udhcpc -i "$INTERFACE" -f -q || msg_print error "Failed to setup dhcp."
@@ -48,7 +48,7 @@ while ! check_online; do
             fi
         ;;
         eth*)
-            read_param "" "Choose method: " "dhcp" IP_METHOD text_check "dhcp,manual"
+            read_param "" "$M_NET_ETH_METHOD" "dhcp" IP_METHOD text_check "dhcp,manual"
             case $IP_METHOD in
                 dhcp)
                     msg_print note "Trying to setup dhcp on interface $INTERFACE..."
@@ -73,7 +73,7 @@ while ! check_online; do
         ;;
     esac
 done
-msg_print note "Host is online. Proceeding to next steps."
+msg_print note "$M_HOST_ONLINE"
 
 read_param "$M_WORK_MODE_M\n" "$M_WORK_MODE (install/console)" "install" WORK_MODE text_check install,console
 if [[ $WORK_MODE == "install" ]]; then

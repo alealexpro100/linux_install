@@ -19,7 +19,7 @@ Supported Linux distros for installation:
 
 ## Usage
 ### Installer
-* Dwonload latest `.iso` file from releases.
+* Download latest `.iso` file from releases.
 * Boot from it. UEFI and BIOS systems are both supported.
 * Follow install instructions.
 * That's all. You have installed system. Good luck!
@@ -43,14 +43,14 @@ Supported Linux distros for installation:
 ## Contents of project:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools for this script. They use only `alexpro100_lib.sh`.
-* bin/make_images - Create image with linux_install script.
+* bin/make_images - Create image with Linux_install script.
 * custom/ - Your custom script and files. See `custom/README_custom.md`.
 * lib/ - Installation files. Easy-to-edit installation system.
 * tests/ - Testing scripts. See `tests/README_tests.md`.
-* install_sys.sh - Install script. Requries profile for work.
+* install_sys.sh - Install script. Requires profile for work.
 * profile_gen.sh - Profile generator.
-* private_parametres - File with private parametres.
-* public_parametres - File with public parametres. Do NOT remove it.
+* private_parameters - File with private parameters.
+* public_parameters - File with public parameters. Do NOT remove it.
 * version_install - Version of this script.
 
 ## Sources:
