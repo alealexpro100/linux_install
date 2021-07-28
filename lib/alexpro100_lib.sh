@@ -1,13 +1,14 @@
 #!/bin/bash
 ###############################################################
 ### alexpro100 BASH LIBRARY
-### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
+### Works both on GNU  and busybox systems. Requries Bash.
+### Copyright (C) 2021 ALEXPRO100 (alealexpro100)
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.2" 
+ALEXPRO100_LIB_VERSION="0.3.3"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
@@ -19,22 +20,22 @@ export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 # Colors for text.
 
 #Foreground.
-export Black="\e[30m"		# Black
-export DGray="\e[90m"		# Dark Gray
-export DRed="\e[31m"		# Dark Red
-export LRed="\e[91m"		# Light Red
+export Black="\e[30m"	# Black
+export DGray="\e[90m"	# Dark Gray
+export DRed="\e[31m"	# Dark Red
+export LRed="\e[91m"	# Light Red
 export DGreen="\e[32m"	# Dark Green
 export LGreen="\e[92m"	# Light Green
 export Orange="\e[33m"	# Orange
 export Yellow="\e[93m"	# Yellow
-export Blue="\e[34m"		# Dark Blue
-export LBlue="\e[94m"		# Light Blue
+export Blue="\e[34m"	# Dark Blue
+export LBlue="\e[94m"	# Light Blue
 export DPurple="\e[35m"	# Dark Purple
 export LPurple="\e[95m"	# Light Purple
-export DCyan="\e[36m"		# Dark Cyan
-export LCyan="\e[96m"		# Light Cyan
-export LGray="\e[37m"		# Light Gray
-export White="\e[97m"		# White
+export DCyan="\e[36m"	# Dark Cyan
+export LCyan="\e[96m"	# Light Cyan
+export LGray="\e[37m"	# Light Gray
+export White="\e[97m"	# White
 
 # Background.
 export On_Black="\e[40m"       # Black
@@ -47,14 +48,14 @@ export On_Cyan="\e[46m"        # Cyan
 export On_White="\e[47m"       # White
 
 #Special symbols.
-export NC="\e[0m"           # Color Reset
-export Bold="\e[1m"		      # Bold text
-export Cursive="\e[3m"      # Italic text
-export Underline="\e[4m"    # Underlined
-export Blink="\e[5m"        # Blink (might not work)
-export Reverse="\e[7m"      # Negative text
-export Crossout="\e[9m"     # Crossed out
-export DUnderline="\e[21m"  # Double Underlined
+export NC="\e[0m"		# Color Reset
+export Bold="\e[1m"		# Bold text
+export Cursive="\e[3m"		# Italic text
+export Underline="\e[4m"	# Underlined
+export Blink="\e[5m"		# Blink (might not work)
+export Reverse="\e[7m"		# Negative text
+export Crossout="\e[9m"		# Crossed out
+export DUnderline="\e[21m"	# Double Underlined
 
 #--DEBUG--
 
@@ -70,14 +71,14 @@ function msg_print() {
   local TYPE=$1; shift
   while IFS= read -r line; do
     case $TYPE in
-	  alert) echo -e "$Bold$White$On_Red$line${NC}";;
-	  err|error) echo -e "[${LRed}ERROR${NC}] $line";;
-	  warn|warning) echo -e "[${Orange}WARNING${NC}] $line";;
-	  note) echo -e "[${LBlue}NOTE${NC}] $line";;
-	  msg|meassage) echo -e "[${DGray}MSG${NC}] $line";;
-    debug) echo -e "[${LGreen}DEBUG${NC}] $line";;
-	  prgs|progress) echo -e "[${Orange}PROGRESS${NC}] $line";;
-	  *);;
+      alert) echo -e "$Bold$White$On_Red$line${NC}";;
+      err|error) echo -e "[${LRed}ERROR${NC}] $line";;
+      warn|warning) echo -e "[${Orange}WARNING${NC}] $line";;
+      note) echo -e "[${LBlue}NOTE${NC}] $line";;
+      msg|meassage) echo -e "[${DGray}MSG${NC}] $line";;
+      debug) echo -e "[${LGreen}DEBUG${NC}] $line";;
+      prgs|progress) echo -e "[${Orange}PROGRESS${NC}] $line";;
+      *) return_err "Incorrect type $TYPE!";;
     esac
   done < <(echo -e "$*")
 }
@@ -139,14 +140,20 @@ function list_files() {
 }
 export -f list_files
 
+function mv_big() {
+  for file in "$1"/*; do
+    mv "$1/$file" "$2"
+  done
+}
+export -f mv_big
+
 function check_online() {
   local offline=1
   while IFS= read -r interface; do
     AP100_DBG msg_print debug "Checking $interface for carrier."
     if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
       AP100_DBG msg_print debug "Found carrier on $interface."
-      offline=0;
-      break;
+      offline=0; break
     fi
   done < <(list_files /sys/class/net/ -type l | sed '/lo/d')
   return $offline;
@@ -254,9 +261,7 @@ function chroot_setup() {
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   chroot_add_mount dir proc "$1/proc" -t proc -o nosuid,noexec,nodev
   chroot_add_mount dir sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro
-  if [[ -d '/sys/firmware/efi/efivars' ]]; then
-    chroot_add_mount dir efivarfs "$1/sys/firmware/efi/efivars" -t efivarfs -o nosuid,noexec,nodev
-  fi
+  [[ -d '/sys/firmware/efi/efivars' ]] && chroot_add_mount dir efivarfs "$1/sys/firmware/efi/efivars" -t efivarfs -o nosuid,noexec,nodev
   chroot_add_mount dir udev "$1/dev" -t devtmpfs -o mode=0755,nosuid
   chroot_add_mount dir devpts "$1/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec
   chroot_add_mount dir shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev
@@ -332,13 +337,10 @@ function parse_arch() {
     x86_64|amd64) export alpine_arch=x86_64 debian_arch=amd64 arch_arch=x86_64 void_arch=x86_64 qemu_arch=x86_64;;
     aarch64|arm64|armv8l) export alpine_arch=aarch64 debian_arch=arm64 arch_arch=aarch64 void_arch=aarch64 qemu_arch=aarch64;;
     armv7|armv7h) export alpine_arch=armv7 debian_arch=armhf arch_arch=armv7h void_arch=armv7l qemu_arch=arm;;
-    armhf|armv6h) export alpine_arch=armhf debian_arch=armhf arch_arch=armv6h void_arch=armv6l qemu_arch=arm ;;
+    armhf|armv6h) export alpine_arch=armhf debian_arch=armhf arch_arch=armv6h void_arch=armv6l qemu_arch=arm;;
     arm|armel) export alpine_arch=armhf debian_arch=armel arch_arch=arm void_arch=armv6l qemu_arch=arm;;
     # TODO: Add and fix another arches (old arm, mips).
-    *) 
-    alpine_arch="$(uname -m)" debian_arch="$(uname -m)" arch_arch="$(uname -m)" void_arch="armv6l" qemu_arch="$(uname -m)"
-    export alpine_arch debian_arch arch_arch void_arch qemu_arch
-    ;;
+    *) qemu_arch="$(uname -m)"; export alpine_arch="$qemu_arch" debian_arch="$qemu_arch" arch_arch="$qemu_arch" void_arch="$qemu_arch" qemu_arch;;
   esac
   AP100_DBG msg_print debug "Exported alpine_arch=$alpine_arch debian_arch=$debian_arch arch_arch=$arch_arch void_arch=$void_arch qemu_arch=$qemu_arch."
 }

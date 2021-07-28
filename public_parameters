@@ -13,9 +13,9 @@ declare -A debian_repos=([main]='deb https://deb.debian.org/debian $version_debi
 [security]='deb https://security.debian.org/ $version_debian/updates main non-free contrib'
 [wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main'
 [webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
-mirror_archlinux='https://mirrors.evowise.com/archlinux'
+mirror_archlinux='http://mirror.dotsrc.org/archlinux'
 mirror_archlinux_32='https://mirror.archlinux32.org'
 mirror_archlinux_arm='https://mirror.archlinuxarm.org'
 mirror_alpine='https://dl-cdn.alpinelinux.org/alpine'
-mirror_voidlinux='httpss://alpha.de.repo.voidlinux.org/current'
+mirror_voidlinux='https://alpha.de.repo.voidlinux.org/current'
 version_void=glibc

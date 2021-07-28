@@ -7,7 +7,7 @@
 
 set -e
 
-export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/../alexpro100_lib.sh}"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/../../lib/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
 source "${BASH_SOURCE[0]%/*}/../../lib/common/lib_connect.sh"
 

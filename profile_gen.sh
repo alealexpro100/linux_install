@@ -8,12 +8,13 @@
 set -e
 
 if [[ ! -f ./version_install ]]; then
-  cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+  cd "${BASH_SOURCE[0]%/*}"
+  [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi
-echo "Startring ${BASH_SOURCE[0]} v$(cat ./version_install)"
+echo "Starting ${BASH_SOURCE[0]} $(cat ./version_install)"
 
 #Use libraries
-export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/bin/alexpro100_lib.sh}"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./bin/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 # shellcheck disable=SC1091
@@ -22,9 +23,9 @@ source ./lib/common/lib_var_op.sh
 source ./lib/common/lib_ui.sh
 
 # shellcheck disable=SC1091
-[[ -f ./public_parametres ]] && source ./public_parametres
+[[ -f ./public_parameters ]] && source ./public_parameters
 # shellcheck disable=SC1091
-[[ -f ./private_parametres ]] && source ./private_parametres
+[[ -f ./private_parameters ]] && source ./private_parameters
 
 #Language support.
 # shellcheck disable=SC1090
