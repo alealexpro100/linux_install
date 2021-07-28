@@ -4,7 +4,7 @@ set -e
 
 #Import some libraries.
 # shellcheck disable=SC1091
-source ./linux_install/bin/alexpro100_lib.sh
+source ./linux_install/lib/alexpro100_lib.sh
 # shellcheck disable=SC1091
 source ./linux_install/lib/common/lib_var_op.sh
 # shellcheck disable=SC1091
@@ -27,7 +27,6 @@ source "$msg_dir/$LANG_INSTALLER.sh"
 
 while ! check_online; do
     msg_print error "$M_HOST_OFFLINE"
-    msg_print warning "You need to connect to network manually."
     NETWORK_INTERFACES="$(list_files "/sys/class/net/" -type l | sed '/lo/d')"
     msg_print note "$M_NET_DETECTED_INTERFACES: \n$NETWORK_INTERFACES"
     read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE text_check "$(echo -e "$NETWORK_INTERFACES" | tr '\n' ',')"
@@ -58,10 +57,10 @@ while ! check_online; do
                 manual)
                     #Not tested.
                     read_param "" "Client IP" "" IP_CLIENT text
-                    read_param "" "Netmask" "" IP_NETMASK text
+                    read_param "" "(Optional) Netmask" "" IP_NETMASK text
                     read_param "" "(Optional) Gateway IP" "" IP_GATEWAY text_empty
                     read_param "" "(Optional) DNS Server" "" IP_DNS text_empty
-                    if ifconfig "$INTERFACE" "$IP_CLIENT" netmask "$IP_NETMASK"; then
+                    if ifconfig "$INTERFACE" "$IP_CLIENT" "$([[ -n "$IP_NETMASK" ]] && echo "netmask \"$IP_NETMASK\"")"; then
                         [[ -z "$IP_GATEWAY" ]] && ip route add 0.0.0.0/0 via "$IP_GATEWAY" dev "$INTERFACE"
 		            fi
 		            [[ -n $IP_DNS ]] && echo "nameserver $IP_DNS" >> /etc/resolv.conf
