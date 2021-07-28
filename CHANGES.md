@@ -1,3 +1,12 @@
+# Version 0.4.9:
+* Added handy build.
+* Fix grammar.
+* Minor fixes.
+
+# Version 0.4.8:
+* Added support for wireless connections.
+* Minor fixes.
+
 # Version 0.4.7:
 * Minor fixes.
 
