@@ -38,7 +38,7 @@ Supported Linux distros for installation:
 * Clone this repo.
 * Change location of ALPINE_FILES in `./bin/make_images/build.sh`.
 * Run it from root.
-* Images will be located at `./builds`.
+* Images will be located at `../linux_install_builds`.
 
 ## Supported variables
 * `CUSTOM_DIR` - Path to custom script and files.

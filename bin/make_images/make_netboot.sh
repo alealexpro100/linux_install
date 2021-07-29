@@ -7,9 +7,10 @@
 
 set -e
 
-export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-${BASH_SOURCE[0]%/*}/../../lib/alexpro100_lib.sh}"
+#Use library
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
-source "${BASH_SOURCE[0]%/*}/../../lib/common/lib_connect.sh"
+source ./lib/common/lib_connect.sh
 
 [[ $UID != 0 ]] && return_err "This script requries root permissions!"
 
