@@ -8,10 +8,9 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.3"
+ALEXPRO100_LIB_VERSION="0.3.4"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
-echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION"
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 
@@ -63,6 +62,8 @@ function AP100_DBG() {
   [[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || "$@"
 }
 export -f AP100_DBG
+
+AP100_DBG echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION (Debug mode)"
 
 #--UI--
 
@@ -130,7 +131,7 @@ export -f try_exec
 
 function command_exists() {
   AP100_DBG msg_print debug "Checking $1..."
-  command -v "$1" &> /dev/null ;
+  command -v "$1" &>/dev/null
 }
 export -f command_exists
 
@@ -162,14 +163,14 @@ export -f check_online
 
 function get_file_s() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [FILE] [URL]\nDownload to file from url."
-  if command_exists wget; then
-    AP100_DBG msg_print debug "Using wget."
+  if command_exists wget &>/dev/null; then
+    [[ $1 == - ]] || AP100_DBG msg_print debug "Using wget."
     wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
-  elif command_exists curl; then
-    AP100_DBG msg_print debug "Using curl."
+  elif command_exists curl &>/dev/null; then
+    [[ $1 == - ]] || AP100_DBG msg_print debug "Using curl."
     curl -s --retry 3 -f -o "$1" "$2" || return_err "Exit code $? while downloading $2!"
   else
-    return_err "Niether wget nor curl are installed."
+    return_err "Niether wget nor curl are found."
   fi
 }
 export -f get_file_s
@@ -183,7 +184,7 @@ function check_url() {
     AP100_DBG msg_print debug "Using curl."
     curl --head --fail "$1" &>/dev/null
   else
-    return_err "Niether wget nor curl are installed."
+    return_err "Niether wget nor curl are found."
   fi
 }
 export -f check_url
@@ -201,34 +202,25 @@ function create_tmp_dir() {
 }
 export -f create_tmp_dir
 
-function archive_extract() (
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE] [DIR]\nExtract archive to directory."
-  cd "$3" || return_err "Directory $3 does not exist!"
-  local file
-  [[ -f "$2" ]] && file="$(realpath "$2")" || file="$2"
-  case $1 in
-    tar.bz2|tbz2)  tar xjf "$file";;
-    tar.gz|tgz)  tar xzf "$file";;
-    tar.xz)  tar xJf "$file";;
-    tar.zst)  tar -I zstd -xf "$file";;
-    lzma)  unlzma "$file";;
-    bz2)  bunzip2 "$file";;
-    rar)  unrar x -ad "$file";;
-    gz)  gunzip "$file";;
-    tar)  tar xf "$file";;
-    zip)  unzip "$file";;
-    Z)  uncompress "$file";;
-    7z)  7z x "$file";;
-    xz)  unxz "$file";;
-    exe|cab)  cabextract "$file";;
-    *)  return_err "$file - Unknown archive type.";;
+function arccat() {
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdio."
+  [[ $2 == - ]] || AP100_DBG msg_print debug "Extracting $2..."
+  case "$1" in
+    zst) zstd -dcf "$2";;
+    bz2)  bunzip2 "$2";;
+    Z|gz)  gunzip -cd "$2";;
+    tar)  tar xf "$2" -O;;
+    rar)  unrar x "$2";;
+    zip)  unzip -p "$2";;
+    7z)  7z x -so "$2" 2>/dev/null;;
+    *)  return_err "$1 - Unknown archive type.";;
   esac
-)
-export -f archive_extract
+}
+export -f arccat
 
 function unpack_initfs_gz() (
   cd -- "$2" || return_err "No directory $2!"
-  gunzip -d < "$1" | cpio -iv
+  arccat gz "$1" | cpio -iv
 )
 export -f unpack_initfs_gz
 
