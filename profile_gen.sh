@@ -8,13 +8,14 @@
 set -e
 
 if [[ ! -f ./version_install ]]; then
+  old_path="$(pwd -P)"
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi
 echo "Starting ${BASH_SOURCE[0]} $(cat ./version_install)"
 
 #Use libraries
-export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./bin/alexpro100_lib.sh}"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 # shellcheck disable=SC1091
@@ -23,9 +24,14 @@ source ./lib/common/lib_var_op.sh
 source ./lib/common/lib_ui.sh
 
 # shellcheck disable=SC1091
-[[ -f ./public_parameters ]] && source ./public_parameters
+if [[ -f ./public_parameters ]]; then
+  source ./public_parameters
+else
+  return_err "Public parameters not found!"
+fi
 # shellcheck disable=SC1091
 [[ -f ./private_parameters ]] && source ./private_parameters
+
 
 #Language support.
 # shellcheck disable=SC1090
@@ -37,7 +43,7 @@ if [[ $LIVE_MODE == "1" ]]; then
   profile_file="/tmp/last_gen.sh"
   add_var "declare -gx" "dir" "${DEFAULT_DIR:-"/mnt/mnt"}"
 else
-  profile_file="${1:-"./auto_configs/last_gen.sh"}"
+  profile_file="$(realpath "${1:-"last_gen.sh"}")"
   print_param note "$M_DIR_WARN\n$M_PROFILE_1 $profile_file"
   read_param "" "$M_PATH" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
@@ -58,10 +64,10 @@ until [[ $var_final == "0" ]]; do
   #Make menu, We use array to make parametres.
   vars_list=("0" "$M_LIST_FINAL_END_OPTION")
   # shellcheck disable=SC2154
-  for ((i=1; i<${#var_num[@]}; i++)); do
+  for ((i=0; i<${#var_num[@]}; i++)); do
     var=${var_num[i]}
     [[ $var == "var_final" ]] && continue
-    vars_list=("${vars_list[@]}" "$i")
+    vars_list=("${vars_list[@]}" "$((i+1))")
     if [[ ${!var} == "0" || ${!var} == "1" ]]; then
       if [[ ${!var} == "1" ]]; then
         vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_YES")

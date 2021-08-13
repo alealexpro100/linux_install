@@ -8,13 +8,14 @@
 set -e
 
 if [[ ! -f ./version_install ]]; then
+  CONFIG_FILE="$(realpath "$1")"
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi
 echo "Starting ${BASH_SOURCE[0]} $(cat ./version_install)"
 
 #Use libraries
-export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./bin/alexpro100_lib.sh}"
+export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.sh}"
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 # shellcheck disable=SC1091
@@ -45,8 +46,6 @@ function custom_actions() {
     rm -rf "$dir/root/custom_script.sh"
   fi
 }
-
-CONFIG_FILE="$1"
 
 if [[ -z $CONFIG_FILE ]]; then
   echo "Main install script. Requries profile for installation."
