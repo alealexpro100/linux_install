@@ -28,7 +28,7 @@ source "$msg_dir/$LANG_INSTALLER.sh"
 while ! check_online; do
     msg_print error "$M_HOST_OFFLINE"
     NETWORK_INTERFACES="$(list_files "/sys/class/net/" -type l | sed '/lo/d')"
-    msg_print note "$M_NET_DETECTED_INTERFACES: \n$NETWORK_INTERFACES"
+    msg_print note "$M_NET_INTERFACE_DETECTED_LIST: \n$NETWORK_INTERFACES"
     read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE text_check "$(echo -e "$NETWORK_INTERFACES" | tr '\n' ',')"
     case $INTERFACE in
         wlan*)
@@ -96,7 +96,7 @@ if [[ $WORK_MODE == "install" ]]; then
             else
                 BOOTLOADER_TYPE_DEFAULT=bios
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
-                read_param "" "$M_BOOTLOADER_PATH" "/dev/$(lsblk --noheadings --output pkname "$PART_ROOT")" PART_BOOT text_check "$(list_disks_get)"
+                read_param "" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT text_check "$(list_disks_get)"
             fi
             read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
             if [[ $PART_DO == "1" ]]; then

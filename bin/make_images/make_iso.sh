@@ -43,7 +43,6 @@ pack_initfs_cpio "$make_iso/initfs" | zstd -T12 -10 > "$initramfs_name"
 mount -t tmpfs tmpfs "$make_iso/rootfs"
 cp "./auto_configs/linux_install_$arch.sh" "$make_iso/config.sh"
 CUSTOM_DIR="$make_iso/custom" default_dir="$make_iso/rootfs" "./install_sys.sh" "$make_iso/config.sh"
-list_files "$make_iso/rootfs"
 squashfs_rootfs_pack "$make_iso/rootfs" "$make_iso/final_iso/apks/rootfs.img" xz
 umount "$make_iso/rootfs"
 sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_iso/final_iso/boot/syslinux/syslinux.cfg"

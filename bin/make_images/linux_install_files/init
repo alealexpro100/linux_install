@@ -3,18 +3,23 @@
 
 # Edited to boot squashfs
 # Taken most parts from original init
-VERSION=0.1.2 #based on alpine init 3.5.0-r0
+VERSION=0.1.3 #based on alpine init 3.5.0-r0
 sysroot=/sysroot
 repofile=/tmp/repositories
 
 if [ -z "$rootfs_net" ]; then
-	echo "Executing /init_orig..."
+	echo "Variable \$rootfs_net not found! Executing /init_orig..."
 	exec /init_orig
 fi
 
 quiet=${quiet:-no}
 
 # some helpers
+return_err() {
+	echo "$*"
+	echo "initramfs emergency recovery shell launched. Type 'exit' to continue boot"
+	/bin/busybox sh
+}
 ebegin() {
 	last_emsg="$*"
 	echo "$last_emsg..." > /dev/kmsg
@@ -32,14 +37,8 @@ eend() {
 		if [ "$quiet" = "yes" ]; then
 			echo -n "$last_emsg "
 		fi
-		echo "failed. $*"
-		echo "initramfs emergency recovery shell launched. Type 'exit' to continue boot"
-		/bin/busybox sh
+		return_err "failed. $*"
 	fi
-}
-return_err() {
-	echo "$*"
-	return 1
 }
 
 # determine the default interface to use if ip=dhcp is set
@@ -160,8 +159,7 @@ mkdir -p $overlayfs/root-ro $overlayfs/root-rw/root $overlayfs/root-rw/work
 
 if is_url "$rootfs_net"; then
     nlplug-findfs -p /sbin/mdev -n
-    configure_ip || echo "Failed to setup network."
-	echo "Downloading rootfs"
+    configure_ip || return_err "Failed to setup network."
 	wget -O $overlayfs/root-rw/squashfs.img "$rootfs_net"
 	ebegin "Mounting rootfs"
 	mount -o loop,ro $overlayfs/root-rw/squashfs.img $overlayfs/root-ro
@@ -169,10 +167,8 @@ if is_url "$rootfs_net"; then
 	eend $?
 else
     mkdir -p /tmp
-	# locate boot media and mount it
-	ebegin "Finding and mounting boot media"
-	nlplug-findfs -p /sbin/mdev \
-		-b $repofile -a /tmp/apkovls
+	ebegin "Finding and mounting rootfs"
+	nlplug-findfs -p /sbin/mdev -b $repofile -a /tmp/apkovls
 	repo_dir=$(head -n 1 $repofile)
 	if [ -f "$repo_dir/$rootfs_net" ]; then
 		mount -o loop,ro "$repo_dir/$rootfs_net" $overlayfs/root-ro
@@ -182,9 +178,8 @@ else
 fi
 : "${init:=/sbin/init}"
 if [ -f $sysroot/$init ]; then
-	if [ -f /etc/resolv.conf ]; then
-		cp /etc/resolv.conf $sysroot/etc/resolv.conf
-	fi
+	[ -f /etc/resolv.conf ] && cp /etc/resolv.conf $sysroot/etc/resolv.conf
+	ebegin "Preparing to switch root"
 	#shellcheck disable=SC2034
 	while read -r DEV DIR TYPE OPTS; do
 		if [ "$DIR" != "/" ] && [ "$DIR" != "$sysroot" ] && [ -d "$DIR" ]; then
@@ -193,7 +188,13 @@ if [ -f $sysroot/$init ]; then
 		fi
 	done < /proc/mounts
 	sync
-	exec /bin/busybox switch_root $sysroot $init "$(cat $sysroot/proc/cmdline)"
+	if [ -e "$sysroot/proc/cmdline" ]; then
+		cmdline="$(cat $sysroot/proc/cmdline)"
+	else
+		cmdline="$(cat /proc/cmdline)"
+	fi
+	eend 0
+	exec /bin/busybox switch_root $sysroot $init "$cmdline"
 else
     echo "File $sysroot/$init does not exist!"
 fi

@@ -22,7 +22,7 @@ rc-update del networking boot
 PASSWORD=pass
 echo "root:$PASSWORD" | chpasswd -c SHA512
 echo alpine_pxe > /etc/hostname
-echo -e "\n### Welcome to linux_install! ###\nSSH is working on port 22.\nPassword for root is \'$PASSWORD\'.\n" > /etc/motd
+echo -e "\n### Welcome to linux_install! ###\nSSH is working on port 22.\nPassword for root is '$PASSWORD'.\n" > /etc/motd
 sed -i "s|tty1.*|tty1::respawn:/bin/login -f root|" /etc/inittab
 sed -i "1s/ash/bash/" /etc/passwd
 
