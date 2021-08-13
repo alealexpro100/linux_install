@@ -7,8 +7,8 @@
 
 set -e
 
+CONFIG_FILE="$(realpath "$1")"
 if [[ ! -f ./version_install ]]; then
-  CONFIG_FILE="$(realpath "$1")"
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi

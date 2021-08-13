@@ -1,4 +1,4 @@
-# Maintainer: ALEXPRO100
+# Maintainer: ALEXPRO100 <alealexpro100@ya.ru>
 
 pkgname=linux_install-git
 _reponame=linux_install
@@ -13,7 +13,7 @@ makedepends=('git')
 optdepends=('debootstrap: debian support'
             'qemu-user-static: foreign architectures support'
             'squashfs-tools: live installer build support')
-source=("git+file:///mnt/mirror/projects/linux_install")
+source=("git+https://github.com/alealexpro100/linux_install.git")
 md5sums=('SKIP')
 
 pkgver() {
