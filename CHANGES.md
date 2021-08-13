@@ -1,3 +1,7 @@
+# Version 0.5.0:
+* Made suitable to package.
+* Fixed regressions.
+
 # Version 0.4.9:
 * Added handy build.
 * Fix grammar.
