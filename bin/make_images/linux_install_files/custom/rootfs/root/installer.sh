@@ -28,7 +28,7 @@ source "$msg_dir/$LANG_INSTALLER.sh"
 while ! check_online; do
     msg_print error "$M_HOST_OFFLINE"
     # shellcheck disable=SC2046
-    read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE menu_var $(list_files "/sys/class/net/" -type l | sed '/lo/d' | gen_menu)
+    read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "0" INTERFACE menu_var $(list_files "/sys/class/net/" -type l | sed '/lo/d' | gen_menu)
     case $INTERFACE in
         wlan*)
             ip link set "$INTERFACE" up
@@ -74,7 +74,7 @@ done
 msg_print note "$M_HOST_ONLINE"
 
 # shellcheck disable=SC2046
-read_param "$M_WORK_MODE_M\n" "$M_WORK_MODE (install/console)" "install" WORK_MODE menu_var $(echo -e "install\nconsole" | gen_menu)
+read_param "" "$M_WORK_MODE" "install" WORK_MODE menu_var $(echo -e "install\nconsole" | gen_menu)
 if [[ $WORK_MODE == "install" ]]; then
     mkdir -p /mnt/mnt >> /dev/null
     #Partition work. Here we format and mount needed partion(s).
@@ -101,7 +101,7 @@ if [[ $WORK_MODE == "install" ]]; then
                 BOOTLOADER_TYPE_DEFAULT=bios
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
                 # shellcheck disable=SC2046
-                read_param "" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT menu_var $(list_disks_get | gen_menu)
+                read_param "" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "/dev/$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT menu_var $(list_disks_get | gen_menu)
             fi
             read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
             if [[ $PART_DO == "1" ]]; then
@@ -129,7 +129,7 @@ if [[ $WORK_MODE == "install" ]]; then
     done
     msg_print note "$M_CHANGE_C"
     # shellcheck disable=SC2046
-    read_param "$M_ECHO_MODE_M\n" "$M_ECHO_MODE (dialog/cli)" "dialog" ECHO_MODE menu_var $(echo -e "dialog\ncli" | gen_menu)
+    read_param "" "$M_ECHO_MODE" "dialog" ECHO_MODE menu_var $(echo -e "dialog\ncli" | gen_menu)
     cd ./linux_install
     LIVE_MODE=1 ./profile_gen.sh
     ./install_sys.sh /tmp/last_gen.sh
