@@ -7,6 +7,7 @@
 
 set -e
 
+CONFIG_FILE="$(realpath "${1:-"last_gen.sh"}")"
 if [[ ! -f ./version_install ]]; then
   old_path="$(pwd -P)"
   cd "${BASH_SOURCE[0]%/*}"
@@ -40,11 +41,10 @@ source "${msg_dir:-./lib/msg/}/${LANG_INSTALLER:-en}.sh"
 print_param note "$M_WELCOME"
 
 if [[ $LIVE_MODE == "1" ]]; then
-  profile_file="/tmp/last_gen.sh"
+  CONFIG_FILE="/tmp/last_gen.sh"
   add_var "declare -gx" "dir" "${DEFAULT_DIR:-"/mnt/mnt"}"
 else
-  profile_file="$(realpath "${1:-"last_gen.sh"}")"
-  print_param note "$M_DIR_WARN\n$M_PROFILE_1 $profile_file"
+  print_param note "$M_DIR_WARN\n$M_PROFILE_1 $CONFIG_FILE"
   read_param "" "$M_PATH" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
 
@@ -100,9 +100,9 @@ done
 {
   echo -e "#Generated on $(date -u).\n"
   var_export "add_var "
-} > "$profile_file"
+} > "$CONFIG_FILE"
 
-[[ $LIVE_MODE != "1" ]] && print_param note "$M_PROFILE_2 $profile_file"
+[[ $LIVE_MODE != "1" ]] && print_param note "$M_PROFILE_2 $CONFIG_FILE"
 
 # =)
 echo "$M_NICE"
