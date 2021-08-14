@@ -1,6 +1,7 @@
 #!/bin/bash
 
-read_param "" "$M_LANG_SYSTEM" "$LANG_SYSTEM" LANG_SYSTEM text_check "en_US.UTF-8,$LANG_SYSTEM"
+# shellcheck disable=SC2046
+read_param "" "$M_LANG_SYSTEM" "$LANG_SYSTEM" LANG_SYSTEM menu_var $(echo -e "en_US.UTF-8\n$LANG_SYSTEM" | gen_menu)
 read_param "" "$M_HOSTNAME" "${distr:?}-$RANDOM" hostname text
 read_param "" "$M_USER" "${user_name:?}" user_name text
 read_param "" "$M_SHELL" "${user_shell:?}" user_shell text
@@ -24,7 +25,8 @@ if mountpoint -q "${dir:?}"; then
     else
       BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-bios}
     fi
-    read_param "" "$M_BOOTLOADER_TYPE (bios/uefi)" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type text_check bios,uefi
+    # shellcheck disable=SC2046
+    read_param "" "$M_BOOTLOADER_TYPE" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type menu_var $(echo -e "bios\nuefi" | gen_menu)
     if [[ ${bootloader_type:?} == "uefi" && $(findmnt -funcevo FSTYPE "$dir/boot") != vfat ]]; then
       print_param warning "No vfat partition found on \"$dir/boot\"!\nWithout it system won't be installed!"
     fi

@@ -50,7 +50,8 @@ fi
 
 profile_dir="${profile_dir:-./lib/distr/}"
 distr_list="$(list_files "$profile_dir" -type d)"
-read_param "$M_DISTR_1: \n$distr_list\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr text_check "$(echo "$distr_list" | tr '\n' ',')"
+# shellcheck disable=SC2046
+read_param "$M_DISTR_1:\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr menu_var $(echo "$distr_list" | gen_menu)
 
 AP100_DBG print_param note "$M_COMMON_OPT"
 # shellcheck disable=SC1091
@@ -79,6 +80,7 @@ until [[ $var_final == "0" ]]; do
     fi
   done
   #Print menu.
+  echo "${vars_list[@]}"
   read_param "$M_LIST_FINAL_TEXT" "$M_LIST_FINAL_DIALOG" "0" var_final menu "${vars_list[@]}"
   #Decide what we have to do: change param and show menu again or end selection.
   if [[ $var_final != 0 ]]; then

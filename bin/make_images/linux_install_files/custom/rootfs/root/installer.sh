@@ -11,7 +11,7 @@ source ./linux_install/lib/common/lib_var_op.sh
 source ./linux_install/lib/common/lib_ui.sh
 
 function list_disks_get() {
-    lsblk -nr -o NAME "$@" | sed -e '/loop[0-10]/d' | tr '\n' ',' | sed -e 's/,$//'
+    lsblk -nr -o NAME "$@" | sed -e '/loop[0-10]/d'
 }
 
 msg_print note "Welcome to ALEXPRO100 Linux install!"
@@ -21,7 +21,8 @@ msg_dir="./linux_install/lib/msg/"
 msg_file_list="$(list_files "$msg_dir" | sed "s|.sh||g")"
 # shellcheck disable=SC1090
 source "$msg_dir/${LANG_INSTALLER:-en}.sh"
-read_param "$M_MSG_M: \n$msg_file_list\n" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER text_check "$(echo "$msg_file_list" | tr '\n' ',')"
+# shellcheck disable=SC2046
+read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var $(echo "$msg_file_list" | gen_menu)
 # shellcheck disable=SC1090
 source "$msg_dir/$LANG_INSTALLER.sh"
 
@@ -29,13 +30,15 @@ while ! check_online; do
     msg_print error "$M_HOST_OFFLINE"
     NETWORK_INTERFACES="$(list_files "/sys/class/net/" -type l | sed '/lo/d')"
     msg_print note "$M_NET_INTERFACE_DETECTED_LIST: \n$NETWORK_INTERFACES"
-    read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE text_check "$(echo -e "$NETWORK_INTERFACES" | tr '\n' ',')"
+    # shellcheck disable=SC2046
+    read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE menu_var $(echo -e "$NETWORK_INTERFACES" | gen_menu)
     case $INTERFACE in
         wlan*)
             ip link set "$INTERFACE" up
             SSID_LIST="$(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g')"
             msg_print note "$M_NET_WIFI_SCAN_RESULT: \n$SSID_LIST"
-            read_param "" "$M_NET_WIFI_SSID_CHOOSE" "" SSID text_check "$(echo -e "$SSID_LIST" | tr '\n' ',')"
+            # shellcheck disable=SC2046
+            read_param "" "$M_NET_WIFI_SSID_CHOOSE" "" SSID menu_var $(echo -e "$SSID_LIST" | gen_menu)
             iwconfig "$INTERFACE" essid "$SSID"
             read_param "$M_NET_WIFI_SSID_PASS $SSID.\n" "$M_PASS" "" SSID_PASS secret
             if wpa_passphrase "$SSID" "$SSID_PASS" > "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"; then
@@ -47,7 +50,8 @@ while ! check_online; do
             fi
         ;;
         eth*)
-            read_param "" "$M_NET_ETH_METHOD" "dhcp" IP_METHOD text_check "dhcp,manual"
+            # shellcheck disable=SC2046
+            read_param "" "$M_NET_ETH_METHOD" "dhcp" IP_METHOD menu_var $(echo -e "dhcp\nmanual" | gen_menu)
             case $IP_METHOD in
                 dhcp)
                     msg_print note "Trying to setup dhcp on interface $INTERFACE..."
@@ -74,7 +78,8 @@ while ! check_online; do
 done
 msg_print note "$M_HOST_ONLINE"
 
-read_param "$M_WORK_MODE_M\n" "$M_WORK_MODE (install/console)" "install" WORK_MODE text_check install,console
+# shellcheck disable=SC2046
+read_param "$M_WORK_MODE_M\n" "$M_WORK_MODE (install/console)" "install" WORK_MODE menu_var $(echo -e "install\nconsole" | gen_menu)
 if [[ $WORK_MODE == "install" ]]; then
     mkdir -p /mnt/mnt >> /dev/null
     #Partition work. Here we format and mount needed partion(s).
@@ -83,21 +88,25 @@ if [[ $WORK_MODE == "install" ]]; then
         read_param "" "$M_PART" "" PART_DO no_or_yes
         msg_print note "$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
         if [[ $PART_DO == "1" ]]; then
-            read_param "" "$M_PART_D" "" PART_ROOT text_check "$(list_disks_get -d)"
+            # shellcheck disable=SC2046
+            read_param "" "$M_PART_D" "" PART_ROOT menu_var $(list_disks_get -d | gen_menu)
             cfdisk -z "/dev/$PART_ROOT"
             partprobe "/dev/$PART_ROOT"
             mdev -s
         else
-            read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT text_check "$(list_disks_get)"
+            # shellcheck disable=SC2046
+            read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var $(list_disks_get | gen_menu)
             if [[ -d /sys/firmware/efi/efivars ]]; then
                 BOOTLOADER_TYPE_DEFAULT=uefi
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
-                read_param "$M_PART_B_M\n" "$M_PART_P" "" PART_BOOT text_check "$(list_disks_get)"
+                # shellcheck disable=SC2046
+                read_param "$M_PART_B_M\n" "$M_PART_P" "" PART_BOOT menu_var $(list_disks_get | gen_menu)
                 [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && msg_print warning "Partition $PART_BOOT is NOT a vfat filesystem." 
             else
                 BOOTLOADER_TYPE_DEFAULT=bios
                 msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
-                read_param "" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT text_check "$(list_disks_get)"
+                # shellcheck disable=SC2046
+                read_param "" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT menu_var $(list_disks_get | gen_menu)
             fi
             read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
             if [[ $PART_DO == "1" ]]; then
@@ -124,7 +133,8 @@ if [[ $WORK_MODE == "install" ]]; then
         fi
     done
     msg_print note "$M_CHANGE_C"
-    read_param "$M_ECHO_MODE_M\n" "$M_ECHO_MODE (dialog/cli)" "dialog" ECHO_MODE text_check dialog,cli
+    # shellcheck disable=SC2046
+    read_param "$M_ECHO_MODE_M\n" "$M_ECHO_MODE (dialog/cli)" "dialog" ECHO_MODE menu_var $(echo -e "dialog\ncli" | gen_menu)
     cd ./linux_install
     LIVE_MODE=1 ./profile_gen.sh
     ./install_sys.sh /tmp/last_gen.sh
