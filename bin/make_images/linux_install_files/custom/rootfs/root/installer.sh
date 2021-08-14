@@ -86,6 +86,7 @@ if [[ $WORK_MODE == "install" ]]; then
             read_param "" "$M_PART_D" "" PART_ROOT text_check "$(list_disks_get -d)"
             cfdisk -z "/dev/$PART_ROOT"
             partprobe "/dev/$PART_ROOT"
+            mdev -s
         else
             read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT text_check "$(list_disks_get)"
             if [[ -d /sys/firmware/efi/efivars ]]; then
