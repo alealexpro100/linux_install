@@ -1,3 +1,7 @@
+# Version 0.5.1:
+* More handy interface.
+* Fixed disk partition.
+
 # Version 0.5.0:
 * Made suitable to package.
 * Fixed regressions.
