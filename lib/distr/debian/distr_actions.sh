@@ -13,9 +13,10 @@ fi
 mirror_repo_debian=${debian_repos[main]#deb*};
 mirror_repo_debian=${mirror_repo_debian% \$version_debian*}
 if command_exists debootstrap; then
-  export DEBOOTSTRAP_BIN=debootstrap
+  DEBOOTSTRAP_BIN=debootstrap
 else
-  export DEBOOTSTRAP_BIN=./bin/debootstrap-debian/debootstrap
+  export DEBOOTSTRAP_DIR=./bin/debootstrap-debian
+  DEBOOTSTRAP_BIN="$DEBOOTSTRAP_DIR/debootstrap"
 fi
 bash $DEBOOTSTRAP_BIN --arch $arch $add_option --include=wget,$preinstall $version_debian $dir $mirror_repo_debian
 [[ $add_option == "--foreign" ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
