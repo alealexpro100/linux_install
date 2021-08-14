@@ -14,7 +14,8 @@ source ./lib/common/lib_connect.sh
 
 function make_bootable_iso() (
     cd -- "$1" || return_err "No directory $1!"
-    mkisofs -o "$2"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -lJR -boot-info-table .; 
+    mkisofs -o "$2"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table \
+      -eltorito-alt-boot -eltorito-platform 0xEF -eltorito-boot boot/grub/efi.img -no-emul-boot -lJR .; 
 )
 
 [[ $UID != 0 ]] && return_err "This script requries root permissions!"
@@ -46,6 +47,7 @@ CUSTOM_DIR="$make_iso/custom" default_dir="$make_iso/rootfs" "./install_sys.sh" 
 squashfs_rootfs_pack "$make_iso/rootfs" "$make_iso/final_iso/apks/rootfs.img" xz
 umount "$make_iso/rootfs"
 sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_iso/final_iso/boot/syslinux/syslinux.cfg"
+sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_iso/final_iso/boot/grub/grub.cfg"
 make_bootable_iso "$make_iso/final_iso" "$iso_file"
 rm -rf "$make_iso"
 
