@@ -1,3 +1,6 @@
+# Version 0.5.2:
+* Minor fixes.
+
 # Version 0.5.1:
 * More handy interface.
 * Fixed disk partition.
