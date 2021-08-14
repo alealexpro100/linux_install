@@ -18,27 +18,22 @@ msg_print note "Welcome to ALEXPRO100 Linux install!"
 
 #Language support.
 msg_dir="./linux_install/lib/msg/"
-msg_file_list="$(list_files "$msg_dir" | sed "s|.sh||g")"
 # shellcheck disable=SC1090
 source "$msg_dir/${LANG_INSTALLER:-en}.sh"
 # shellcheck disable=SC2046
-read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var $(echo "$msg_file_list" | gen_menu)
+read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var $(list_files "$msg_dir" | sed "s|.sh||g" | gen_menu)
 # shellcheck disable=SC1090
 source "$msg_dir/$LANG_INSTALLER.sh"
 
 while ! check_online; do
     msg_print error "$M_HOST_OFFLINE"
-    NETWORK_INTERFACES="$(list_files "/sys/class/net/" -type l | sed '/lo/d')"
-    msg_print note "$M_NET_INTERFACE_DETECTED_LIST: \n$NETWORK_INTERFACES"
     # shellcheck disable=SC2046
-    read_param "" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE menu_var $(echo -e "$NETWORK_INTERFACES" | gen_menu)
+    read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "$(echo -e "$NETWORK_INTERFACES" | head -1)" INTERFACE menu_var $(list_files "/sys/class/net/" -type l | sed '/lo/d' | gen_menu)
     case $INTERFACE in
         wlan*)
             ip link set "$INTERFACE" up
-            SSID_LIST="$(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g')"
-            msg_print note "$M_NET_WIFI_SCAN_RESULT: \n$SSID_LIST"
             # shellcheck disable=SC2046
-            read_param "" "$M_NET_WIFI_SSID_CHOOSE" "" SSID menu_var $(echo -e "$SSID_LIST" | gen_menu)
+            read_param "$M_NET_WIFI_SCAN_RESULT:\n" "$M_NET_WIFI_SSID_CHOOSE" "" SSID menu_var $(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g' | gen_menu)
             iwconfig "$INTERFACE" essid "$SSID"
             read_param "$M_NET_WIFI_SSID_PASS $SSID.\n" "$M_PASS" "" SSID_PASS secret
             if wpa_passphrase "$SSID" "$SSID_PASS" > "/etc/wpa_supplicant/wpa_supplicant-$INTERFACE.conf"; then

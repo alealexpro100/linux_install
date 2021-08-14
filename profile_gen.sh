@@ -9,7 +9,6 @@ set -e
 
 CONFIG_FILE="$(realpath "${1:-"last_gen.sh"}")"
 if [[ ! -f ./version_install ]]; then
-  old_path="$(pwd -P)"
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi
@@ -48,15 +47,11 @@ else
   read_param "" "$M_PATH" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
 
-profile_dir="${profile_dir:-./lib/distr/}"
-distr_list="$(list_files "$profile_dir" -type d)"
 # shellcheck disable=SC2046
-read_param "$M_DISTR_1:\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr menu_var $(echo "$distr_list" | gen_menu)
+read_param "$M_DISTR_1:\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr menu_var $(list_files "./lib/distr/" -type d | gen_menu)
 
-AP100_DBG print_param note "$M_COMMON_OPT"
 # shellcheck disable=SC1091
 source ./lib/common/common_options.sh
-AP100_DBG print_param note "$M_DISTR_OPT"
 # shellcheck disable=SC1090
 source "./lib/distr/${distr:?}/distr_options.sh"
 #Final menu for changes.
@@ -101,8 +96,6 @@ done
   echo -e "#Generated on $(date -u).\n"
   var_export "add_var "
 } > "$CONFIG_FILE"
-
-[[ $LIVE_MODE != "1" ]] && print_param note "$M_PROFILE_2 $CONFIG_FILE"
 
 # =)
 echo "$M_NICE"

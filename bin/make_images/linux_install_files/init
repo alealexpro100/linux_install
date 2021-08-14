@@ -58,25 +58,10 @@ ip_choose_if() {
 	[ -e "$x" ] && echo "${x##*/}" && return
 }
 
-# if "ip=dhcp" is specified on the command line, we obtain an IP address
-# using udhcpc. we do this now and not by enabling kernel-mode DHCP because
-# kernel-model DHCP appears to require that network drivers be built into
-# the kernel rather than as modules. At this point all applicable modules
-# in the initrd should have been loaded.
-#
-# You need af_packet.ko available as well modules for your Ethernet card.
-#
-# See https://www.kernel.org/doc/Documentation/filesystems/nfs/nfsroot.txt
-# for documentation on the format.
-#
 # Valid syntaxes:
 #   ip=client-ip:server-ip:gw-ip:netmask:hostname:device:autoconf:
-#     :dns0-ip:dns1-ip:ntp0-ip
+#     :dns0-ip:dns1-ip
 #   ip=dhcp
-#   "server-ip", "hostname" and "ntp0-ip" are not supported here.
-# Default (when configure_ip is called without setting ip=):
-#   ip=dhcp
-#
 configure_ip() {
 	[ -n "$MAC_ADDRESS" ] && return
 
@@ -94,14 +79,12 @@ configure_ip() {
 	[ -z "$device" ] && return_err "ERROR: IP requested but no network device was found"
 
 	if [ "$autoconf" = "dhcp" ]; then
-		# automatic configuration
 		[ ! -e /usr/share/udhcpc/default.script ] && return_err "ERROR: DHCP requested but not present in initrd"
 		ebegin "Obtaining IP via DHCP ($device)"
 		ifconfig "$device" 0.0.0.0
 		udhcpc -i "$device" -f -q
 		eend $?
 	else
-		# manual configuration
 		[ -n "$client_ip" ] && [ -n "$netmask" ] || return
 		ebegin "Setting IP ($device)"
 		if ifconfig "$device" "$client_ip" netmask "$netmask"; then
@@ -144,14 +127,12 @@ mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
 set -- "$(cat /proc/cmdline)"
 echo "Linux_install Init $VERSION"
 
-# load available drivers for normal work
 ebegin "Loading boot drivers"
 modprobe -a "$(echo "${rootfstype:-}" | tr ',' ' ' )" loop squashfs 2> /dev/null
 eend 0
 
 ln -s /proc/mounts /etc/mtab
 
-# --CUSTOM LINES
 overlayfs="/media"
 mkdir -p $overlayfs/root-rw
 mount -t tmpfs root-tmpfs $overlayfs/root-rw
@@ -200,6 +181,5 @@ else
 fi
 
 
-echo "initramfs emergency recovery shell launched"
-/bin/busybox sh
+return_err "Unexpected end"
 reboot
