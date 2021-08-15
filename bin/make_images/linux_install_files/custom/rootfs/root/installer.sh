@@ -120,7 +120,7 @@ if [[ $WORK_MODE == "install" ]]; then
                     mount -t vfat "$PART_BOOT" /mnt/mnt/boot
                 else
                     # shellcheck disable=SC2034
-                    bootloader_bios_place=$PART_BOOT
+                    export bootloader_bios_place=$PART_BOOT
                 fi
             else
                 PART_BOOT="" PART_ROOT=""
