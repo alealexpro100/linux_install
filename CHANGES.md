@@ -1,3 +1,7 @@
+# Version 0.5.3:
+* Minor fixes.
+* Optimization of build.
+
 # Version 0.5.2:
 * Minor fixes.
 

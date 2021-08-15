@@ -19,7 +19,7 @@ Supported Linux distros for installation:
 * `perl dpkg` - debootstrap
 * `qemu-user-static` - foreign architectures
 ### Build
-* `squashfs-tools` - live installer build
+* `squashfs-tools cdrtools` - live installer build
 
 ## Usage
 ### Live installer
