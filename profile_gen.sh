@@ -7,7 +7,11 @@
 
 set -e
 
-CONFIG_FILE="$(realpath "${1:-"last_gen.sh"}")"
+if [[ -n "$1" ]]; then
+  CONFIG_FILE="$(realpath "$1")"
+else
+  CONFIG_FILE="$(realpath .)/last_gen.sh"
+fi
 if [[ ! -f ./version_install ]]; then
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
@@ -75,11 +79,10 @@ until [[ $var_final == "0" ]]; do
     fi
   done
   #Print menu.
-  echo "${vars_list[@]}"
   read_param "$M_LIST_FINAL_TEXT" "$M_LIST_FINAL_DIALOG" "0" var_final menu "${vars_list[@]}"
   #Decide what we have to do: change param and show menu again or end selection.
-  if [[ $var_final != 0 ]]; then
-    var="${var_num[$((${var_final#0}))]}"
+  if [[ $var_final != "0" ]]; then
+    var="${var_num[$((${var_final#0}-1))]}"
     if [[ ${!var} == "0" || ${!var} == "1" ]]; then
       if [[ ${!var} == "0" ]]; then
         read_param "" "${M_VAR_DESCRIPTION[$var]:-$var}" "" "$var" no_or_yes
