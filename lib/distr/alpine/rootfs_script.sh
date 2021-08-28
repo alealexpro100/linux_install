@@ -1,3 +1,9 @@
+#!/bin/bash
+
+user_groups="audio video input wheel"
+base_setup musl
+msg_print note "Alpine has no support of locales. Skipping."
+
 #Apk config
 msg_print note "Apk setup..."
 apk_install="apk add"
@@ -68,3 +74,20 @@ done
 [[ $networkmanager == "1" ]] &&  addgroup "$user_name" plugdev
 
 msg_print note "Packages are installed."
+
+case "$bootloader_name" in
+  grub2)
+    to_install="grub"
+    [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
+    if [[ "$bootloader_bios_place" == *loop* ]]; then
+      msg_print warning "$distr can not install grub loader to virtual disk."
+    fi
+    $apk_install $to_install
+    [[ $removable_disk == "1" ]] && msg_print warning "Os-prober can't be installed."
+    fs_type=$(grep $'\t''/'$'\t' < /etc/fstab | awk '{print $3;}')
+    echo "GRUB_CMDLINE_LINUX_DEFAULT=\"modules=sd-mod,usb-storage,$fs_type\"" >> /etc/default/grub
+    grub_config
+  ;;
+  *) msg_print note "Bootloader not chosen."
+esac

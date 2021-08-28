@@ -1,5 +1,9 @@
 #!/bin/bash
 
+user_groups="audio,video,input,network,storage,wheel"
+base_setup glibc
+locale_setup /etc/locale.conf
+
 #Pacman setup.
 msg_print note "Pacman setup..."
 pacman_install="pacman -Suy --needed --noconfirm"
@@ -118,3 +122,18 @@ for service in $to_enable; do
 done
 
 msg_print note "Packages are installed."
+
+case "$bootloader_name" in
+  grub2)
+    to_install="grub"
+    [[ $bootloader_type = uefi ]] && to_install="$to_install efibootmgr"
+    $pacman_install $to_install
+    if [[ $removable_disk == "1" ]]; then
+      $pacman_install -w os-prober
+    else
+      $pacman_install os-prober
+    fi
+    grub_config
+  ;;
+  *) msg_print note "Bootloader not chosen."
+esac

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+user_groups="audio,video,input,sudo"
+base_setup glibc
+locale_setup /etc/default/locale
+
 #Apt config
 msg_print note "Apt setup..."
 declare -gx DEBIAN_FRONTEND=noninteractive
@@ -119,3 +123,17 @@ for service in $to_enable; do
 done
 
 msg_print note "Packages are installed."
+
+case "$bootloader_name" in
+  grub2)
+    to_install="grub2"
+    [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
+    [[ $bootloader_type = bios ]] && to_install="$to_install grub-pc"
+    $apt_install $to_install
+    if [[ $removable_disk == "0" ]]; then
+      apt -y remove os-prober;
+    fi
+    grub_config
+  ;;
+  *) msg_print note "Bootloader not chosen."
+esac
