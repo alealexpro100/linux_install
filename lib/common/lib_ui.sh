@@ -175,14 +175,14 @@ function read_param() {
             done
             read -r -p "$dialog: " -e -i "$default_var" tmp
             for ((i=1; i<$#; i+=2)); do
-              if [[ $tmp == $((i/2)) ]]; then
+              j=$((i+1))
+              [[ $tmp == "${!i}" ]] && tmp=${!j}
+              if [[ $tmp == "${!j}" ]]; then
                 correct=1
                 break
               fi
             done
           done
-          tmp=$(((tmp+1)*2))
-          tmp="${!tmp}"
         ;;
         *)
           return_err "Option $option is incorrect!"
