@@ -9,17 +9,14 @@ msg_print note "Apt setup..."
 declare -gx DEBIAN_FRONTEND=noninteractive
 apt_install="apt -y install"
 
-[[ -f /etc/apt/sources.list ]] && rm -rf /etc/apt/sources.list
-for repo_name in main updates backports security; do
-  [[ -n ${debian_repos[$repo_name]} ]] && echo -e "#$repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
-done
+[[ -f /etc/apt/sources.list ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
 apt update
-$apt_install ca-certificates gnupg
-for repo_name in "${!debian_repos[@]}"; do
-  if [[ $repo_name != "main" && $repo_name != "updates" && $repo_name != "backports" && $repo_name != "security" ]]; then
-    echo -e "\n#$repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
-    [[ -f "/root/certs/$repo_name.key" ]] && apt-key add "/root/certs/$repo_name.key"
+for repo_name in "${debian_repos_order[@]}"; do
+  echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
+  if [[ -f "/root/certs/$repo_name.key" ]]; then
+    gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"
+    chmod 644 "/etc/apt/trusted.gpg.d/$repo_name.gpg"
   fi
 done
 apt update

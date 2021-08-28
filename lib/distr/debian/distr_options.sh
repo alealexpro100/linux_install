@@ -30,23 +30,36 @@ fi
 read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
 
 read_param "" "$M_DISTR_VER" "$version_debian" version_debian text
-print_param note "$M_DEB_NOTE_1"
-print_param note "$M_DEB_NOTE_2 $version_debian."
 add_var "declare -gA" "debian_repos"
-if [[ $version_debian == "sid" ]]; then
-  for repo_name in updates security backports; do
-    unset "debian_repos[$repo_name]"
-  done
+add_var "declare -ga" "debian_repos_order"
+add_var "declare -gx" "debian_repos[main]" "deb https://deb.debian.org/debian $version_debian main non-free contrib"
+add_var "declare -gx" "debian_repos_order[0]" "main"
+if [[ $version_debian != "sid" ]]; then
+    add_var "declare -gx" "debian_repos[main]" "deb $debian_mirror $version_debian main non-free contrib"
+    add_var "declare -gx" "debian_repos_order[0]" "main"
+    add_var "declare -gx" "debian_repos[updates]" "deb $debian_mirror $version_debian-updates main non-free contrib"
+    add_var "declare -gx" "debian_repos_order[1]" "updates"
+    add_var "declare -gx" "debian_repos[backports]" "deb $debian_mirror $version_debian-backports main non-free contrib"
+    add_var "declare -gx" "debian_repos_order[2]" "backports"
+    if [[ $version_debian == "bullseye" || $version_debian == "testing" ]]; then
+      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian-security main non-free contrib"
+    else
+      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian/updates main non-free contrib"
+    fi
+    add_var "declare -gx" "debian_repos_order[3]" "security"
 fi
-print_param note "$M_DEB_REPO_1"
-for repo_name in "${!debian_repos[@]}"; do
-  read_param "" "$M_DEB_REPO_DIALOG $repo_name" "${debian_repos[$repo_name]}" debian_repos[$repo_name] text_empty
-  [[ -z ${debian_repos[$repo_name]} ]] && unset debian_repos[$repo_name]
+[[ -n ${debian_repos_add[*]} ]] && print_param note "$M_DEB_REPO_1"
+for repo_name in "${!debian_repos_add[@]}"; do
+  read_param "" "$M_DEB_REPO_DIALOG $repo_name" "${debian_repos_add[$repo_name]}" debian_repos[$repo_name] text_empty
+  [[ -n ${debian_repos[$repo_name]} ]] && add_var "declare -gx" "debian_repos_order[${#debian_repos_order[@]}]" "$repo_name"
 done
 read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
 while [[ $repos == 1 ]]; do
+  print_param note "$M_DEB_NOTE_1"
+  print_param note "$M_DEB_NOTE_2 $version_debian."
   read_param "" "$M_DEB_REPO_NAME" "" repo_name text_empty
-  [[ -n $repo_name ]] && read_param "" "$M_DEB_REPO_DIALOG $repo_name" "deb https://example.com/debian $version_debian main" "debian_repos[$repo_name]" text
+  [[ -n $repo_name ]] && read_param "" "$M_DEB_REPO_DIALOG $repo_name" "${debian_repos_add[$repo_name]:-"deb https://example.com/debian $version_debian main"}" "debian_repos[$repo_name]" text
+  [[ -n ${debian_repos[$repo_name]} ]] && add_var "declare -gx" "debian_repos_order[${#debian_repos_order[@]}]" "$repo_name"
   read_param "" "$M_DEB_REPO_ADD" "" repos no_or_yes
   [[ -z $repo_name ]] && repos=0
 done
