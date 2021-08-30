@@ -26,7 +26,7 @@ for distr_install in "$@"; do
   msg_print msg "Started on $(date -u)."
   msg_print msg "Testing $distr_install..."
   create_tmp_dir tmp_distr_install
-  size=10;
+  size=4;
   dd if=/dev/zero of="${tmp_distr_install:?}/disk.img" bs=$((1024*1024*1024)) count=$((size)) status=progress
   disk_id="$(losetup --show -Pf "$tmp_distr_install/disk.img")"
   echo -e "label: dos\n 2048,$((size*2*1024*1024-2048-1)),L" | sfdisk "${disk_id}"
@@ -38,9 +38,9 @@ for distr_install in "$@"; do
   cat "$tmp_distr_install/used_config"
   msg_print warn "End of profile file."
   ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
-  umount "$tmp_distr_install/rootfs"
+  umount --lazy "$tmp_distr_install/rootfs"
   losetup -D "${disk_id}"
-  qemu-system-x86_64 -hda "$tmp_distr_install/disk.img" -m 6G
+  qemu-system-x86_64 -hda "$tmp_distr_install/disk.img" -m 6G || msg_print error "Qemu returned error $?."
   rm -rf "$tmp_distr_install"
 done
 

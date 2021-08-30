@@ -35,7 +35,7 @@ for distr_install in "$@"; do
   cat "$tmp_distr_install/used_config"
   msg_print warn "End of profile file."
   ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
-  umount "$tmp_distr_install/rootfs"
+  umount --lazy "$tmp_distr_install/rootfs"
   rm -rf "$tmp_distr_install"
 done
 
