@@ -53,8 +53,7 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install bluetooth"
   fi
   if [[ $printers == "1" ]]; then
-    to_install="$to_install task-print-server printer-driver-all"
-    to_install="$to_install foomatic-db cups-pdf"
+    to_install="$to_install cups printer-driver-all"
     [[ $bluetooth == "1" ]] && to_install="$to_install bluez-cups"
   fi
 fi
