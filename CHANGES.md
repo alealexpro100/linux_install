@@ -1,4 +1,10 @@
 # Version 0.5.3:
+* Added flag AUTO_PROFILE.
+* Reworked debian repo install.
+* Added RPM bootstrap (testing).
+* Interface fixes. 
+
+# Version 0.5.3:
 * Minor fixes.
 * Optimization of build.
 

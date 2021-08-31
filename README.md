@@ -17,15 +17,30 @@ Supported Linux distros for installation:
 * `busybox bash zstd findmnt lsblk` - For busybox system
 ### Optional
 * `perl dpkg` - debootstrap
+* `rpm2cpio` - rpm-bootstrap
 * `qemu-user-static` - foreign architectures
 ### Build
 * `squashfs-tools cdrtools` - live installer build
 
 ## Usage
 ### Live installer
-* Download latest `.iso` file from releases.
+#### Manual mode
+##### From ISO
+* Download latest `linux_install-*.iso` file from releases.
 * Boot from it. UEFI and BIOS systems are supported.
 * Follow install instructions.
+* That's all. You have installed system. Good luck!
+##### From PXE (IPXE)
+* Download latest `linux_install-*.pxe.tar.gz` file from releases.
+* Unpack it to boot server. Variable `${linux_url}` is a url to directory with needed files.
+* To boot it from IPXE there is two necessary kernel options: `modloop=${linux_url}/modloop-lts rootfs_net=${linux_url}/rootfs.img`.
+* Follow install instructions.
+* That's all. You have installed system. Good luck!
+#### Auto mode
+* You will need ready to use profile. (see example `./auto_configs/example_auto_profile.sh`)
+* You will need add kernel option `AUTO_PROFILE=URL_TO_YOUR_PROFILE`. 
+* (ISO) You can add this while booting from ISO in bootloader by pressing 'e' and when adding the option.
+* (PXE) Just add the option before loading kernel and initramfs.
 * That's all. You have installed system. Good luck!
 ### Standalone
 * Prepare directory for installation.
@@ -41,6 +56,8 @@ Supported Linux distros for installation:
 * Images will be located at `../linux_install_builds`.
 
 ## Supported variables
+* `AUTO_PROFILE` - Kernel option for live installer. URL of profile for auto mode.
+* `REBOOT_AFTER` - Used for auto mode. If set to `0`, prevents system from rebooting after installation. 
 * `CUSTOM_DIR` - Path to custom script and files.
 * `ECHO_MODE` - Mode of interface (auto/cli/dialog).
 * `LANG_INSTALLER` - Language for install interface. (NOT of target system!)
