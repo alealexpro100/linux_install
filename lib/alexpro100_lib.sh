@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.4"
+ALEXPRO100_LIB_VERSION="0.3.5"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -189,11 +189,6 @@ function check_url() {
 }
 export -f check_url
 
-function get_file_list_html() {
-  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
-}
-export -f get_file_list_html
-
 function create_tmp_dir() {
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate tempory directory and assign it to variable."
   export "$1=/tmp/.$1_tmp_$RANDOM"
@@ -206,9 +201,10 @@ function arccat() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdio."
   [[ $2 == - ]] || AP100_DBG msg_print debug "Extracting $2..."
   case "$1" in
-    zst) zstd -dcf "$2";;
+    zst|zstd) zstd -dcf "$2";;
     bz2)  bunzip2 "$2";;
     Z|gz)  gunzip -cd "$2";;
+    xz)  xz -d "$2";;
     tar)  tar xf "$2" -O;;
     rar)  unrar x "$2";;
     zip)  unzip -p "$2";;
@@ -218,11 +214,11 @@ function arccat() {
 }
 export -f arccat
 
-function unpack_initfs_gz() (
-  cd -- "$2" || return_err "No directory $2!"
-  arccat gz "$1" | cpio -iv
+function unpack_cpio() (
+  cd -- "$1" || return_err "No directory $1!"
+  cpio -idm &>/dev/null
 )
-export -f unpack_initfs_gz
+export -f unpack_cpio
 
 function pack_initfs_cpio() (
   cd -- "$1" || return_err "No directory $1!"
@@ -235,6 +231,13 @@ function squashfs_rootfs_pack() (
   mksquashfs . "$2" -noappend -comp "$3"
 )
 export -f squashfs_rootfs_pack
+
+# -- PARSERS
+
+function get_file_list_html() {
+  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
+}
+export -f get_file_list_html
 
 #--- ROOTFS MOUNT: BEGIN
 function chroot_add_mount() {
@@ -325,14 +328,14 @@ export -f chroot_rootfs
 
 function parse_arch() {
   case $1 in
-    i[3-6]86|x86) export alpine_arch=x86 debian_arch=i386 arch_arch=i686 void_arch=i686 qemu_arch=i386;;
-    x86_64|amd64) export alpine_arch=x86_64 debian_arch=amd64 arch_arch=x86_64 void_arch=x86_64 qemu_arch=x86_64;;
-    aarch64|arm64|armv8l) export alpine_arch=aarch64 debian_arch=arm64 arch_arch=aarch64 void_arch=aarch64 qemu_arch=aarch64;;
-    armv7|armv7h) export alpine_arch=armv7 debian_arch=armhf arch_arch=armv7h void_arch=armv7l qemu_arch=arm;;
-    armhf|armv6h) export alpine_arch=armhf debian_arch=armhf arch_arch=armv6h void_arch=armv6l qemu_arch=arm;;
-    arm|armel) export alpine_arch=armhf debian_arch=armel arch_arch=arm void_arch=armv6l qemu_arch=arm;;
+    i[3-6]86|x86) export alpine_arch=x86 debian_arch=i386 arch_arch=i686 rpm_arch=x86 void_arch=i686 qemu_arch=i386;;
+    x86_64|amd64) export alpine_arch=x86_64 debian_arch=amd64 arch_arch=x86_64 rpm_arch=x86_64 void_arch=x86_64 qemu_arch=x86_64;;
+    aarch64|arm64|armv8l) export alpine_arch=aarch64 debian_arch=arm64 arch_arch=aarch64 rpm_arch=aarch64 void_arch=aarch64 qemu_arch=aarch64;;
+    armv7|armv7h) export alpine_arch=armv7 debian_arch=armhf arch_arch=armv7h rpm_arch=armv7hl void_arch=armv7l qemu_arch=arm;;
+    armhf|armv6h) export alpine_arch=armhf debian_arch=armhf arch_arch=armv6h rpm_arch=armhfp void_arch=armv6l qemu_arch=arm;;
+    arm|armel) export alpine_arch=armhf debian_arch=armel arch_arch=arm rpm_arch=armhfp void_arch=armv6l qemu_arch=arm;;
     # TODO: Add and fix another arches (old arm, mips).
-    *) qemu_arch="$(uname -m)"; export alpine_arch="$qemu_arch" debian_arch="$qemu_arch" arch_arch="$qemu_arch" void_arch="$qemu_arch" qemu_arch;;
+    *) qemu_arch="$(uname -m)"; export alpine_arch="$qemu_arch" debian_arch="$qemu_arch" arch_arch="$qemu_arch" rpm_arch="$qemu_arch" void_arch="$qemu_arch" qemu_arch;;
   esac
   AP100_DBG msg_print debug "Exported alpine_arch=$alpine_arch debian_arch=$debian_arch arch_arch=$arch_arch void_arch=$void_arch qemu_arch=$qemu_arch."
 }
