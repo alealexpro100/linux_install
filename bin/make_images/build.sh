@@ -36,7 +36,7 @@ function make_bootable_iso() (
 
 
 function prepare_initfs() {
-    unpack_initfs_gz "$1" "$make_build/initfs"
+    arccat gz "$1" | unpack_cpio "$make_build/initfs"
     mv "$make_build/initfs/init" "$make_build/initfs/init_orig"
     cp "$build_files/init" "$make_build/initfs/init"
     pack_initfs_cpio "$make_build/initfs" | zstd -T12 -10 > "$2"

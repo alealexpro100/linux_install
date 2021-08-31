@@ -30,7 +30,7 @@ if mountpoint -q "${dir:?}"; then
     if [[ ${bootloader_type:?} == "uefi" && $(findmnt -funcevo FSTYPE "$dir/boot") != vfat ]]; then
       print_param warning "No vfat partition found on \"$dir/boot\"!\nWithout it system won't be installed!"
     fi
-    read_param "" "$M_BOOTLOADER_NAME (grub2/refind)" "grub2" bootloader_name text
+    read_param "" "$M_BOOTLOADER_NAME" "grub2" bootloader_name menu_var $(echo -e "grub2" | gen_menu)
     [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "${bootloader_bios_place:-$(findmnt -funcevo SOURCE "$dir")}" bootloader_bios_place text
     if [[ $LIVE_MODE == "1" ]]; then
       ECHO_MODE=$ECHO_MODE_TMP
