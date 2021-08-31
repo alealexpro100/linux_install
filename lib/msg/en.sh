@@ -76,10 +76,16 @@ M_DEB_BACKPORTS_KERNEL="Install backports-kernel?"
 M_DEB_STABLE_KERNEL="Stable kernel will be installed."
 
 #Messages for installer.
+M_MODE_AUTO="Working in auto mode."
+M_MODE_AUTO_FAIL="Failed to use profile."
+M_MODE_MANUAL="Working in manual mode."
+M_MODE_CONSOLE_M="To run installer, type \"./linux_install/profile_gen.sh\" and then \"./linux_install/install_sys.sh\""
 M_HOST_OFFLINE="Host is offline!"
 M_HOST_ONLINE="Host is online."
 M_NET_INTERFACE_DETECTED_LIST="Detected network interfaces"
 M_NET_INTERFACE_CHOOSE="Choose interface to setup"
+M_NET_DHHCP_TRY="Trying to setup DHCP on interface"
+M_NET_DHCP_FAIL="Failed to setup DHCP."
 M_NET_WIFI_SCAN_RESULT="Scan result"
 M_NET_WIFI_SSID_CHOOSE="Choose SSID"
 M_NET_WIFI_SSID_PASS="Enter password for"
@@ -96,6 +102,7 @@ M_FORMAT="Formatting"
 M_MOUNT="Mounting"
 M_CHANGE_C="Complete!"
 M_ECHO_MODE="Echo mode"
+M_REBOOT_M="Complete! To reboot, type \"reboot\""
 
 
 declare -A M_VAR_DESCRIPTION=(

@@ -76,10 +76,16 @@ M_DEB_BACKPORTS_KERNEL="Установить backports-ядро?"
 M_DEB_STABLE_KERNEL="Будет установлено стабильное ядро."
 
 #Messages for installer.
+M_MODE_AUTO="Работа в автоматическом режиме."
+M_MODE_AUTO_FAIL="Попытка использования автоматического профиля провалилась."
+M_MODE_MANUAL="Работа в ручном режиме."
+M_MODE_CONSOLE_M="Чтобы запустить установщик, введите \"./linux_install/profile_gen.sh\", а затем \"./linux_install/install_sys.sh\""
 M_HOST_OFFLINE="Хост не подключен к сети!"
 M_HOST_ONLINE="Хост подключен к сети."
 M_NET_INTERFACE_DETECTED_LIST="Обнаруженные сетевые интерфейсы"
 M_NET_INTERFACE_CHOOSE="Выберите интерфейс для настройки"
+M_NET_DHHCP_TRY="Попытка настройки DHCP на интерфейсе"
+M_NET_DHCP_FAIL="Настройка DHCP провалилась."
 M_NET_WIFI_SCAN_RESULT="Результат сканирования"
 M_NET_WIFI_SSID_CHOOSE="Выберите SSID"
 M_NET_WIFI_SSID_PASS="Выберите пароль для"
@@ -96,6 +102,7 @@ M_FORMAT="Форматирование"
 M_MOUNT="Монтирование"
 M_CHANGE_C="Готово!"
 M_ECHO_MODE="Режим вывода"
+M_REBOOT_M="Готово! Чтобы перезагрузиться, введите \"reboot\""
 
 
 declare -A M_VAR_DESCRIPTION=(
