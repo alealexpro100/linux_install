@@ -11,7 +11,12 @@ source ./linux_install/lib/common/lib_var_op.sh
 source ./linux_install/lib/common/lib_ui.sh
 
 # shellcheck disable=SC2046
-export $(cat /proc/cmdline)
+IFS=' ' read -ra kernel_cmdline < /proc/cmdline
+for option in ${kernel_cmdline[*]}; do
+    case $option in
+        AUTO_PROFILE=*|REBOOT_AFTER=*) export "${option?}";;
+    esac
+done
 
 function list_disks_get() {
     lsblk -nr -o NAME "$@" | sed -e '/loop[0-10]/d'

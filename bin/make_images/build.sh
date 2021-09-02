@@ -28,7 +28,8 @@ else
 fi
 
 function make_bootable_iso() (
-    local iso_location="$(realpath "$2")"
+    local iso_location
+    iso_location="$(realpath "$2")"
     cd -- "$1" || return_err "No directory $1!"
     mkisofs -o "$iso_location"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table \
       -eltorito-alt-boot -eltorito-platform 0xEF -eltorito-boot boot/grub/efi.img -no-emul-boot -lJR .; 
@@ -36,7 +37,7 @@ function make_bootable_iso() (
 
 
 function prepare_initfs() {
-    arccat gz "$1" | unpack_cpio "$make_build/initfs"
+    arccat gz "$1" | unpack_cpio "${make_build:?}/initfs"
     mv "$make_build/initfs/init" "$make_build/initfs/init_orig"
     cp "$build_files/init" "$make_build/initfs/init"
     pack_initfs_cpio "$make_build/initfs" | zstd -T12 -10 > "$2"
