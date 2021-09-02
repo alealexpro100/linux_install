@@ -7,7 +7,8 @@ if [[ $add_soft == "1" ]]; then
   read_param "" "$M_PRINTERS" '' printers yes_or_no
 fi
 
-read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$alpine_arch" arch text
+# shellcheck disable=SC2046
+read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$alpine_arch" arch menu_var $(echo -e "x86_64\nx86\naarch64\nmips64\nppc64le\ns390x" | gen_menu)
 
 read_param "" "$M_MIRROR" "$mirror_alpine" mirror_alpine text_empty
 

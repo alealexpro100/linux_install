@@ -28,7 +28,7 @@ if mountpoint -q "${dir:?}"; then
     # shellcheck disable=SC2046
     read_param "" "$M_BOOTLOADER_TYPE" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type menu_var $(echo -e "bios\nuefi" | gen_menu)
     if [[ ${bootloader_type:?} == "uefi" && $(findmnt -funcevo FSTYPE "$dir/boot") != vfat ]]; then
-      print_param warning "No vfat partition found on \"$dir/boot\"!\nWithout it system won't be installed!"
+      print_param error "$M_BOOTLOADER_UEFI_VFAT_NO \"$dir/boot\"!"
     fi
     read_param "" "$M_BOOTLOADER_NAME" "grub2" bootloader_name menu_var $(echo -e "grub2" | gen_menu)
     [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "${bootloader_bios_place:-$(findmnt -funcevo SOURCE "$dir")}" bootloader_bios_place text

@@ -27,7 +27,8 @@ if [[ $add_soft == "1" ]]; then
   fi
 fi
 
-read_param "$M_ARCH_AVAL amd64,arm64,armel,armhf,i386,etc.\n" "$M_ARCH_ENTER" "$debian_arch" arch text
+# shellcheck disable=SC2046
+read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var $(echo -e "amd64\ni386\narm64\narmel\narmhf\nmips\nmips64el\nmipsel\nppc64el\ns390x" | gen_menu)
 
 read_param "" "$M_DISTR_VER" "$version_debian" version_debian text
 add_var "declare -gA" "debian_repos"

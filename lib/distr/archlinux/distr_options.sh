@@ -32,7 +32,8 @@ if [[ $add_soft == "1" ]]; then
   fi
 fi
 
-read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$arch_arch" arch text
+# shellcheck disable=SC2046
+read_param "" "$M_ARCH_ENTER" "$arch_arch" arch menu_var $(echo -e "x86_64\ni686\naarch64\narm\narmv6h\narmv7h" | gen_menu)
 
 [[ $arch == "i686" ]] && mirror_archlinux=$mirror_archlinux_32
 [[ "$arch" == "aarch64" || "$arch" == "arm*" ]] && mirror_archlinux=$mirror_archlinux_arm
