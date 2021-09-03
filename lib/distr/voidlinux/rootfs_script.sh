@@ -42,7 +42,8 @@ fi
 
 [[ -n $to_install ]] && $xbps_install $to_install
 for service in $to_enable; do
-    if [[ -d "/etc/runit/runsvdir/default/$service" ]]; then
+    if [[ -d "/etc/sv/$service" ]]; then
+      msg_print note "Enabling service $service."
       ln -s "/etc/sv/$service" /etc/runit/runsvdir/default/
     else
       msg_print warning "Service $service not found!"
