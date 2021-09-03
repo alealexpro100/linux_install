@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# shellcheck disable=SC2046
-read_param "" "$M_LANG_SYSTEM" "$LANG_SYSTEM" LANG_SYSTEM menu_var $(echo -e "en_US.UTF-8\n$LANG_SYSTEM" | gen_menu)
+gen_menu < <(echo -e "en_US.UTF-8\n$LANG_SYSTEM" | uniq)
+read_param "" "$M_LANG_SYSTEM" "$LANG_SYSTEM" LANG_SYSTEM menu_var "${tmp_gen_menu[@]}"
 read_param "" "$M_HOSTNAME" "${distr:?}-$RANDOM" hostname text
 read_param "" "$M_USER" "${user_name:?}" user_name text
 read_param "" "$M_SHELL" "${user_shell:?}" user_shell text
@@ -25,12 +25,13 @@ if mountpoint -q "${dir:?}"; then
     else
       BOOTLOADER_TYPE_DEFAULT=${BOOTLOADER_TYPE_DEFAULT:-bios}
     fi
-    # shellcheck disable=SC2046
-    read_param "" "$M_BOOTLOADER_TYPE" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type menu_var $(echo -e "bios\nuefi" | gen_menu)
+    gen_menu < <(echo -e "bios\nuefi")
+    read_param "" "$M_BOOTLOADER_TYPE" "$BOOTLOADER_TYPE_DEFAULT" bootloader_type menu_var "${tmp_gen_menu[@]}"
     if [[ ${bootloader_type:?} == "uefi" && $(findmnt -funcevo FSTYPE "$dir/boot") != vfat ]]; then
       print_param error "$M_BOOTLOADER_UEFI_VFAT_NO \"$dir/boot\"!"
     fi
-    read_param "" "$M_BOOTLOADER_NAME" "grub2" bootloader_name menu_var $(echo -e "grub2" | gen_menu)
+    gen_menu < <(echo -e "grub2")
+    read_param "" "$M_BOOTLOADER_NAME" "grub2" bootloader_name menu_var "${tmp_gen_menu[@]}"
     [[ $bootloader_type == bios ]] && read_param "" "$M_BOOTLOADER_PATH" "${bootloader_bios_place:-$(findmnt -funcevo SOURCE "$dir")}" bootloader_bios_place text
     if [[ $LIVE_MODE == "1" ]]; then
       ECHO_MODE=$ECHO_MODE_TMP

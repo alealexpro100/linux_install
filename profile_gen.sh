@@ -51,8 +51,8 @@ else
   read_param "" "$M_PATH" "${DEFAULT_DIR:-"/mnt/mnt"}" dir text
 fi
 
-# shellcheck disable=SC2046
-read_param "$M_DISTR_1:\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr menu_var $(list_files "./lib/distr/" -type d | gen_menu)
+gen_menu < <(list_files "./lib/distr/" -type d)
+read_param "$M_DISTR_1:\n" "$M_DISTR_2" "$DEFAULT_DISTR" distr menu_var "${tmp_gen_menu[@]}"
 
 # shellcheck disable=SC1091
 source ./lib/common/common_options.sh
@@ -62,24 +62,24 @@ source "./lib/distr/${distr:?}/distr_options.sh"
 var_final=''
 until [[ $var_final == "0" ]]; do
   #Make menu, We use array to make parametres.
-  vars_list=("0" "$M_LIST_FINAL_END_OPTION")
+  vars_list="$M_LIST_END_OPTION"
   # shellcheck disable=SC2154
   for ((i=0; i<${#var_num[@]}; i++)); do
     var=${var_num[i]}
     [[ $var == "var_final" ]] && continue
-    vars_list=("${vars_list[@]}" "$((i+1))")
     if [[ ${!var} == "0" || ${!var} == "1" ]]; then
       if [[ ${!var} == "1" ]]; then
-        vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_YES")
+        vars_list+="\n${M_VAR_DESCRIPTION[$var]:-$var} | $M_YES"
       else
-        vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | $M_NO")
+        vars_list+="\n${M_VAR_DESCRIPTION[$var]:-$var} | $M_NO"
       fi
     else
-      vars_list=("${vars_list[@]}" "${M_VAR_DESCRIPTION[$var]:-$var} | ${!var}")
+      vars_list+="\n${M_VAR_DESCRIPTION[$var]:-$var} | ${!var}"
     fi
   done
   #Print menu.
-  read_param "$M_LIST_FINAL_TEXT" "$M_LIST_FINAL_DIALOG" "0" var_final menu "${vars_list[@]}"
+  gen_menu < <(echo -e "$vars_list")
+  read_param "$M_LIST_TEXT" "$M_LIST_DIALOG" "0" var_final menu "${tmp_gen_menu[@]}"
   #Decide what we have to do: change param and show menu again or end selection.
   if [[ $var_final != "0" ]]; then
     var="${var_num[$((${var_final#0}-1))]}"

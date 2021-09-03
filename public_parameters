@@ -9,12 +9,9 @@ passwd_default='pass'
 version_debian=bullseye
 debian_mirror='https://deb.debian.org/debian'
 debian_mirror_security='https://security.debian.org'
-declare -A debian_repos_add=([main]='deb https://deb.debian.org/debian $version_debian main non-free contrib' 
-[updates]='deb https://deb.debian.org/debian $version_debian-updates main non-free contrib'
-[backports]='deb https://deb.debian.org/debian $version_debian-backports main non-free contrib'
-[security]='deb https://security.debian.org/ $version_debian/updates main non-free contrib'
-[wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main'
-[webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
+declare -A debian_repos_add=(
+    [wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main' 
+    [webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
 mirror_archlinux='http://mirror.dotsrc.org/archlinux'
 mirror_archlinux_32='https://mirror.archlinux32.org'
 mirror_archlinux_arm='https://mirror.archlinuxarm.org'

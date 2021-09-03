@@ -15,9 +15,9 @@ M_DISTR_1="Доступные для установки дистрибутивы
 M_DISTR_2="Дистрибутив"
 M_COMMON_OPT="Общие опции."
 M_DISTR_OPT="Специфичные для дистрибутива опции."
-M_LIST_FINAL_END_OPTION="Конец (сгенерировать профиль и выйти)."
-M_LIST_FINAL_TEXT="Сгенерированные опции.\n"
-M_LIST_FINAL_DIALOG="Выберите опцию"
+M_LIST_END_OPTION="Конец (перейти к следующему шагу)."
+M_LIST_TEXT="Сгенерированные опции.\n"
+M_LIST_DIALOG="Выберите опцию"
 M_CHANGE_FINAL_DIALOG="Изменить опцию"
 M_NICE="Скрипт успешно завершил работу. Хорошего дня!"
 
@@ -66,15 +66,10 @@ M_DESKTOP_MANUAL_PKGS="Десктопный(ые) пакет(ы) или пуст
 M_DM_E="Установить и добавить в автозапуск менеджер входа?"
 M_DM="Выбранный DM"
 
-M_DEB_NOTE_1="Вводите deb-* команду как в файле sources.list."
-M_DEB_NOTE_2="Переменная \$debian_distr -"
-M_DEB_REPO_1="Чтобы НЕ добавлять репозиторий, просто оставьте его пустым."
-M_DEB_REPO_ADD="Добавить репозиторий?"
-M_DEB_REPO_NAME="Имя репозитория"
+M_DEB_REPO_1="Чтобы удалить репозиторий, просто оставьте его пустым."
 M_DEB_REPO_DIALOG="Репозиторий"
 M_DEB_REPO_TEXT="Репозитории"
 M_DEB_BACKPORTS_KERNEL="Установить backports-ядро?"
-M_DEB_STABLE_KERNEL="Будет установлено стабильное ядро."
 
 #Messages for installer.
 M_MODE_AUTO="Работа в автоматическом режиме."
@@ -103,6 +98,9 @@ M_FORMAT="Форматирование"
 M_MOUNT="Монтирование"
 M_CHANGE_C="Готово!"
 M_ECHO_MODE="Режим вывода"
+M_END_OPTION_REBOOT="Перезагрузить машину"
+M_END_OPTION_POWEROFF="Выключить машину"
+M_END_OPTION_CONSOLE="Войти в консоль"
 M_REBOOT_M="Готово! Чтобы перезагрузиться, введите \"reboot\""
 
 
