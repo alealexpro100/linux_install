@@ -3,12 +3,14 @@
 #Weight and height parametres of terminal for UI.
 ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
 
+#Generate menu from string and place it to array 'tmp_gen_menu'.
+declare -a tmp_gen_menu
 function gen_menu() {
-  local vars_list=() i=0
+  tmp_gen_menu=()
+  local i=0
   while IFS=$'\n' read -r var; do
-    vars_list=("${vars_list[@]}" "$((i++))" "$var")
+    tmp_gen_menu=("${tmp_gen_menu[@]}" "$((i++))" "$var")
   done
-  echo "${vars_list[@]}"
 }
 
 #Print info
@@ -193,5 +195,9 @@ function read_param() {
       return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
     ;;
     esac
-  add_var "declare -gx" "$var" "$tmp"
+  if [[ -n "$tmp" ]]; then
+    add_var "declare -gx" "$var" "$tmp"
+  else
+    add_var "unset" "$var"
+  fi
 }
