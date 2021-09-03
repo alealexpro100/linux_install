@@ -1,3 +1,13 @@
+# Version 0.5.5:
+* Added choice of reboot or power off in live installer.
+* Interface fixes.
+* Minor fixes.
+
+# Version 0.5.4:
+* Fixed UEFI PXE live installer.
+* Minor interface fixes.
+* Minor fixes.
+
 # Version 0.5.3:
 * Added flag AUTO_PROFILE.
 * Reworked debian repo install.
