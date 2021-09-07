@@ -1,3 +1,6 @@
+# Version 0.5.6:
+* Minor fixes.
+
 # Version 0.5.5:
 * Added choice of reboot or power off in live installer.
 * Interface fixes.
