@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.6"
+ALEXPRO100_LIB_VERSION="0.3.7"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -99,10 +99,10 @@ export -f echo_help
 function show_progress() {
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
-    sp) local sp="|\-/"; s=1;;
-    kit) local sp="  .   /|\  ||| <|||> |||  \|/   '  "; s=5;;
-    train) local sp="     < <=<=======>=> >  "; s=3;;
-    *) sp="----====++++"; s=4;;
+    sp) local sp="|\-/" s=1;;
+    kit) local sp="  .   /|\  ||| <|||> |||  \|/   '  " s=5;;
+    train) local sp="     < <=<=======>=> >  " s=3;;
+    *) local sp="incorrect option! "; s=9;;
   esac
   local i=0;
   while [[ -d /proc/$2 ]]; do
@@ -337,7 +337,7 @@ function parse_arch() {
     s390x|ppc64*|mips*) qemu_arch="$1"; export alpine_arch="$qemu_arch" debian_arch="$qemu_arch" arch_arch="$qemu_arch" rpm_arch="$qemu_arch" void_arch="$qemu_arch" qemu_arch;;
     *) qemu_arch="$(uname -m)"; export alpine_arch="$qemu_arch" debian_arch="$qemu_arch" arch_arch="$qemu_arch" rpm_arch="$qemu_arch" void_arch="$qemu_arch" qemu_arch;;
   esac
-  AP100_DBG msg_print debug "Exported alpine_arch=$alpine_arch debian_arch=$debian_arch arch_arch=$arch_arch void_arch=$void_arch qemu_arch=$qemu_arch."
+  AP100_DBG msg_print debug "Exported alpine_arch=$alpine_arch debian_arch=$debian_arch arch_arch=$arch_arch rpm_arch=$qemu_arch void_arch=$void_arch qemu_arch=$qemu_arch."
 }
 export -f parse_arch
 
