@@ -14,5 +14,5 @@ read_param "" "$M_MIRROR" "$mirror_alpine" mirror_alpine text_empty
 
 
 read_param "" "$M_DISTR_VER" 'edge' version_alpine text
-read_param "" "$M_PACK_PRE" "wget terminus-font" preinstall text_empty
-read_param "" "$M_PACK_POST" "screen htop rsync bash-completion" postinstall text_empty
+add_var "declare -gx" "preinstall" "wget"
+read_param "" "$M_PACK" "screen htop rsync bash-completion" postinstall text_empty

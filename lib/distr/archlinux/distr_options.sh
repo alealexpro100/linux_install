@@ -41,5 +41,5 @@ read_param "" "$M_MIRROR" "$mirror_archlinux" mirror_archlinux text_empty
 
 
 [[ $arch == "x86_64" ]] && read_param "" "$M_MULTILIB" '' arch_add_i386 yes_or_no
-read_param "" "$M_PACK_PRE" "wget nano" preinstall text_empty
-read_param "" "$M_PACK_POST" "base-devel screen htop rsync bash-completion" postinstall text_empty
+add_var "declare -gx" "preinstall" "wget"
+read_param "" "$M_PACK" "nano base-devel screen htop rsync bash-completion" postinstall text_empty

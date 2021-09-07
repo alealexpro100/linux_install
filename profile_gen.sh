@@ -62,7 +62,11 @@ source "./lib/distr/${distr:?}/distr_options.sh"
 var_final=''
 until [[ $var_final == "0" ]]; do
   #Make menu, We use array to make parametres.
-  vars_list="$M_LIST_END_OPTION"
+  if [[ $LIVE_MODE == "1" ]]; then
+    vars_list="$M_LIST_FINAL_OPTION_LIVE"
+  else
+    vars_list="$M_LIST_FINAL_OPTION"
+  fi
   # shellcheck disable=SC2154
   for ((i=0; i<${#var_num[@]}; i++)); do
     var=${var_num[i]}

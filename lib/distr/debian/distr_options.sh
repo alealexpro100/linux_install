@@ -57,7 +57,7 @@ done
 until [[ $repos == "0" ]]; do
   vars_list="$M_LIST_END_OPTION"
   for repo_name in "${debian_repos_order[@]}"; do
-    [[ -z "${debian_repos[$repo_name]}" ]] || vars_list+="\n$repo_name | ${debian_repos[$repo_name]}"
+    vars_list+="\n$repo_name | ${debian_repos[$repo_name]}"
   done
   gen_menu < <(echo -e "$vars_list")
   read_param "$M_DEB_REPO_TEXT\n" "$M_LIST_DIALOG" "0" repos menu "${tmp_gen_menu[@]}"
@@ -72,5 +72,5 @@ done
 
 [[ $kernel == "1" && -n ${debian_repos[backports]} ]] && read_param "" "$M_DEB_BACKPORTS_KERNEL" "" backports_kernel no_or_yes
 [[ $debian_arch == amd64 ]] && read_param "" "$M_MULTILIB" '' debian_add_i386 yes_or_no
-read_param "" "$M_PACK_PRE" "locales,rsync" preinstall text
-read_param "" "$M_PACK_POST" "usbutils pciutils dosfstools software-properties-common bash-completion" postinstall text_empty
+add_var "declare -gx" "preinstall" "locales"
+read_param "" "$M_PACK" "usbutils pciutils dosfstools software-properties-common screen htop rsync bash-completion" postinstall text_empty
