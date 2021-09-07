@@ -21,6 +21,7 @@ for repo_name in "${debian_repos_order[@]}"; do
   fi
 done
 apt update
+apt -y upgrade
 
 msg_print note "Apt is ready."
 

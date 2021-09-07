@@ -14,5 +14,5 @@ read_param "" "$M_MIRROR" "$mirror_alpine" mirror_alpine text_empty
 
 
 read_param "" "$M_DISTR_VER" 'edge' version_alpine text
-add_var "declare -gx" "preinstall" "wget"
+add_var "declare -gx" "preinstall" ""
 read_param "" "$M_PACK" "screen htop rsync bash-completion" postinstall text_empty

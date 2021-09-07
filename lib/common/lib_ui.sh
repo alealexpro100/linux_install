@@ -3,7 +3,6 @@
 #Weight and height parametres of terminal for UI.
 ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
 
-#Generate menu from string and place it to array 'tmp_gen_menu'.
 declare -a tmp_gen_menu
 function gen_menu() {
   tmp_gen_menu=()
@@ -28,7 +27,7 @@ case $ECHO_MODE in
   esac
 }
 
-#Enter parametres. Needs rework!
+#Enter parametres.
 function read_param() {
   local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
   shift 5
@@ -45,10 +44,7 @@ function read_param() {
         menu) tmp=$default_var;;
         menu_var)
           for ((i=0; i<=$#; i+=2)); do
-            if [[ "${!i}" == "$default_var" ]]; then
-              default_var=$((i/2-1))
-              break
-            fi
+            [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
           done
           tmp=$(((default_var+1)*2))
           tmp="${!tmp}"
@@ -86,10 +82,7 @@ function read_param() {
         ;;
         menu_var)
           for ((i=0; i<=$#; i+=2)); do
-            if [[ "${!i}" == "$default_var" ]]; then
-              default_var=$((i/2-1))
-              break
-            fi
+            [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
           done
           tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "$@" 3>&1 1>&2 2>&3) || return_err "Operation cancelled by user!"
           tmp=$(((tmp+1)*2))
@@ -149,40 +142,29 @@ function read_param() {
           while [[ "$correct" != "1" ]]; do
             echo -ne "$text"
             for ((i=1; i<$#; i+=2)); do
-              j=$((i+1))
-              echo -e "${!i} ${!j}"
+              j=$((i+1)) && echo -e "${!i} ${!j}"
             done
             read -r -p "$dialog: " -e -i "$default_var" tmp
             for ((i=1; i<$#; i+=2)); do
-              if [[ $tmp == $((i/2)) ]]; then
-                correct=1
-                break
-              fi
+              [[ $tmp == $((i/2)) ]] && correct=1 && break
             done
           done
         ;;
         menu_var)
           for ((i=0; i<=$#; i+=2)); do
-            if [[ "${!i}" == "$default_var" ]]; then
-              default_var=$((i/2-1))
-              break
-            fi
+            [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
           done
           local correct=0;
           while [[ "$correct" != "1" ]]; do
             echo -ne "$text"
             for ((i=1; i<$#; i+=2)); do
-              j=$((i+1))
-              echo -e "${!i} ${!j}"
+              j=$((i+1)) && echo -e "${!i} ${!j}"
             done
             read -r -p "$dialog: " -e -i "$default_var" tmp
             for ((i=1; i<$#; i+=2)); do
               j=$((i+1))
               [[ $tmp == "${!i}" ]] && tmp=${!j}
-              if [[ $tmp == "${!j}" ]]; then
-                correct=1
-                break
-              fi
+              [[ $tmp == "${!j}" ]] && correct=1 && break
             done
           done
         ;;
