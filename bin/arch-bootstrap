@@ -57,7 +57,7 @@ fi
 
 # Set pico complect of packages for archlinux installation.
 # You can get this list by running $(pacman -Qq | sort | uniq) on newly installed system.
-[[ -z ${BASIC_PACKAGES[*]} ]] && BASIC_PACKAGES=(acl attr bash bzip2 coreutils curl e2fsprogs expat filesystem ca-certificates-utils ca-certificates-mozilla p11-kit libp11-kit libtasn1 libffi findutils gawk glibc gmp gnupg gnutls gpgme keyutils krb5 libarchive libassuan libgcrypt libgpg-error libidn2 libksba libnghttp2 libpsl libssh2 libunistring lz4 mpfr ncurses npth openssl pacman pinentry readline sqlite xz zlib zstd)
+[[ -z ${BASIC_PACKAGES[*]} ]] && BASIC_PACKAGES=(acl attr audit bash brotli bzip2 ca-certificates ca-certificates-mozilla ca-certificates-utils coreutils curl e2fsprogs expat filesystem findutils gcc-libs glib2 glibc gmp gnupg gnutls gpgme iana-etc keyutils krb5 libarchive libassuan libcap libcap-ng libffi libgcrypt libgpg-error libidn2 libksba libldap libnghttp2 libp11-kit libpsl libsasl libsecret libssh2 libtasn1 libtirpc libunistring libxcrypt linux-api-headers lz4 ncurses nettle npth openssl p11-kit pacman pacman-mirrorlist pam pambase pcre pinentry readline sqlite systemd-libs tzdata util-linux-libs xz zlib zstd)
 
 case $arch in
   i?86) BASIC_PACKAGES=(archlinux32-keyring archlinux-keyring "${BASIC_PACKAGES[*]}")
