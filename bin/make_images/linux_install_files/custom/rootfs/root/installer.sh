@@ -25,7 +25,7 @@ function list_disks_get() {
 # shellcheck disable=SC1090
 source "./linux_install/lib/msg/${LANG_INSTALLER:-en}.sh"
 
-msg_print note "$M_WELCOME"
+msg_print note "$M_WELCOME $(cat ./linux_install/version_install)"
 
 if [[ -n "$AUTO_PROFILE" ]]; then
     msg_print note "$M_MODE_AUTO"
@@ -48,6 +48,7 @@ fi
 msg_print note "$M_MODE_MANUAL"
 
 gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g")
+#shellcheck disable=SC2154
 read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "${tmp_gen_menu[@]}"
 # shellcheck disable=SC1090
 source "./linux_install/lib/msg/$LANG_INSTALLER.sh"
@@ -107,9 +108,14 @@ if [[ $WORK_MODE == "install" ]]; then
     PART_BOOT="" PART_ROOT=""
     while [[ -z $PART_BOOT || -z "$PART_ROOT" ]]; do
         read_param "" "$M_PART" "" PART_DO no_or_yes
-        print_param note "$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
+        print_param note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
         if [[ $PART_DO == "1" ]]; then
             gen_menu < <(list_disks_get -d)
+            if [[ -d /sys/firmware/efi/efivars ]]; then
+                BOOTLOADER_TYPE_DEFAULT=uefi
+            else
+                BOOTLOADER_TYPE_DEFAULT=bios
+            fi
             read_param "" "$M_PART_D" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
             cfdisk -z "/dev/$PART_ROOT"
             partprobe "/dev/$PART_ROOT"
@@ -161,6 +167,7 @@ if [[ $WORK_MODE == "install" ]]; then
     umount -l /mnt/mnt
     gen_menu < <(echo -e "$M_END_OPTION_REBOOT\n$M_END_OPTION_POWEROFF\n$M_END_OPTION_CONSOLE")
     read_param "" "$M_ECHO_MODE" "0" end_action menu "${tmp_gen_menu[@]}"
+    #shellcheck disable=SC2154
     case $end_action in
         0) msg_print note "Rebooting..."; reboot;;
         1) msg_print note "Powering off..."; poweroff;;
