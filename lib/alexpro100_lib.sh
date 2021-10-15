@@ -163,12 +163,12 @@ export -f check_online
 
 function get_file_s() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [FILE] [URL]\nDownload to file from url."
-  if command_exists wget &>/dev/null; then
-    [[ $1 == - ]] || AP100_DBG msg_print debug "Using wget."
-    wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
-  elif command_exists curl &>/dev/null; then
+  if command_exists curl &>/dev/null; then
     [[ $1 == - ]] || AP100_DBG msg_print debug "Using curl."
     curl -s --retry 3 -f -o "$1" "$2" || return_err "Exit code $? while downloading $2!"
+  elif command_exists wget &>/dev/null; then
+    [[ $1 == - ]] || AP100_DBG msg_print debug "Using wget."
+    wget -q -t 3 -O "$1" "$2" || return_err "Exit code $? while downloading $2!"
   else
     return_err "Niether wget nor curl are found."
   fi
@@ -177,12 +177,12 @@ export -f get_file_s
 
 function check_url() {
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to exist."
-  if command_exists wget; then
-    AP100_DBG msg_print debug "Using wget."
-    wget -q --spider "$1"
-  elif command_exists curl; then
+  if command_exists curl; then
     AP100_DBG msg_print debug "Using curl."
     curl --head --fail "$1" &>/dev/null
+  elif command_exists wget; then
+    AP100_DBG msg_print debug "Using wget."
+    wget -q --spider "$1"
   else
     return_err "Niether wget nor curl are found."
   fi
@@ -238,6 +238,14 @@ function get_file_list_html() {
   sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
 }
 export -f get_file_list_html
+
+function detect_vm() {
+  for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox'}; do
+    [[ "$(dmidecode -s system-product-name)" == "$type" ]] && return 0
+  done
+  return 1
+}
+export -f detect_vm
 
 #--- ROOTFS MOUNT: BEGIN
 function chroot_add_mount() {

@@ -43,7 +43,11 @@ echo -e "#auto eth0\n#\tiface eth0 inet dhcp\n#\t\thostname $hostname\n" >> /etc
 to_install="$postinstall" to_enable=''
 
 if [[ $kernel == "1" ]]; then
-  to_install="$to_install linux-firmware linux-lts"
+  case "$kernel_type" in
+    vanilla) to_install="$to_install linux-firmware linux-lts";;
+    virtual) to_install="$to_install linux-virt";;
+    *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
+  esac
 fi
 if [[ $add_soft == "1" ]]; then
   to_install="$to_install dbus"

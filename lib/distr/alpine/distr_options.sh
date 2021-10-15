@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [[ $kernel == "1" ]]; then
+  if detect_vm; then
+    gen_menu < <(echo -e "virtual\nvanilla")
+  else
+    gen_menu < <(echo -e "vanilla\nvirtual")
+  fi
+  read_param "" "$M_KERNEL_TYPE" '' kernel_type menu_var "${tmp_gen_menu[@]}"
+fi
+
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
   read_param "" "$M_PIPEWIRE" '' pipewire yes_or_no
@@ -13,6 +22,6 @@ read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$al
 read_param "" "$M_MIRROR" "$mirror_alpine" mirror_alpine text_empty
 
 
-read_param "" "$M_DISTR_VER" 'edge' version_alpine text
+read_param "" "$M_DISTR_VER" 'v3.14' version_alpine text
 add_var "declare -gx" "preinstall" ""
 read_param "" "$M_PACK" "screen htop rsync bash-completion" postinstall text_empty
