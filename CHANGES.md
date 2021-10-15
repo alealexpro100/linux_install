@@ -1,3 +1,8 @@
+# Version 0.5.7:
+* Minor fixes (mostly interface).
+* Added choose of type of kernel of Alpine.
+* Start working on new arch-bootstrap script.
+
 # Version 0.5.6:
 * Minor fixes.
 
