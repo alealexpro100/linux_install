@@ -6,7 +6,7 @@ if [[ $kernel == "1" ]]; then
   else
     gen_menu < <(echo -e "vanilla\nvirtual")
   fi
-  read_param "" "$M_KERNEL_TYPE" '' kernel_type menu_var "${tmp_gen_menu[@]}"
+  read_param "" "$M_KERNEL_TYPE" '0' kernel_type menu_var "${tmp_gen_menu[@]}"
 fi
 
 if [[ $add_soft == "1" ]]; then

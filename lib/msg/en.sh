@@ -74,6 +74,7 @@ M_DEB_REPO_1="To remove repo, just leave it empty."
 M_DEB_REPO_DIALOG="Reposistory"
 M_DEB_REPO_TEXT="Reposistories"
 M_DEB_BACKPORTS_KERNEL="Install backports kernel instead of stable?"
+M_DEB_NO_RECOMMENDS="Do NOT install reocommended packages (apt parameter)?"
 
 #Messages for installer.
 M_MODE_AUTO="Working in auto mode."

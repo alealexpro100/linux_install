@@ -10,7 +10,7 @@ sed -i "6s/default8x16.psf.gz/ter-v16n.psf.gz/" /etc/conf.d/consolefont
 sed -i "92s/NO/YES/;92s/#//" /etc/rc.conf
 
 #Dependencies
-apk add terminus-font bash dropbear zstd perl dpkg findmnt lsblk dialog cfdisk e2fsprogs wireless-tools wpa_supplicant htop rsync
+apk add terminus-font bash dropbear zstd perl dpkg findmnt lsblk dialog cfdisk e2fsprogs dmidecode wireless-tools wpa_supplicant htop rsync
 
 #SSH
 rc-update add firstboot default

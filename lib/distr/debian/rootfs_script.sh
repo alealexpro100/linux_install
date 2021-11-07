@@ -8,10 +8,10 @@ locale_setup /etc/default/locale
 msg_print note "Apt setup..."
 declare -gx DEBIAN_FRONTEND=noninteractive
 apt_install="apt -y install"
+[[ $debian_no_recommends == 1 ]] && apt_install="$apt_install --no-install-recommends"
 
 [[ -f /etc/apt/sources.list ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
-apt update
 for repo_name in "${debian_repos_order[@]}"; do
   [[ -n "${debian_repos[$repo_name]}" ]] || continue
   echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
@@ -21,7 +21,6 @@ for repo_name in "${debian_repos_order[@]}"; do
   fi
 done
 apt update
-apt -y upgrade
 
 msg_print note "Apt is ready."
 
@@ -37,9 +36,17 @@ if [[ $kernel == "1" ]]; then
     *) kernel_arch=$debian_arch;;
   esac
   if [[ $backports_kernel == "1" ]]; then
-    $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" "linux-headers-$kernel_arch" firmware-linux dkms
+    case "$kernel_type" in
+      vanilla) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" "linux-headers-$kernel_arch" firmware-linux dkms;;
+      virtual) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch";;
+      *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
+    esac
   else
-    to_install="$to_install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux dkms"
+    case "$kernel_type" in
+      vanilla) to_install="$to_install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux dkms";;
+      virtual) to_install="$to_install linux-image-$kernel_arch";;
+      *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
+    esac
   fi
 fi
 
