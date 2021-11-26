@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.7"
+ALEXPRO100_LIB_VERSION="0.3.8"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -136,8 +136,9 @@ function command_exists() {
 export -f command_exists
 
 function list_files() {
+  # Don't be afraid of this. It is hack for busybox.
   local DIR_SEARCH="$1"; shift
-  find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d" #Hack for busybox.
+  find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d"
 }
 export -f list_files
 
@@ -198,7 +199,7 @@ function create_tmp_dir() {
 export -f create_tmp_dir
 
 function arccat() {
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdio."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdout."
   [[ $2 == - ]] || AP100_DBG msg_print debug "Extracting $2..."
   case "$1" in
     zst|zstd) zstd -dcf "$2";;
@@ -235,19 +236,28 @@ export -f squashfs_rootfs_pack
 # -- PARSERS
 
 function get_file_list_html() {
+  # Use it for getting list of files from html file.
   sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
 }
 export -f get_file_list_html
 
 function detect_vm() {
-  for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox'}; do
-    [[ "$(dmidecode -s system-product-name)" == "$type" ]] && return 0
+  # Will write to stdout detected type and/or return result.
+  for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox' 'Standard PC (Q35 + ICH9, 2009)'}; do
+    AP100_DBG msg_print debug "Testing $type..."
+    if [[ "$(dmidecode -s system-product-name)" == "$type" ]]; then
+      echo "$type"
+      return 0
+    fi
   done
   return 1
 }
 export -f detect_vm
 
 #--- ROOTFS MOUNT: BEGIN
+
+# Aim of this bunch of functions is to correctly mount rootfs for correct work of many scripts and package managers (such as pacman).
+
 function chroot_add_mount() {
   if [[ ! -e $3 ]]; then
     [[ $1 == dir ]] && mkdir -p "$3"; [[ $1 == file ]] && touch "$3"
@@ -350,9 +360,9 @@ function parse_arch() {
 export -f parse_arch
 
 function qemu_chroot() {
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu static, mounting necessary directories."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu-static, mounting necessary directories."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
-  # If arch set to check, we just check ability to use qemu static.
+  # If arch is set to check, we just check ability to use qemu static.
   [[ "$1" == "check" ]] && shift
   parse_arch "$1"; shift
   if [[ -f $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static ]]; then
@@ -369,7 +379,7 @@ function qemu_chroot() {
 export -f qemu_chroot
 
 function qemu_run_bin() {
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu static."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu-static."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
     AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
@@ -411,4 +421,5 @@ function genfstab_light() {
   done
 }
 export -f genfstab_light
+
 #--- ROOTFS MOUNT: END
