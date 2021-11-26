@@ -1,3 +1,4 @@
+#!/bin/bash
 
 if [[ $arch == $debian_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
@@ -16,7 +17,7 @@ else
   export DEBOOTSTRAP_DIR=./bin/debootstrap-debian
   DEBOOTSTRAP_BIN="$DEBOOTSTRAP_DIR/debootstrap"
 fi
-bash -c "$DEBOOTSTRAP_BIN --arch $arch $add_option --include=gnupg,$preinstall $version_debian $dir \"$debian_mirror\""
+bash -c "$DEBOOTSTRAP_BIN --arch $arch $add_option --include=gnupg,$preinstall $version_debian $dir \"$(echo "${debian_repos[main]}" | cut -d" " -f2)\""
 [[ $add_option == "--foreign" ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
 
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

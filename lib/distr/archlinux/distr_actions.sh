@@ -1,3 +1,4 @@
+#!/bin/bash
 
 if [[ $arch == $arch_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"

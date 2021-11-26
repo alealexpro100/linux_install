@@ -4,6 +4,7 @@ function base_setup() {
   msg_print note "Setting up hostname and configuring user..."
   echo "$hostname" > /etc/hostname
   echo "root:$passwd" | chpasswd -c SHA512
+  user_groups="${user_groups:-users}"
   case "$1" in
     glibc) 
       useradd -m -g users -G "$user_groups" -s "$user_shell" "$user_name"
