@@ -13,14 +13,18 @@ else
     li_type=public
 fi
 
+BUILD_DEBUG="${BUILD_DEBUG:-0}"
+[[ "$BUILD_DEBUG" == "1" ]] && msg_print warning "Building DEBUG vesrion..."
+LI_VERSION="$(cat ./version_install)"
+[[ "$BUILD_DEBUG" == "1" ]] && LI_VERSION="${LI_VERSION}-dbg"
 ARCH="${ARCH:-x86_64}"
 ALPINE_FILES="${ALPINE_FILES:-../../alpine/v3.14/releases/$ARCH/}"
 BUILDS_DIR="${BUILDS_DIR:-../linux_install_builds}"
 ALPINE_ISO="$ALPINE_FILES/alpine-standard-3.14.0-$ARCH.iso"
 ALPINE_NETBOOT="$ALPINE_FILES/netboot"
 ALPINE_NEBOOT_VERSION="lts"
-LI_ISO="$BUILDS_DIR/linux_install-$ARCH-$(cat ./version_install)-$li_type.iso"
-LI_NETBOOT="$BUILDS_DIR/linux_install-$ARCH-$(cat ./version_install)-$li_type.pxe"
+LI_ISO="$BUILDS_DIR/linux_install-$ARCH-$LI_VERSION-$li_type.iso"
+LI_NETBOOT="$BUILDS_DIR/linux_install-$ARCH-$LI_VERSION-$li_type.pxe"
 if [[ -d "$ALPINE_FILES" ]]; then
     msg_print note "Using local directory: $ALPINE_FILES"
 else
@@ -48,11 +52,11 @@ build_files="./bin/make_images/linux_install_files"
 create_tmp_dir make_build
 #Prepare rootfs
 mkdir "$make_build/rootfs" "$make_build/custom"
-cp -r "./custom/." "$make_build/custom"
 cp -r "$build_files/custom/." "$make_build/custom"
 mount -t tmpfs tmpfs "$make_build/rootfs"
 cp "./auto_configs/linux_install_$ARCH.sh" "$make_build/config.sh"
 CUSTOM_DIR="$make_build/custom" default_dir="$make_build/rootfs" "./install_sys.sh" "$make_build/config.sh"
+[[ "$BUILD_DEBUG" == "1" ]] && sed -ie '5s/=0/=1/' "$make_build/rootfs/root/installer.sh"
 squashfs_rootfs_pack "$make_build/rootfs" "$make_build/rootfs.img" xz
 umount "$make_build/rootfs"
 

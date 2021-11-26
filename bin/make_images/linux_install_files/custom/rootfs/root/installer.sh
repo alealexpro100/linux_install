@@ -2,6 +2,8 @@
 
 set -e
 
+ALEXPRO100_LIB_DEBUG=0
+
 #Import some libraries.
 # shellcheck disable=SC1091
 source ./linux_install/lib/alexpro100_lib.sh
@@ -12,7 +14,7 @@ source ./linux_install/lib/common/lib_ui.sh
 
 # shellcheck disable=SC2046
 IFS=' ' read -ra kernel_cmdline < /proc/cmdline
-for option in ${kernel_cmdline[*]}; do
+for option in "${kernel_cmdline[@]}"; do
     case $option in
         AUTO_PROFILE=*|REBOOT_AFTER=*) export "${option?}";;
     esac
@@ -118,15 +120,14 @@ if [[ $WORK_MODE == "install" ]]; then
             fi
             read_param "" "$M_PART_D" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
             cfdisk -z "/dev/$PART_ROOT"
-            partprobe "/dev/$PART_ROOT"
-            mdev -s &>/dev/null
+            mdev -s &>/dev/null # We have to call mdev to update symbol devices.
         else
             gen_menu < <(list_disks_get)
             read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
             if [[ -d /sys/firmware/efi/efivars ]]; then
                 BOOTLOADER_TYPE_DEFAULT=uefi
                 gen_menu < <(list_disks_get)
-                read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "/dev/$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")1" PART_BOOT menu_var "${tmp_gen_menu[@]}"
                 [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && print_param warning "Partition $PART_BOOT will be formatted to vfat filesystem." 
             else
                 BOOTLOADER_TYPE_DEFAULT=bios
