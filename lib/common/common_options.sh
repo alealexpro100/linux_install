@@ -47,6 +47,4 @@ else
   read_param "" "$M_ADD_SOFT" '' add_soft no_or_yes
 fi
 
-[[ $LIVE_MODE == "1" ]] || read_param "" "$M_COPYSCRIPT" '' copy_setup_script yes_or_no
-
 parse_arch "$(uname -m)"

@@ -27,11 +27,6 @@ ff02::2		ip6-allrouters
 
 $HOSTS_ADD" >> "$dir/etc/hosts"
 
-if [[ $copy_setup_script == "1" ]]; then
-  msg_print note "Copying installator..."
-  $cp_safe . "$dir/root/linux_install"
-fi
-
 if [[ $fstab == "1" ]]; then
   msg_print note "Generationg fstab..."
   [[ -f $dir/etc/fstab ]] && mv "$dir/etc/fstab" "$dir/etc/fstab.bak"
