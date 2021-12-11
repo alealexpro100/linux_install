@@ -21,6 +21,10 @@ CUSTOM_ARCH_REPO=1 CORE_NAME=arch_repo arch-bootstrap x86_64 http://mirror.site/
 use warnings;
 use strict;
 
+if ($> != 0) {
+    die "You are not root!";
+}
+
 if (@ARGV < 4) {
     die "Not enough arguments!";
 }
@@ -31,7 +35,22 @@ if (@ARGV > 5) {
         push(@packages, $ARGV[$_]);
     }
 }
+
+exec 'mkdir', '-m', '0755', '-p', $dir.'/var/lib/pacman/sync', $dir.'/log', $dir.'/dev', $dir.'/run', $dir.'/etc/pacman.d';
+
 if (defined $ENV{CUSTOM_ARCH_REPO} && $ENV{CUSTOM_ARCH_REPO} == 1) {
-    print "h";
-    my $CORE_NAME=$ENV{CORE_NAME};
+    my $core_name=$ENV{CORE_NAME};
+}
+else {
+    my $core_name='core';
+    if (exec 'wget', '--spider', $mirror.'/'.$core_name.'/os/'.$arch.'/'.$core_name.'.db') {
+        exec 'wget', '-O', $dir.'/var/lib/pacman/sync'.$core_name.'db', $mirror.'/'.$core_name.'/os/'.$arch.'/'.$core_name.'.db';
+        my $repo_file=$dir.'/var/lib/pacman/sync'.$core_name.'db';
+    }
+    elsif (exec 'wget', '--spider', $mirror.'/'.$core_name.'/'.$core_name.'/'.$arch.'.db') {
+        my $repo_file=$dir.'/var/lib/pacman/sync'.$core_name.'db';
+    }
+    else {
+        die "Could not download core repo file.";
+    }
 }

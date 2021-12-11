@@ -200,7 +200,6 @@ export -f create_tmp_dir
 
 function arccat() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdout."
-  [[ $2 == - ]] || AP100_DBG msg_print debug "Extracting $2..."
   case "$1" in
     zst|zstd) zstd -dcf "$2";;
     bz2)  bunzip2 "$2";;
@@ -243,7 +242,7 @@ export -f get_file_list_html
 
 function detect_vm() {
   # Will write to stdout detected type and/or return result.
-  for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox' 'Standard PC (Q35 + ICH9, 2009)'}; do
+  for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox' 'Standard PC (Q35 + ICH9, 2009)' 'Standard PC (i440FX + PIIX, 1996)'}; do
     AP100_DBG msg_print debug "Testing $type..."
     if [[ "$(dmidecode -s system-product-name)" == "$type" ]]; then
       echo "$type"
