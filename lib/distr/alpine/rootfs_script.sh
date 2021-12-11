@@ -17,6 +17,8 @@ msg_print note "Apk is ready."
 #Alpine setup.
 msg_print note "Installing addational packages..."
 
+to_install="$postinstall" to_enable=''
+
 #Activate services for booting
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
@@ -26,7 +28,6 @@ rc-update add bootmisc boot
 rc-update add hostname boot
 rc-update add hwclock boot
 rc-update add modules boot
-rc-update add networking boot
 #rc-update add swap boot
 rc-update add sysctl boot
 rc-update add syslog boot
@@ -36,11 +37,12 @@ rc-update add killprocs shutdown
 rc-update add savecache shutdown
 
 #Network setup.
-echo -e "auto lo\n  iface lo inet loopback\n" > /etc/network/interfaces
-echo -e "#auto eth0\n#\tiface eth0 inet dhcp\n#\t\thostname $hostname\n" >> /etc/network/interfaces
-
-
-to_install="$postinstall" to_enable=''
+echo -e "#auto eth0\n#\tiface eth0 inet dhcp\n#\t\thostname \$(hostname)\n" >> /etc/network/interfaces
+if [[ $networkmanager != "1" ]]; then
+  msg_print note "Using default network config."
+  rc-update add networking boot
+  sed -i "s/#//g" /etc/network/interfaces
+fi
 
 if [[ $kernel == "1" ]]; then
   case "$kernel_type" in
@@ -55,6 +57,10 @@ if [[ $add_soft == "1" ]]; then
   if [[ $networkmanager == "1" ]]; then
     to_install="$to_install networkmanager networkmanager-openrc"
     to_enable="$to_enable networkmanager"
+  fi
+  if [[ $ssh == "1" ]]; then
+    to_install="$to_install openssh"
+    to_enable="$to_enable sshd"
   fi
   if [[ $pipewire == "1" ]]; then
     to_install="$to_install pipewire pipewire-pulse"

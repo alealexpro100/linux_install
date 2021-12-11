@@ -56,6 +56,7 @@ fi
 
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
+  read_param "" "$M_SSH" '' ssh yes_or_no
   read_param "" "$M_PULSEAUDIO" '' pulseaudio yes_or_no
   read_param "" "$M_BLUETOOTH" '' bluetooth yes_or_no
   read_param "" "$M_PRINTERS" '' printers yes_or_no

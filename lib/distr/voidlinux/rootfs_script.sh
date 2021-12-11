@@ -24,6 +24,13 @@ msg_print note "Installing addational packages..."
 
 to_install="$postinstall" to_enable=''
 
+#Network setup.
+if [[ $networkmanager != "1" ]]; then
+  msg_print note "Using default network config."
+  to_enable="$to_enable dhcpcd"
+  to_install="$to_install linux base-system"
+fi
+
 if [[ $kernel == "1" ]]; then
   to_install="$to_install linux base-system"
 fi
@@ -34,6 +41,10 @@ if [[ $add_soft == "1" ]]; then
   if [[ $networkmanager == "1" ]]; then
     to_install="$to_install NetworkManager"
     to_enable="$to_enable NetworkManager"
+  fi
+  if [[ $ssh == "1" ]]; then
+    to_install="$to_install openssh"
+    to_enable="$to_enable sshd"
   fi
   if [[ $pipewire == "1" ]]; then
     to_install="$to_install pipewire alsa-pipewire"

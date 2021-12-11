@@ -29,6 +29,13 @@ msg_print note "Installing addational packages..."
 
 to_install="$postinstall" to_enable=''
 
+#Network setup.
+if [[ $networkmanager != "1" ]]; then
+  msg_print note "Using default network config."
+  echo -e "auto eth0\n\tallow-hotplug eth0\n\tiface eth0 inet dhcp\n\tiface eth0 inet6 auto" >> /etc/network/interfaces.d/net
+  to_enable="networking"
+fi
+
 if [[ $kernel == "1" ]]; then
   echo "Installing linux kernel and its additions..."
   case $debian_arch in
@@ -53,6 +60,10 @@ fi
 if [[ $add_soft == "1" ]]; then
   if [[ $networkmanager == "1" ]]; then
     to_install="$to_install network-manager"
+  fi
+  if [[ $ssh == "1" ]]; then
+    to_install="$to_install ssh"
+    to_enable="$to_enable ssh"
   fi
   if [[ $pulseaudio == "1" ]]; then
     to_install="$to_install pulseaudio"

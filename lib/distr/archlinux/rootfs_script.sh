@@ -20,6 +20,13 @@ msg_print note "Installing addational packages..."
 
 to_install="$postinstall" to_enable=''
 
+#Network setup.
+if [[ $networkmanager != "1" ]]; then
+  msg_print note "Using default network config."
+  echo -e "[Match]\nName=enp1s0\n\n[Network]\nDHCP=yes" >> /etc/systemd/network/20-wired.network
+  to_enable="$to_enable systemd-networkd"
+fi
+
 if [[ $kernel == "1" ]]; then
   to_install="$to_install linux linux-firmware linux-headers"
 fi
@@ -28,6 +35,10 @@ if [[ $add_soft == "1" ]]; then
   if [[ $networkmanager == "1" ]]; then
     to_install="$to_install networkmanager crda"
     to_enable="$to_enable NetworkManager.service"
+  fi
+  if [[ $ssh == "1" ]]; then
+    to_install="$to_install openssh"
+    to_enable="$to_enable sshd"
   fi
   if [[ $pipewire == "1" ]]; then
     to_install="$to_install pipewire pipewire-pulse pipewire-alsa"

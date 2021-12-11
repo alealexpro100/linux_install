@@ -12,11 +12,13 @@ sed -i "92s/NO/YES/;92s/#//" /etc/rc.conf
 #Dependencies
 apk add terminus-font bash dropbear zstd perl dpkg findmnt lsblk dialog cfdisk e2fsprogs dmidecode wireless-tools wpa_supplicant htop rsync
 
-#SSH
+#Servcies
 rc-update add firstboot default
 rc-update add modloop sysinit
 rc-update add dropbear boot
-rc-update del networking boot
+
+#Prevent network setup
+sed -i 's/^/#/g' /etc/network/interfaces
 
 #Some other.
 PASSWORD=pass
