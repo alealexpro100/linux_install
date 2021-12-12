@@ -26,16 +26,16 @@ arch=$1 version=$2 mirror="$3"; dir="$(realpath "$4")"; shift 4; add_packages="$
 parse_arch "$(uname -m)"
 if [[ $mirror =~ https* ]]; then
   msg_print warning "Detected https mirror! Will try to use http for initial install."
-  check_url "${mirror/https/http}" || return_err "Mirror $mirror does NOT support http!"
+  check_url "${mirror/https\:/http\:}" || return_err "Mirror $mirror does NOT support http!"
 fi
 if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then
   check_url "$mirror" || return_err "Incorrect mirror $mirror!"
   download_repo="$mirror/$alpine_arch"
-  arg_repos="-X ${mirror/https/http}"
+  arg_repos="-X ${mirror/https\:/http\:}"
 else
   check_url "$mirror/$version/main/$arch" || return_err "Incorrect arch $arch, version $version or mirror $mirror!"
   download_repo="$mirror/$version/main/$alpine_arch"
-  arg_repos="-X ${mirror/https/http}/$version/main -X ${mirror/https/http}/$version/community"
+  arg_repos="-X ${mirror/https\:/http\:}/$version/main -X ${mirror/https\:/http\:}/$version/community"
 fi
 if [[ $arch == "$alpine_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
