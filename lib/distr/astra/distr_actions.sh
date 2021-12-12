@@ -1,0 +1,1 @@
+../debian/distr_actions.sh
