@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################
-### Test linux_install for directories.
+### Test linux_install in qemu.
 ### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
 ### License: GPL v3.0
 ###############################################################
@@ -26,16 +26,21 @@ for distr_install in "$@"; do
   msg_print msg "Started on $(date -u)."
   msg_print msg "Testing $distr_install..."
   create_tmp_dir tmp_distr_install
-  dd if=/dev/zero of="${tmp_distr_install:?}/disk.img" bs=1M count=$((1024*12)) status=progress
-  mkfs.ext4 "$tmp_distr_install/disk.img"
+  size=4
+  dd if=/dev/zero of="${tmp_distr_install:?}/disk.img" bs=$((1024*1024*1024)) count=$((size)) status=progress
+  disk_id="$(losetup --show -Pf "$tmp_distr_install/disk.img")"
+  echo -e "label: dos\n ,,L" | sfdisk "${disk_id}"
+  mkfs.ext4 "${disk_id}"p1
   mkdir -p "$tmp_distr_install/rootfs"
-  mount "$tmp_distr_install/disk.img" "$tmp_distr_install/rootfs" 
-  BOOTLOADER_TYPE_DEFAULT=bios DEFAULT_DISTR=$distr_install DEFAULT_DIR="$tmp_distr_install/rootfs" ECHO_MODE=auto bash ./profile_gen.sh "$tmp_distr_install/used_config"
+  mount "${disk_id}"p1 "$tmp_distr_install/rootfs"
+  BOOTLOADER_TYPE_DEFAULT=bios DEFAULT_DISTR=$distr_install DEFAULT_DIR="$tmp_distr_install/rootfs" kernel_type=virtual bootloader_bios_place="${disk_id}" ECHO_MODE=auto bash ./profile_gen.sh "$tmp_distr_install/used_config"
   msg_print warn "Start of profile file."
   cat "$tmp_distr_install/used_config"
   msg_print warn "End of profile file."
   ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
   umount --lazy "$tmp_distr_install/rootfs"
+  losetup -D "${disk_id}"
+  qemu-system-x86_64 -hda "$tmp_distr_install/disk.img" -m 3G || msg_print error "Qemu returned error $?."
   rm -rf "$tmp_distr_install"
 done
 
