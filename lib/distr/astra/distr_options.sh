@@ -16,7 +16,8 @@ add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_debian ma
 add_var "declare -gx" "debian_repos_order[0]" "main"
 
 if [[ $kernel == "1" ]]; then
-  if detect_vm; then
+  preinstall="initramfs-tools"
+  if [[ $(detect_vm) || "$kernel_type" == "virtual" ]]; then
     gen_menu < <(echo -e "virtual\nvanilla")
   else
     gen_menu < <(echo -e "vanilla\nvirtual")
@@ -31,5 +32,5 @@ fi
 
 read_param "" "$M_DEB_NO_RECOMMENDS" '' debian_no_recommends no_or_yes
 [[ $debian_arch == amd64 ]] && read_param "" "$M_MULTILIB" '' debian_add_i386 yes_or_no
-add_var "declare -gx" "preinstall" "locales"
+add_var "declare -gx" "preinstall" "$preinstall,locales"
 read_param "" "$M_PACK" "usbutils pciutils dosfstools software-properties-common screen htop rsync bash-completion" postinstall text_empty

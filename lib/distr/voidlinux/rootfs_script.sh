@@ -28,7 +28,7 @@ to_install="$postinstall" to_enable=''
 if [[ $networkmanager != "1" ]]; then
   msg_print note "Using default network config."
   to_enable="$to_enable dhcpcd"
-  to_install="$to_install linux base-system"
+  to_install="$to_install dhcpcd"
 fi
 
 if [[ $kernel == "1" ]]; then

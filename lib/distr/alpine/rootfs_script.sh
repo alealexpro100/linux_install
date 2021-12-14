@@ -91,7 +91,7 @@ case "$bootloader_name" in
     [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
     [[ $bootloader_type = bios ]] && to_install="$to_install grub-bios"
     if [[ "$bootloader_bios_place" == *loop* ]]; then
-      msg_print warning "$distr can not install grub loader to virtual disk."
+      msg_print warning "$distr can not install GRUB loader to virtual disk. Installation will fail."
     fi
     $apk_install $to_install
     [[ $removable_disk == "1" ]] && msg_print warning "Os-prober can't be installed."

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $kernel == "1" ]]; then
-  if detect_vm; then
+  if [[ $(detect_vm) || "$kernel_type" == "virtual" ]]; then
     gen_menu < <(echo -e "virtual\nvanilla")
   else
     gen_menu < <(echo -e "vanilla\nvirtual")

@@ -64,9 +64,8 @@ msg_print note "Packages are installed."
 
 case "$bootloader_name" in
   grub2)
-    to_install="grub2"
-    [[ $bootloader_type = uefi ]] && to_install="$to_install grub-efi"
-    [[ $bootloader_type = bios ]] && to_install="$to_install grub-pc"
+    [[ $bootloader_type = uefi ]] && to_install="grub-efi"
+    [[ $bootloader_type = bios ]] && to_install="grub-pc"
     $apt_install $to_install
     grub_config
   ;;
