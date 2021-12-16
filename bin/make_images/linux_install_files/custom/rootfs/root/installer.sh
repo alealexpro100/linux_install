@@ -23,6 +23,9 @@ done
 function list_disks_get() {
     lsblk -nr -o NAME "$@" | sed -e '/loop[0-10]/d'
 }
+function root_disk_get() {
+    lsblk --noheadings --output pkname "$1" 2>/dev/null || echo "$1"
+}
 
 # shellcheck disable=SC1090
 source "./linux_install/lib/msg/${LANG_INSTALLER:-en}.sh"
@@ -107,35 +110,53 @@ gen_menu < <(echo -e "install\nconsole")
 read_param "" "$M_WORK_MODE" "install" WORK_MODE menu_var "${tmp_gen_menu[@]}"
 if [[ $WORK_MODE == "install" ]]; then
     #Partition work. Here we format and mount needed partion(s).
-    PART_BOOT="" PART_ROOT=""
-    while [[ -z $PART_BOOT || -z "$PART_ROOT" ]]; do
+    PART_BOOT="" PART_ROOT="" PART_DONE="0"
+    while [[ $PART_DONE != "1" ]]; do
         read_param "" "$M_PART" "" PART_DO no_or_yes
         print_param note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
         if [[ $PART_DO == "1" ]]; then
-            gen_menu < <(list_disks_get -d)
             if [[ -d /sys/firmware/efi/efivars ]]; then
                 BOOTLOADER_TYPE_DEFAULT=uefi
             else
                 BOOTLOADER_TYPE_DEFAULT=bios
             fi
             msg_print note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT."
-            read_param "" "$M_PART_D" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
-            cfdisk -z "/dev/$PART_ROOT"
-            mdev -s &>/dev/null # We have to call mdev to update symbol devices.
-        else
-            gen_menu < <(list_disks_get)
-            read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
-            if [[ -d /sys/firmware/efi/efivars ]]; then
-                BOOTLOADER_TYPE_DEFAULT=uefi
-                gen_menu < <(list_disks_get)
-                read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "$(list_disks_get "/dev/$(lsblk --noheadings --output pkname "/dev/$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" | sed '2q;d')" PART_BOOT menu_var "${tmp_gen_menu[@]}"
-                [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && print_param warning "Partition $PART_BOOT will be formatted to vfat filesystem." 
+            msg_print warning "$M_PART_WARN"
+            gen_menu < <(list_disks_get -d)
+            read_param "" "$M_PART_D" '0' PART_ROOT menu_var "${tmp_gen_menu[@]}"
+            gen_menu < <(echo -e "auto\nmanual")
+            read_param "" "$M_PART_MODE" "auto" PART_MODE menu_var "${tmp_gen_menu[@]}"
+            # We have to call mdev to update symbol devices.
+            if [[ $PART_MODE == "auto" ]]; then
+                if [[ $BOOTLOADER_TYPE_DEFAULT == "uefi" ]]; then
+                    echo -e "label: gpt\n ,512M,U\n,,L" | sfdisk "/dev/$PART_ROOT"
+                    PART_BOOT="$(list_disks_get "/dev/$(root_disk_get "/dev/$PART_ROOT")" | sed '2q;d')"
+                    PART_ROOT="$(list_disks_get "/dev/$(root_disk_get "/dev/$PART_ROOT")" | sed '3q;d')"
+                else
+                    echo -e "label: dos\n ,,L" | sfdisk "/dev/$PART_ROOT"
+                    PART_BOOT="$PART_ROOT"
+                    PART_ROOT="$(list_disks_get "/dev/$PART_ROOT" | sed '2q;d')"
+                fi
             else
-                BOOTLOADER_TYPE_DEFAULT=bios
-                gen_menu < <(list_disks_get)
-                read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "$(lsblk --noheadings --output pkname "/dev/$PART_ROOT" 2>/dev/null || echo "$PART_ROOT")" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                cfdisk -z "/dev/$PART_ROOT"
+                mdev -s &>/dev/null
             fi
-            read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
+        else
+            if [[ $PART_MODE == "auto" ]]; then
+                gen_menu < <(list_disks_get)
+                read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
+                if [[ -d /sys/firmware/efi/efivars ]]; then
+                    BOOTLOADER_TYPE_DEFAULT=uefi
+                    gen_menu < <(list_disks_get)
+                    read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "$(root_disk_get "$PART_ROOT" | sed '2q;d')" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                    [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && print_param warning "Partition $PART_BOOT will be formatted to vfat filesystem." 
+                else
+                    BOOTLOADER_TYPE_DEFAULT=bios
+                    gen_menu < <(list_disks_get)
+                    read_param "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n" "$M_BOOTLOADER_PATH" "$(root_disk_get "$PART_ROOT")" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                fi
+                read_param "" "$M_CHANGE_DO" "" PART_DO no_or_yes
+            fi
             if [[ $PART_DO == "1" ]]; then
                 PART_ROOT="/dev/$PART_ROOT" PART_BOOT="/dev/$PART_BOOT"
                 msg_print note "$M_FORMAT $PART_ROOT..."
@@ -154,8 +175,7 @@ if [[ $WORK_MODE == "install" ]]; then
                     # shellcheck disable=SC2034
                     export bootloader_bios_place=$PART_BOOT
                 fi
-            else
-                PART_BOOT="" PART_ROOT=""
+                PART_DONE="1";
             fi
         fi
     done
@@ -168,7 +188,7 @@ if [[ $WORK_MODE == "install" ]]; then
     [[ $BOOTLOADER_TYPE_DEFAULT == "uefi" ]] && umount /mnt/mnt/boot
     umount -l /mnt/mnt
     gen_menu < <(echo -e "$M_END_OPTION_REBOOT\n$M_END_OPTION_POWEROFF\n$M_END_OPTION_CONSOLE")
-    read_param "" "$M_ECHO_MODE" "0" end_action menu "${tmp_gen_menu[@]}"
+    read_param "" "" "0" end_action menu "${tmp_gen_menu[@]}"
     #shellcheck disable=SC2154
     case $end_action in
         0) msg_print note "Rebooting..."; reboot;;
