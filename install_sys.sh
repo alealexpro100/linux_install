@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################
 ### Initial install script
-### Copyright (C) 2021 ALEXPRO100 (ktifhfl)
+### Copyright (C) 2021 ALEXPRO100 (alealexpro100)
 ### License: GPL v3.0
 ###############################################################
 
