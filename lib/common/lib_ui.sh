@@ -7,13 +7,13 @@ var_history_index=$((0))
 #Weight and height parametres of terminal for UI.
 ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
 
-declare -a tmp_gen_menu
+#Generate menu.
 function gen_menu() {
-  tmp_gen_menu=()
-  local i=0
+  local tmp_gen_menu=() i=0
   while IFS=$'\n' read -r var; do
     tmp_gen_menu=("${tmp_gen_menu[@]}" "$((i++))" "$var")
   done
+  echo -ne "${tmp_gen_menu[@]@Q}"
 }
 
 #Print info
@@ -62,17 +62,19 @@ function read_param() {
         secret_empty) tmp=$default_var;;
         menu) tmp=$default_var;;
         menu_var)
-          for ((i=0; i<=$#; i+=2)); do
-            [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
+          eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
+          for ((i=1; i<=${#params[@]}; i+=2)); do
+              [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
           done
-          tmp=$(((default_var+1)*2))
-          tmp="${!tmp}"
+          tmp="${params[$((default_var*2+1))]}"
         ;;
         *) return_err "Option $option is incorrect!";;
       esac
     ;;
     whiptail|dialog)
-      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME") return_code=''
+      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME") return_code='' 
+      local params=() i_var
+      eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
       while [[ $return_code != 0 ]]; do
         case $option in
           yes_or_no)
@@ -100,24 +102,25 @@ function read_param() {
             tmp=$("${options[@]}" --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu)
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "$@" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu_var)
-            for ((i=0; i<=$#; i+=2)); do
-              [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
+            for ((i=1; i<=${#params[@]}; i+=2)); do
+              [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
             done
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "$@" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
-            tmp=$(((tmp+1)*2))
-            tmp="${!tmp}"
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp="${params[$((tmp*2+1))]}"
           ;;
           *)
             return_err "Option $option is incorrect!"
           ;;
         esac
-        [[ $return_code == 1 ]] && history_read_param "$((var_history_index-1))"
+        [[ $return_code != 1 ]] || history_read_param "$((var_history_index-1))"
       done
     ;;
     cli|'')
+      local params=() i_var
+      eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
       case $option in
         yes_or_no)
           while [[ $tmp == '' ]]; do
@@ -165,30 +168,29 @@ function read_param() {
           local correct=0;
           while [[ "$correct" != "1" ]]; do
             echo -ne "$text"
-            for ((i=1; i<$#; i+=2)); do
-              j=$((i+1)) && echo -e "${!i} ${!j}"
+            for ((i=0; i<${#params[@]}; i+=2)); do
+              echo -e "${params[$((i))]} ${params[$((i+1))]}"
             done
             read -r -p "$dialog: " -e -i "$default_var" tmp
-            for ((i=1; i<$#; i+=2)); do
-              [[ $tmp == $((i/2)) ]] && correct=1 && break
+            for ((i=0; i<${#params[@]}; i+=2)); do
+              [[ $tmp == "${params[$((i))]}" ]] && correct=1 && break
             done
           done
         ;;
         menu_var)
-          for ((i=0; i<=$#; i+=2)); do
-            [[ "${!i}" == "$default_var" ]] && default_var=$((i/2-1)) && break
+          for ((i=1; i<=${#params[@]}; i+=2)); do
+            [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
           done
           local correct=0;
           while [[ "$correct" != "1" ]]; do
             echo -ne "$text"
-            for ((i=1; i<$#; i+=2)); do
-              j=$((i+1)) && echo -e "${!i} ${!j}"
+            for ((i=0; i<${#params[@]}; i+=2)); do
+              echo -e "${params[$((i))]} ${params[$((i+1))]}"
             done
             read -r -p "$dialog: " -e -i "$default_var" tmp
-            for ((i=1; i<$#; i+=2)); do
-              j=$((i+1))
-              [[ $tmp == "${!i}" ]] && tmp=${!j}
-              [[ $tmp == "${!j}" ]] && correct=1 && break
+            for ((i=0; i<${#params[@]}; i+=2)); do
+              [[ $tmp == "${params[$((i))]}" ]] && tmp=${params[$((i+1))]}
+              [[ $tmp == "${params[$((i+1))]}" ]] && correct=1 && break
             done
           done
         ;;

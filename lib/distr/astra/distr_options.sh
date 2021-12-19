@@ -1,7 +1,6 @@
 #!/bin/bash
 
-gen_menu < <(echo -e "amd64\ni386\narm64\narmel\narmhf\nmips\nmips64el\nmipsel\nppc64el\ns390x")
-read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var "${tmp_gen_menu[@]}"
+read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var "$(gen_menu < <(echo -e "amd64\ni386\narm64\narmel\narmhf\nmips\nmips64el\nmipsel\nppc64el\ns390x"))"
 
 read_param "" "$M_DISTR_VER" "$version_astra" version_debian text
 
@@ -16,13 +15,7 @@ add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_debian ma
 add_var "declare -gx" "debian_repos_order[0]" "main"
 
 if [[ $kernel == "1" ]]; then
-  preinstall="initramfs-tools"
-  if [[ $(detect_vm) || "$kernel_type" == "virtual" ]]; then
-    gen_menu < <(echo -e "virtual\nvanilla")
-  else
-    gen_menu < <(echo -e "vanilla\nvirtual")
-  fi
-  read_param "" "$M_KERNEL_TYPE" '' kernel_type menu_var "${tmp_gen_menu[@]}"
+  read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 0 || echo 1)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
 fi
 
 if [[ $add_soft == "1" ]]; then
