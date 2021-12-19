@@ -47,7 +47,7 @@ function interface_setup_static() {
 }
 
 function interface_con_wlan() {
-    local interface="$1" ssid="$2" ssid_pass="$3" ip_method="${4:-dhcp}"
+    local interface="$1" ssid="$2" ssid_pass="$3" ip_method="${4:-dhcp}"  ip_client="$5" ip_netmask="$6" ip_gateway="$7" ip_dns="$8"
     try_exec 0 ip link set "$interface" up
     iwconfig "$interface" essid "$ssid"
     if wpa_passphrase "$ssid" "$ssid_pass" > "/etc/wpa_supplicant/wpa_supplicant-$interface.conf"; then
@@ -68,25 +68,25 @@ function partition_auto() {
     if [[ $bootloader_type == "uefi" ]]; then
         echo -e "label: gpt\n ,512M,U\n,,L" | sfdisk "/dev/$part_root"
         export PART_BOOT PART_ROOT
-        PART_BOOT="$(disk_list_get "/dev/$(disk_root_get "/dev/$part_root")" | sed '2q;d')"
-        PART_ROOT="$(disk_list_get "/dev/$(disk_root_get "/dev/$part_root")" | sed '3q;d')"
-        echo -e "PART_BOOT=\"$part_boot\" PART_ROOT=\"$part_root\""
+        PART_BOOT="$(disk_list_get /dev/"$part_root" | sed '2q;d')"
+        PART_ROOT="$(disk_list_get /dev/"$part_root" | sed '3q;d')"
     else
         echo -e "label: dos\n ,,L" | sfdisk "/dev/$part_root"
         export PART_BOOT PART_ROOT
         PART_BOOT="$part_root"
         PART_ROOT="$(disk_list_get "/dev/$part_root" | sed '2q;d')"
     fi
+    echo -e "PART_BOOT=\"$PART_BOOT\" PART_ROOT=\"$PART_ROOT\""
+    mdev -s &>/dev/null # Add symbol devices.
 }
 
 function format_and_mount() {
-    local part_root="$1" part_boot="$2"
-    PART_ROOT="/dev/$PART_ROOT" PART_BOOT="/dev/$part_boot"
+    local bootloader_type="$1" part_root="$2" part_boot="$3"
     msg_print note "$M_FORMAT $part_root..."
     mkfs.ext4 -L "Linux" -F "$part_root"
     msg_print note "$M_MOUNT $part_root..."
     mount -t ext4 "$part_root" /mnt/mnt
-    if [[ $BOOTLOADER_TYPE_DEFAULT == "uefi" ]]; then
+    if [[ $bootloader_type == "uefi" ]]; then
         if [[ $(findmnt -Recvruno FSTYPE "$part_boot") != "vfat" ]]; then
             msg_print note "$M_FORMAT $part_boot..."
             mkfs.vfat -F32 -n 'BOOT' "$part_boot"
@@ -106,6 +106,7 @@ function do_end_action() {
         1) msg_print note "Powering off..."; poweroff;;
         2) msg_print note "$M_REBOOT_M"; bash;;
     esac
+    exit 0
 }
 
 msg_print note "$M_WELCOME $(cat ./linux_install/version_install)"
@@ -130,29 +131,25 @@ fi
 
 msg_print note "$M_MODE_MANUAL"
 
-gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g")
 #shellcheck disable=SC2154
-read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "${tmp_gen_menu[@]}"
+read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "$(gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g"))"
 # shellcheck disable=SC1090
 source "./linux_install/lib/msg/$LANG_INSTALLER.sh"
 
 while ! check_online; do
     msg_print warning "$M_HOST_OFFLINE"
-    gen_menu < <(list_files "/sys/class/net/" -type l | sed '/lo/d')
-    read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "0" INTERFACE menu_var "${tmp_gen_menu[@]}"
+    read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "0" INTERFACE menu_var "$(gen_menu < <(list_files "/sys/class/net/" -type l | sed '/lo/d'))"
     #shellcheck disable=SC2153
     case $INTERFACE in
         wlan*)
             ip link set "$INTERFACE" up
-            gen_menu < <(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g')
-            read_param "$M_NET_WIFI_SCAN_RESULT:\n" "$M_NET_WIFI_SSID_CHOOSE" "" SSID menu_var "${tmp_gen_menu[@]}"
+            read_param "$M_NET_WIFI_SCAN_RESULT:\n" "$M_NET_WIFI_SSID_CHOOSE" "" SSID menu_var "$(gen_menu < <(iwlist "$INTERFACE" scanning | awk -F ':' '/ESSID:/ {print $2;}' | sed 's/\"//g'))"
             read_param "$M_NET_WIFI_SSID_PASS $SSID.\n" "$M_PASS" "" SSID_PASS secret
             #shellcheck disable=SC2153
             interface_con_wlan "$INTERFACE" "$SSID" "$SSID_PASS"
         ;;
         eth*|eno*|rename*)
-            gen_menu < <(echo -e "dhcp\nmanual")
-            read_param "" "$M_NET_ETH_METHOD" "dhcp" IP_METHOD menu_var "${tmp_gen_menu[@]}"
+            read_param "" "$M_NET_ETH_METHOD" "dhcp" IP_METHOD menu_var "$(gen_menu < <(echo -e "dhcp\nmanual"))"
             #shellcheck disable=SC2153
             case $IP_METHOD in
                 dhcp)
@@ -175,8 +172,7 @@ while ! check_online; do
 done
 msg_print note "$M_HOST_ONLINE"
 
-gen_menu < <(echo -e "install\nconsole")
-read_param "" "$M_WORK_MODE" "install" WORK_MODE menu_var "${tmp_gen_menu[@]}"
+read_param "" "$M_WORK_MODE" "install" WORK_MODE menu_var "$(gen_menu < <(echo -e "install\nconsole"))"
 if [[ $WORK_MODE == "install" ]]; then
     #Partition work. Here we format and mount needed partion(s).
     if [[ -d /sys/firmware/efi/efivars ]]; then
@@ -190,44 +186,38 @@ if [[ $WORK_MODE == "install" ]]; then
         print_param note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
         if [[ $PART_DO == "1" ]]; then
             msg_print warning "$M_PART_WARN"
-            gen_menu < <(disk_list_get -d)
-            read_param "" "$M_PART_D" '0' PART_ROOT menu_var "${tmp_gen_menu[@]}"
-            gen_menu < <(echo -e "auto\nmanual")
-            read_param "" "$M_PART_MODE" "auto" PART_MODE menu_var "${tmp_gen_menu[@]}"
+            read_param "" "$M_PART_D" '0' PART_ROOT menu_var "$(gen_menu < <(disk_list_get -d))"
+            read_param "" "$M_PART_MODE" "auto" PART_MODE menu_var "$(gen_menu < <(echo -e "auto\nmanual"))"
             if [[ $PART_MODE == "auto" ]]; then
                 #shellcheck disable=SC2091
                 partition_auto "$BOOTLOADER_TYPE_DEFAULT" "$PART_ROOT"
                 PART_DO="0"
             else
                 cfdisk -z "/dev/$PART_ROOT"
+                mdev -s &>/dev/null # Add symbol devices.
             fi
-            mdev -s &>/dev/null # Add symbol devices.
         fi
         if [[ $PART_MODE != "auto" ]]; then
-            gen_menu < <(disk_list_get)
-            read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var "${tmp_gen_menu[@]}"
+            read_param "$M_PART_I_M\n" "$M_PART_P" "" PART_ROOT menu_var "$(gen_menu < <(disk_list_get))"
             if [[ $BOOTLOADER_TYPE_DEFAULT == "uefi" ]]; then
-                gen_menu < <(disk_list_get)
-                read_param "" "$M_BOOTLOADER_PATH" "$(disk_root_get "/dev/$PART_ROOT" | sed '2q;d')" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                read_param "" "$M_BOOTLOADER_PATH" "$(disk_root_get "/dev/$PART_ROOT" | sed '2q;d')" PART_BOOT menu_var "$(gen_menu < <(disk_list_get))"
                 [[ $(findmnt -Recvruno FSTYPE "$PART_BOOT") != "vfat" ]] && print_param warning "Partition $PART_BOOT will be formatted to vfat filesystem." 
             else
-                gen_menu < <(disk_list_get)
-                read_param "" "$M_BOOTLOADER_PATH" "$(disk_root_get "/dev/$PART_ROOT")" PART_BOOT menu_var "${tmp_gen_menu[@]}"
+                read_param "" "$M_BOOTLOADER_PATH" "$(disk_root_get "/dev/$PART_ROOT")" PART_BOOT menu_var "$(gen_menu < <(disk_list_get))"
             fi
             PART_DO="0"
         fi
     done
-    msg_print note "$M_CHANGE_C"
-    gen_menu < <(echo -e "dialog\ncli")
-    read_param "" "$M_ECHO_MODE" "dialog" ECHO_MODE menu_var "${tmp_gen_menu[@]}"
+    format_and_mount $BOOTLOADER_TYPE_DEFAULT "/dev/$PART_ROOT" "/dev/$PART_BOOT"
+    read_param "" "$M_ECHO_MODE" "dialog" ECHO_MODE menu_var "$(gen_menu < <(echo -e "dialog\ncli"))"
     cd ./linux_install
-    LIVE_MODE=1 ./profile_gen.sh
-    format_and_mount "/dev/$PART_ROOT" "/dev/$PART_BOOT"
+    while [[ ! -f /tmp/last_gen.sh ]]; do
+        LIVE_MODE=1 ./profile_gen.sh
+    done
     ./install_sys.sh /tmp/last_gen.sh
     [[ $BOOTLOADER_TYPE_DEFAULT == "uefi" ]] && umount /mnt/mnt/boot
     umount -l /mnt/mnt
-    gen_menu < <(echo -e "$M_END_OPTION_REBOOT\n$M_END_OPTION_POWEROFF\n$M_END_OPTION_CONSOLE")
-    read_param "" "" "0" end_action menu "${tmp_gen_menu[@]}"
+    read_param "$M_CHANGE_C" "" "0" end_action menu "$(gen_menu < <(echo -e "$M_END_OPTION_REBOOT\n$M_END_OPTION_POWEROFF\n$M_END_OPTION_CONSOLE"))"
     #shellcheck disable=SC2154
     do_end_action "$end_action"
 else

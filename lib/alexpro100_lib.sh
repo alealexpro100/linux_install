@@ -401,7 +401,7 @@ function genfstab_light() {
   while read -r src target fstype opts fsroot; do
     (( pseudofs_types["$fstype"] )) && continue
     dump=0 pass=0
-    target=${target#$root}
+    target=${target#"$root"}
     if [[ $fsroot != "/" && $fstype != "btrfs" ]]; then
       src=$(findmnt -funcevo TARGET "$src")$fsroot #bind mount
       [[ ! $src -ef "$target" ]] && echo -ne "\n# $src\n$src\t/${target#/}\tnone\t$opts,bind\t$dump $pass\n"

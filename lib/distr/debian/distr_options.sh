@@ -43,7 +43,7 @@ done
 unset repos
 
 if [[ $kernel == "1" ]]; then
-  read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 0 || echo 1)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
+  read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 1 || echo 0)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
   [[ -n ${debian_repos[backports]} ]] && read_param "" "$M_DEB_BACKPORTS_KERNEL" "" backports_kernel no_or_yes
 fi
 

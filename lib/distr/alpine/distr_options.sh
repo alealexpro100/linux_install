@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $kernel == "1" ]]; then
-  read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 0 || echo 1)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
+  read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 1 || echo 0)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
 fi
 
 if [[ $add_soft == "1" ]]; then
