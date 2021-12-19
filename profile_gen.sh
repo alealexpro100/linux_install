@@ -82,7 +82,7 @@ until [[ $var_final == "0" ]]; do
   done
   #Print menu.
   gen_menu < <(echo -e "$vars_list")
-  DO_NOT_ADD_VAR=1 read_param "$M_LIST_TEXT" "$M_LIST_DIALOG" "0" var_final menu "${tmp_gen_menu[@]}"
+  NO_VAR=1 NO_HISTORY=1 read_param "$M_LIST_TEXT" "$M_LIST_DIALOG" "0" var_final menu "${tmp_gen_menu[@]}"
   #Decide what we have to do: change param and show menu again or end selection.
   if [[ $var_final != "0" ]]; then
     var="${var_num[$((${var_final#0}-1))]}"

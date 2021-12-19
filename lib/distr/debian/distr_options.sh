@@ -33,7 +33,7 @@ until [[ $repos == "0" ]]; do
     vars_list+="\n$repo_name | ${debian_repos[$repo_name]}"
   done
   gen_menu < <(echo -e "$vars_list")
-  DO_NOT_ADD_VAR=1 read_param "$M_DEB_REPO_TEXT\n" "$M_LIST_DIALOG" "0" repos menu "${tmp_gen_menu[@]}"
+  NO_VAR=1 NO_HISTORY=1 read_param "$M_DEB_REPO_TEXT\n" "$M_LIST_DIALOG" "0" repos menu "${tmp_gen_menu[@]}"
   if [[ $repos != "0" ]]; then
     curr_num=$((${repos#0}-1))
     repo_name="${debian_repos_order[curr_num]}"
