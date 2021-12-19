@@ -50,10 +50,10 @@ Supported Linux distros for installation:
 * That's all. You have installed system. Good luck!
 
 ## Building
-* Clone this repo.
-* Change location of ALPINE_FILES in `./bin/make_images/build.sh`.
-* Run it from root.
-* Images will be located at `../linux_install_builds`.
+* Clone this repo: `git clone https://github.com/alealexpro100/linux_install`.
+* Change location of ALPINE_FILES in `./bin/make_images/build.sh`. Some variables can be changed without changing file.
+* Run it from **root**: `sudo ./bin/make_images/build.sh`.
+* Images will be located at directory `./linux_install_builds`.
 
 ## Supported variables
 * `AUTO_PROFILE` - Kernel option for live installer. URL of profile for auto mode.

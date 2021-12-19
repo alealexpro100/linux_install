@@ -1,3 +1,10 @@
+# Version 0.5.8:
+* Interface fixes: added "back" button, clean up.
+* Added support for astra installation.
+* Added support for ssh server on every supported distribution.
+* Reworked live installer: added function for auto profiles, added auto partition.
+* Minor fixes: fixed alpine installation, made build simplier.
+
 # Version 0.5.7:
 * Minor fixes (mostly interface).
 * Added choose of type of kernel of Alpine.
