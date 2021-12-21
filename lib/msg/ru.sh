@@ -2,7 +2,7 @@
 LANG_SYSTEM="ru_RU.UTF-8"
 
 #Messages for russian language.
-M_PROJECT_NAME="Скрипт установки Linux."
+M_PROJECT_NAME="Скрипт установки Linux"
 M_YES="Да"
 M_NO="Нет"
 M_EXIT_BUTTON="Выход"

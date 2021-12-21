@@ -21,7 +21,7 @@ function print_param() {
 case $ECHO_MODE in
     whiptail|dialog) 
       local print_type=$1 text="$2"
-      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME")
+      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.")
       "${options[@]}" --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
     ;;
     auto|cli|*) 
@@ -72,7 +72,7 @@ function read_param() {
       esac
     ;;
     whiptail|dialog)
-      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME") return_code='' 
+      local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.") return_code='' 
       local params=() i_var
       eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
       while [[ $return_code != 0 ]]; do

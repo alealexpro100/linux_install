@@ -16,7 +16,8 @@ if [[ ! -f ./version_install ]]; then
   cd "${BASH_SOURCE[0]%/*}"
   [[ ! -f ./version_install ]] && echo "Failed to locate version_install." && exit 1
 fi
-echo "Starting ${BASH_SOURCE[0]} $(cat ./version_install)"
+LI_VERSION="$(cat ./version_install)"
+echo "Starting ${BASH_SOURCE[0]} $LI_VERSION"
 
 #Use libraries
 export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.sh}"

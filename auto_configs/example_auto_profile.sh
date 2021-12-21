@@ -9,6 +9,7 @@ fi
 partition_auto "$BOOTLOADER_TYPE_DEFAULT" sda
 format_and_mount "$BOOTLOADER_TYPE_DEFAULT" "/dev/$PART_ROOT" "/dev/$PART_BOOT"
 function profile_end_action() {
+    umount_partitions
     do_end_action 0
 }
 

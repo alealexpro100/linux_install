@@ -2,7 +2,7 @@
 LANG_SYSTEM="en_US.UTF-8"
 
 #Messages for english language.
-M_PROJECT_NAME="Linux install script."
+M_PROJECT_NAME="Linux install script"
 M_YES="Yes"
 M_NO="No"
 M_EXIT_BUTTON="Exit"

@@ -5,6 +5,14 @@ set -e
 # shellcheck disable=SC2034
 ALEXPRO100_LIB_DEBUG=0
 
+# shellcheck disable=SC2046
+IFS=' ' read -ra kernel_cmdline < /proc/cmdline
+for option in "${kernel_cmdline[@]}"; do
+    case $option in
+        AUTO_PROFILE=*|LANG_INSTALLER=*) export "${option?}";;
+    esac
+done
+
 #Import some libraries.
 # shellcheck disable=SC1091
 source ./linux_install/lib/alexpro100_lib.sh
@@ -14,14 +22,6 @@ source ./linux_install/lib/common/lib_var_op.sh
 source ./linux_install/lib/common/lib_ui.sh
 # shellcheck disable=SC1090
 source "./linux_install/lib/msg/${LANG_INSTALLER:-en}.sh"
-
-# shellcheck disable=SC2046
-IFS=' ' read -ra kernel_cmdline < /proc/cmdline
-for option in "${kernel_cmdline[@]}"; do
-    case $option in
-        AUTO_PROFILE=*) export "${option?}";;
-    esac
-done
 
 # These functions are designed for using not only in installer, but in automatic profiles.
 
@@ -118,7 +118,7 @@ function do_end_action() {
     case $1 in
         0) msg_print note "Rebooting..."; reboot;;
         1) msg_print note "Powering off..."; poweroff;;
-        2) msg_print note "$M_REBOOT_M"; bash;;
+        2) msg_print note "${M_REBOOT_M:-"Complete!"}"; bash;;
     esac
     exit 0
 }
@@ -145,9 +145,7 @@ if [[ -n "$AUTO_PROFILE" ]]; then
     else
         cp -a "$AUTO_PROFILE" /tmp/auto_profile.sh || return_err "Couldn't copy $AUTO_PROFILE."
     fi
-    if ./linux_install/install_sys.sh /tmp/auto_profile.sh; then
-        umount_partitions
-    else
+    if ! ./linux_install/install_sys.sh /tmp/auto_profile.sh; then
         return_err "$M_MODE_AUTO_FAIL"
     fi
     bash
