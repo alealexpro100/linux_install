@@ -74,15 +74,15 @@ Supported Linux distros for installation:
 * auto-configs/ - Directory with working configs for auto installation.
 * bin/ - Tools used by script.
 * bin/make_images - Build live installer.
-* custom/ - Custom script and files. See [here](custom/README_custom.md).
+* custom/ - Custom script and files. See [here](custom/README.md).
 * lib/ - Installation files. Easy-to-edit installation system.
-* tests/ - Testing scripts. See [here](tests/README_tests.md).
+* tests/ - Testing scripts. See [here](tests/README.md).
 * install_sys.sh - Install script. Requires profile for work.
 * profile_gen.sh - Profile generator.
 * private_parameters - File with private parameters.
 * public_parameters - File with public parameters. Do NOT remove it.
 * version_install - Version of this script.
 ## Sources
-* http://ftp.debian.org/debian/pool/main/d/debootstrap/ -- deboostrap.
-* https://www.archlinux.org/packages/extra/any/arch-install-scripts/download/ -- Parts from arch-chroot and genfstab.
-* https://alpinelinux.org/downloads/ -- Distribution used in builds.
+* [Debian deboostrap](http://ftp.debian.org/debian/pool/main/d/debootstrap/).
+* [Parts from arch-chroot and genfstab](https://www.archlinux.org/packages/extra/any/arch-install-scripts/download/).
+*  [Distribution used in builds](https://alpinelinux.org/downloads/).
