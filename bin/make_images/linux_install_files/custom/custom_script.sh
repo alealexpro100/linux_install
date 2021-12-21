@@ -28,6 +28,7 @@ echo -e "\n### Welcome to linux_install client! ###\nSSH is working on port 22.\
 sed -i "s|tty1.*|tty1::respawn:/bin/login -f root|" /etc/inittab
 sed -i "1s/ash/bash/" /etc/passwd
 mkdir -p /mnt/mnt
+ln -s /root/linux_install/auto_configs /auto_configs
 
 #Bash remove error for busybox.
 if [[ -f /root/.bashrc ]]; then

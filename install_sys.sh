@@ -60,6 +60,9 @@ if [[ -f "$CONFIG_FILE" ]]; then
   # shellcheck disable=SC1090
   source "./lib/distr/${distr:?}/distr_actions.sh"
   custom_actions
+  if is_function profile_end_action; then
+    profile_end_action || return_err "Couldn't do profile_end_action."
+  fi
   msg_print note "Installed $distr with $CONFIG_FILE to $dir."
 else
   return_err "No file $CONFIG_FILE!"
