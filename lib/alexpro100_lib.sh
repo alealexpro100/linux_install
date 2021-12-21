@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.3.8"
+ALEXPRO100_LIB_VERSION="0.3.9"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -135,6 +135,12 @@ function command_exists() {
 }
 export -f command_exists
 
+function is_function() {
+  AP100_DBG msg_print debug "Checking $1..."
+  declare -F "$1" > /dev/null;
+}
+export -f is_function
+
 function list_files() {
   # Don't be afraid of this. It is hack for busybox.
   local DIR_SEARCH="$1"; shift
@@ -189,6 +195,14 @@ function check_url() {
   fi
 }
 export -f check_url
+
+function is_url() {
+	case "$1" in
+  http://*|https://*|ftp://*) return 0;;
+	*) return 1;;
+	esac
+}
+export -f is_url
 
 function create_tmp_dir() {
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate tempory directory and assign it to variable."
