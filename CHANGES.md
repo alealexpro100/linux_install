@@ -1,3 +1,6 @@
+# Version 0.5.9:
+* Minor fixes.
+
 # Version 0.5.8:
 * Interface fixes: added "back" button, clean up.
 * Added support for astra installation.
