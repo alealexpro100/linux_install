@@ -221,7 +221,7 @@ if [[ $WORK_MODE == "install" ]]; then
         fi
     done
     format_and_mount $BOOTLOADER_TYPE_DEFAULT "/dev/$PART_ROOT" "/dev/$PART_BOOT"
-    read_param "" "$M_ECHO_MODE" "dialog" ECHO_MODE menu_var "$(gen_menu < <(echo -e "dialog\ncli"))"
+    read_param "$M_CHANGE_C\n" "$M_ECHO_MODE" "dialog" ECHO_MODE menu_var "$(gen_menu < <(echo -e "dialog\ncli"))"
     cd ./linux_install
     while [[ ! -f /tmp/last_gen.sh ]]; do
         LIVE_MODE=1 ./profile_gen.sh

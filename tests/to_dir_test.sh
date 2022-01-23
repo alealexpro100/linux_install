@@ -32,7 +32,3 @@ for distr_install in "$@"; do
   rm -rf "$tmp_distr_install"
   msg_print msg "Ended on $(date -u)."
 done
-
-# =)
-echo "Script succesfully ended its work. Have a nice day!"
-exit 0

@@ -103,5 +103,4 @@ done
 } > "$CONFIG_FILE"
 
 # =)
-echo "$M_NICE"
-exit 0
+[[ $LIVE_MODE == "1" ]] || msg_print note "$M_NICE"

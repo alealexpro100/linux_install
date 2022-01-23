@@ -68,14 +68,12 @@ case $arch in
   ;;
 esac
 
-echo "Installing archlinux $arch to $dir..."
-
-echo "Creating cache directory and tempory rootfs... "
+echo "(1) Preparing... "
 cache_dir="$dir/var/cache/pacman/pkg"
 mkdir -p "$cache_dir"
 create_tmp_dir arch_sys
 
-msg_print note "(1) Downloading pico complect of packages: "
+msg_print note "(2) Downloading pico complect of packages: "
 for package in ${BASIC_PACKAGES[*]}; do
   echo -ne "I: Retriving $package... "
   pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^$package-[[:digit:]].*\.xz$" -e "^$package-[[:digit:]].*\.gz$" -e "^$package-[[:digit:]].*\.zst$")
@@ -92,7 +90,7 @@ for package in ${BASIC_PACKAGES[*]}; do
   fi
 done
 
-msg_print note "(2) Unpacking packages to temporary rootfs: "
+msg_print note "(3) Unpacking packages to temporary rootfs: "
 for package in ${BASIC_PACKAGES[*]}; do
   echo "I: Unpacking $package... "
   pkg_file=$(echo "${pkg_list}" | grep -m1 -e "^$package-[[:digit:]].*\.xz$" -e "^$package-[[:digit:]].*\.gz$" -e "^$package-[[:digit:]].*\.zst$")
@@ -105,7 +103,7 @@ for package in ${BASIC_PACKAGES[*]}; do
   esac
 done
 
-msg_print note "(3) Preparing temporary rootfs..."
+msg_print note "(4) Preparing temporary rootfs..."
 mkdir -p "$arch_sys/etc/pacman.d"
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   sed -i 's|SigLevel    = Required DatabaseOptional|SigLevel = Never|;s|Include =|#Include =|;s|\[core\]|#\[core\]|;s|\[extra\]|#\[extra\]|;s|\[community\]|#\[community\]|' "$arch_sys/etc/pacman.conf"
@@ -117,7 +115,7 @@ echo -e "update-ca-trust\npacman-key --init\npacman-key --populate\ncp -a {,/mnt
 echo "pacman -r /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm -Sy base $install_packages" >> "$arch_sys/root/run.sh"
 chmod +x "$arch_sys/root/run.sh"
 
-msg_print note "(4) Installing to choosed directory..."
+msg_print note "(5) Installing to chosen directory..."
 mkdir -m 0755 "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d"
 mkdir -m 1777 "$dir/tmp"
 mkdir -m 0555 "$dir/sys" "$dir/proc"
@@ -132,7 +130,4 @@ mv "$dir"/etc/resolv.conf{.pacnew,} || :
 mv "$dir"/etc/hosts{.pacnew,} || :
 [[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$dir"/etc/pacman.d/mirrorlist.used
 
-echo "Archlinux was succesfully installed to $dir."
-
-# =)
-echo "Script succesfully ended its work. Have a nice day!"
+msg_print note "Archlinux was succesfully bootstrapped to $dir."

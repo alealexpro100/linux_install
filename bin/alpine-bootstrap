@@ -67,7 +67,4 @@ if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
   [[ $version == "edge" ]] && echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
 fi
 
-echo "Alpine was succesfully installed to $dir."
-
-# =)
-echo "Script succesfully ended its work. Have a nice day!"
+msg_print note "Alpinelinux was succesfully bootstrapped to $dir."

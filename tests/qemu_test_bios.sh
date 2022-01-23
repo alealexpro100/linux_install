@@ -38,7 +38,3 @@ for distr_install in "$@"; do
   qemu-system-x86_64 -hda "$tmp_distr_install/disk.img" -m 3G || msg_print error "Qemu returned error $?."
   rm -rf "$tmp_distr_install"
 done
-
-# =)
-echo "Script succesfully ended its work. Have a nice day!"
-exit 0
