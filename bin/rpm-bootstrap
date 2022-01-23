@@ -18,8 +18,7 @@ source ./lib/common/lib_connect.sh
 if [[ -z $3 ]]; then
   echo "RPM boostrap script."
   echo "Supports RPM_TYPE flag."
-  echo "Example 1: $0 x86_64 https://mirror.dotsrc.org/fedora/linux/releases/34/Everything/x86_64/os fedora 34 /mnt base-devel mc htop"
-  echo "Example 2: $0 x86_64 https://yum.oracle.com/repo/OracleLinux/OL8/baseos/latest/x86_64 oracle 8 /mnt base-devel mc htop"
+  echo "Example: $0 x86_64 https://mirror.dotsrc.org/fedora/linux/releases/34/Everything/x86_64/os fedora 34 /mnt base-devel mc htop"
   exit 1
 fi
 
@@ -45,13 +44,12 @@ pkg_list="$(get_file_s - "$mirror/$primary_repo" | arccat gz - | sed -n 's|  <lo
 # You can get this list by running $(dnf --repofrompath InstallMedia,'$mirror' --nogpgcheck --assumeno install dnf util-linux | sed '1,2d' | grep InstallMedia | awk '{print $1}' | sort | tr '\n' ' ' | uniq) on newly installed system.
 if [[ -z ${BASIC_PACKAGES[*]} ]]; then
   case $version in
-    oracle) 
-      BASIC_PACKAGES=(audit-libs basesystem bash brotli bzip2-libs ca-certificates chkconfig coreutils coreutils-common cracklib cracklib-dicts crypto-policies curl cyrus-sasl-lib dnf dnf-data elfutils-default-yama-scope elfutils-libelf elfutils-libs expat file-libs filesystem gawk gdbm gdbm-libs glib2 glibc glibc-all-langpacks glibc-common gmp gnupg2 gnutls gpgme grep gzip ima-evm-utils info json-c keyutils-libs krb5-libs libacl libarchive libassuan libattr libblkid libcap libcap-ng libcom_err libcomps libcurl libdb libdb-utils libdnf libfdisk libffi libgcc libgcrypt libgpg-error libidn2 libksba libmetalink libmodulemd libmount libnghttp2 libnsl2 libpsl libpwquality librepo libreport-filesystem libselinux libsemanage libsepol libsigsegv libsmartcols libsolv libssh libssh-config libstdc++ libtasn1 libtirpc libunistring libusbx libutempter libuuid libverto libxcrypt libxml2 libyaml libzstd lua-libs lz4-libs mpfr ncurses ncurses-base ncurses-libs nettle npth openldap openssl-libs oraclelinux-release p11-kit p11-kit-trust pam pcre pcre2 platform-python platform-python-setuptools popt publicsuffix-list-dafsa python3-dnf python3-gpg python3-hawkey python3-libcomps python3-libdnf python3-libs python3-pip-wheel python3-rpm python3-setuptools-wheel readline redhat-release rpm rpm-build-libs rpm-libs sed setup shadow-utils sqlite-libs systemd-libs tpm2-tss tzdata util-linux xz-libs zlib)
-      RPM_TYPE=${RPM_TYPE:-xz}
-    ;;
     fedora) 
       BASIC_PACKAGES=(acl alternatives audit-libs basesystem bash bzip2-libs ca-certificates coreutils coreutils-common cpio cracklib cracklib-dicts crypto-policies crypto-policies-scripts cryptsetup-libs curl cyrus-sasl-lib dbus dbus-broker dbus-common dbus-libs deltarpm device-mapper device-mapper-libs diffutils dnf dnf-data dracut elfutils-debuginfod-client elfutils-default-yama-scope elfutils-libelf elfutils-libs expat fedora-gpg-keys fedora-release fedora-release-common fedora-release-identity-basic fedora-repos file file-libs filesystem findutils fuse-libs gawk gawk-all-langpacks gdbm-libs gettext gettext-libs glib2 glibc glibc-common glibc-doc glibc-minimal-langpack gmp gnupg2 gnupg2-smime gnutls gpgme grep grub2-common grub2-tools grub2-tools-minimal grubby gzip ima-evm-utils iptables-libs json-c kbd kbd-misc keyutils-libs kmod kmod-libs kpartx krb5-libs libacl libarchive libargon2 libassuan libattr libblkid libbrotli libcap libcap-ng libcom_err libcomps libcurl libdb libdnf libeconf libevent libfdisk libffi libgcc libgcrypt libgomp libgpg-error libibverbs libidn2 libkcapi libkcapi-hmaccalc libksba libmetalink libmnl libmodulemd libmount libnetfilter_conntrack libnfnetlink libnghttp2 libnl3 libnsl2 libpcap libpsl libpwquality librepo libreport-filesystem libseccomp libsecret libselinux libsemanage libsepol libsigsegv libsmartcols libsolv libssh libssh-config libstdc++ libtasn1 libtextstyle libtirpc libunistring libusbx libutempter libuuid libverto libxcrypt libxcrypt-compat libxkbcommon libxml2 libyaml libzstd lua-libs lz4-libs memstrack mkpasswd mpfr ncurses ncurses-base ncurses-libs nettle npth openldap openssl-libs openssl-pkcs11 os-prober p11-kit p11-kit-trust pam pcre pcre2 pcre2-syntax pigz pinentry popt procps-ng protobuf-c publicsuffix-list-dafsa python3 python3-dnf python3-gpg python3-hawkey python3-libcomps python3-libdnf python3-libs python3-pip python3-rpm python3-setuptools python3-unbound python-pip-wheel python-setuptools-wheel python-unversioned-command qrencode-libs readline rpm rpm-build-libs rpm-libs rpm-plugin-systemd-inhibit rpm-sign-libs sed setup shadow-utils shared-mime-info sqlite-libs systemd systemd-libs systemd-networkd systemd-pam systemd-rpm-macros systemd-udev tpm2-tss trousers trousers-lib tzdata unbound-libs util-linux which whois-nls xkeyboard-config xz xz-libs zchunk-libs zlib)
       RPM_TYPE=${RPM_TYPE:-zst}
+    ;;
+    *)
+      return_err "Incorrect version $version!"
     ;;
   esac
 fi
@@ -106,7 +104,4 @@ chroot_setup "$rpm_sys/mnt"
 $arch_chroot_command "$rpm_sys" /bin/bash /root/run.sh
 rm -rf "$rpm_sys"
 
-echo "RPM $version was succesfully installed to $dir."
-
-# =)
-echo "Script succesfully ended its work. Have a nice day!"
+msg_print note "RPM distribution $version was succesfully bootstrapped to $dir."
