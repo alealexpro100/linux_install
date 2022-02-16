@@ -41,34 +41,44 @@ cache_dir="$dir/var/cache/pacman/pkg"
 CORE_NAME="${CORE_NAME:-core}"
 db_file="$dir/var/lib/pacman/sync/$CORE_NAME.db"
 
-echo "(1) Preparing rootfs... "
+echo "Preparing rootfs... "
 create_tmp_dir arch_sys
-mkdir "$dir" || :
-mkdir -m 0755 "$dir/var" "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d"
-mkdir -m 1777 "$dir/tmp"
-mkdir -m 0555 "$dir/sys" "$dir/proc"
-mkdir -p "$cache_dir" "$dir/var/lib/pacman/sync"
+mkdir "$dir" &>/dev/null || :
+mkdir -m 0755 "$dir/var" "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d" &>/dev/null || :
+mkdir -m 1777 "$dir/tmp" &>/dev/null || :
+mkdir -m 0555 "$dir/sys" "$dir/proc" &>/dev/null || :
+mkdir -p "$cache_dir" "$dir/var/lib/pacman/sync" &>/dev/null || :
 
+
+msg_print note "Downloading $CORE_NAME repo file..."
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   get_file_s "$db_file" "$mirror/$CORE_NAME.db"
   repo="$mirror" core_repo="$mirror"
 else
-  get_file_s "$db_file" "$mirror/$CORE_NAME/os/$arch/$CORE_NAME.db"
-  if [[ -f "$db_file" ]]; then
+  if check_url "$mirror/$CORE_NAME/os/$arch/$CORE_NAME.db" &>/dev/null; then
+    get_file_s "$db_file" "$mirror/$CORE_NAME/os/$arch/$CORE_NAME.db"
     core_repo="$mirror/$CORE_NAME/os/$arch"
     repo="$mirror/\$repo/os/\$arch"
   else
-    # If first is invalid (empty), try second variant of mirror structure...
-    rm -rf "$db_file"
-    get_file_s "$db_file" "$mirror/$arch/$CORE_NAME/$CORE_NAME.db"
-    core_repo="$mirror/$arch/$CORE_NAME"
-    repo="$mirror/\$arch/\$repo"
+    if check_url "$mirror/$arch/$CORE_NAME/$CORE_NAME.db" &>/dev/null; then
+      get_file_s "$db_file" "$mirror/$arch/$CORE_NAME/$CORE_NAME.db"
+      core_repo="$mirror/$arch/$CORE_NAME"
+      repo="$mirror/\$arch/\$repo"
+    else
+      if check_url "$mirror/$CORE_NAME/$arch/$CORE_NAME.db" &>/dev/null; then
+        get_file_s "$db_file" "$mirror/$CORE_NAME/$arch/$CORE_NAME.db"
+        core_repo="$mirror/$CORE_NAME/$arch"
+        repo="$mirror/\$repo/\$arch"
+      else
+        return_err "Incorrect mirror $mirror!"
+      fi
+    fi
   fi
 fi
 
 #Get dependenices and provides lists.
 declare -A pkgs=() provides=() depends=()
-pkg_name='' pkg_file='' provides_name='' read_next=''
+pkg_name='' pkg_file='' read_next=''
 while IFS=$'\n' read -r line; do
   if [[ $line =~ \%([A-Z0-9]+)\%$ ]]; then
     read_next=${BASH_REMATCH[1]}
@@ -77,30 +87,18 @@ while IFS=$'\n' read -r line; do
       continue
     else
       case $read_next in
-        FILENAME)
-          pkg_file="$line"
-        ;;
-        NAME)
-          pkg_name="$line"
-          provides[$pkg_name]="$pkg_name"
-          depends[$pkg_name]=''
-          pkgs[$pkg_name]="$pkg_file"
-        ;;
-        DEPENDS)
-          [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && depends[$pkg_name]="${depends[$pkg_name]}\n${BASH_REMATCH[1]}"
-        ;;
-        PROVIDES)
-          [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && provides_name="${BASH_REMATCH[1]}"
-          provides[$provides_name]="$pkg_name"
-        ;;
+        FILENAME) pkg_file="$line";;
+        NAME) pkg_name="$line"; provides[$pkg_name]="$pkg_name" depends[$pkg_name]='' pkgs[$pkg_name]="$pkg_file";;
+        DEPENDS) [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && depends[$pkg_name]="${depends[$pkg_name]}\n${BASH_REMATCH[1]}";;
+        PROVIDES) [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && provides[${BASH_REMATCH[1]}]="$pkg_name";;
       esac
     fi
   fi
 done < <(< "$db_file" gunzip)
-unset pkg_name pkg_file provides_name read_next
+unset pkg_name pkg_file read_next
 
 # Replace depends with provides contents.
-pkg='' dep=''
+pkg=''
 for pkg in ${!depends[*]}; do
   dep_list=''
   while IFS=$'\n' read -r line; do
@@ -109,7 +107,7 @@ for pkg in ${!depends[*]}; do
   done < <(echo -ne "${depends[$pkg]}" | sort -u)
   depends[$pkg]="$(echo -ne "$dep_list")"
 done
-unset pkg dep
+unset pkg
 
 #Resolve dependenices.
 msg_print note "Resolving dependencies..."
@@ -147,12 +145,14 @@ done <<<"$(echo -ne "$deps_list" | sort -u)"
 
 unset pkgs
 
-msg_print note "(2) Downloading CORE packages: "
+msg_print note "Downloading CORE packages: "
 for pkg_file in "${to_download[@]}"; do
   echo -ne "I: Retriving $pkg_file... "
   # Download packages.
   if [[ ! -f "${cache_dir}/${pkg_file}" ]]; then
-    if get_file_s "${cache_dir}/${pkg_file}" "${core_repo}/${pkg_file}"; then
+    [[ -f "${cache_dir}/${pkg_file}.tmp" ]] && rm -rf "${cache_dir}/${pkg_file}.tmp"
+    if get_file_s "${cache_dir}/${pkg_file}.tmp" "${core_repo}/${pkg_file}"; then
+      mv "${cache_dir}/${pkg_file}.tmp" "${cache_dir}/${pkg_file}"
       echo ""
     else
       rm -rf "${cache_dir:?}/${pkg_file}"
@@ -163,7 +163,7 @@ for pkg_file in "${to_download[@]}"; do
   fi
 done
 
-msg_print note "(3) Unpacking $CORE_NAME packages to temporary rootfs: "
+msg_print note "Unpacking $CORE_NAME packages to temporary rootfs: "
 for pkg_file in "${to_download[@]}"; do
   echo "I: Unpacking $pkg_file... "
   case "${pkg_file}" in
@@ -175,25 +175,25 @@ for pkg_file in "${to_download[@]}"; do
   esac
 done
 
-msg_print note "(4) Preparing temporary rootfs..."
+msg_print note "Preparing temporary rootfs..."
 mkdir -p "$arch_sys/etc/pacman.d"
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   sed -i 's|SigLevel    = Required DatabaseOptional|SigLevel = Never|;/Include =/d;/\[[a-z]\+\]/d;' "$arch_sys/etc/pacman.conf"
   echo -e "[$CORE_NAME]\nServer = $mirror" >> "$arch_sys/etc/pacman.conf"
 else
-  echo "Server = $repo" >> "$arch_sys/etc/pacman.d/mirrorlist"
+  echo "Server = $repo" > "$arch_sys/etc/pacman.d/mirrorlist"
 fi
 echo -e "update-ca-trust\npacman-key --init\npacman-key --populate\ncp -a {,/mnt}/etc/pacman.d/gnupg" >> "$arch_sys/root/run.sh"
 echo "pacman -r /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm -Sy base $install_packages" >> "$arch_sys/root/run.sh"
 chmod +x "$arch_sys/root/run.sh"
 
-msg_print note "(5) Installing system..."
+msg_print note "Installing system..."
 #Avoid "fixing" directory in order to mount filesystems normally (requried by pacman).
 ROOTFS_DIR_NO_FIX=1
 chroot_add_mount dir "$dir" "$arch_sys/mnt" --rbind --make-rslave
 chroot_setup "$arch_sys/mnt"
 $arch_chroot_command "$arch_sys" /bin/bash /root/run.sh
-msg_print note "(6) Cleaning up..."
+msg_print note "Cleaning up..."
 rm -rf "$arch_sys"
 # Failsafe (file may does not exist)
 mv "$dir"/etc/resolv.conf{.pacnew,} || :
