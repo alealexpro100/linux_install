@@ -37,17 +37,19 @@ else
   fi
 fi
 
+create_tmp_dir arch_sys
 cache_dir="$dir/var/cache/pacman/pkg"
 CORE_NAME="${CORE_NAME:-core}"
 db_file="$dir/var/lib/pacman/sync/$CORE_NAME.db"
+core_repo_dir="$arch_sys/var/lib/pacman/local"
 
 echo "Preparing rootfs... "
-create_tmp_dir arch_sys
 mkdir "$dir" &>/dev/null || :
 mkdir -m 0755 "$dir/var" "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d" &>/dev/null || :
 mkdir -m 1777 "$dir/tmp" &>/dev/null || :
 mkdir -m 0555 "$dir/sys" "$dir/proc" &>/dev/null || :
 mkdir -p "$cache_dir" "$dir/var/lib/pacman/sync" &>/dev/null || :
+mkdir -p "$core_repo_dir" &>/dev/null || :
 
 
 msg_print note "Downloading $CORE_NAME repo file..."
@@ -76,6 +78,8 @@ else
   fi
 fi
 
+arccat gz "$db_file" | tar xf - -C "$core_repo_dir" &>/dev/null
+
 #Get dependenices and provides lists.
 declare -A pkgs=() provides=() depends=()
 pkg_name='' pkg_file='' read_next=''
@@ -94,7 +98,7 @@ while IFS=$'\n' read -r line; do
       esac
     fi
   fi
-done < <(< "$db_file" gunzip)
+done < <(find "$core_repo_dir" -type f -exec cat {} \;)
 unset pkg_name pkg_file read_next
 
 # Replace depends with provides contents.
