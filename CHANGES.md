@@ -1,3 +1,7 @@
+# Version 0.6.0:
+* Minor fixes.
+* Dynamic dependency resoltuion for archlinux installation.
+
 # Version 0.5.9:
 * Minor fixes.
 
