@@ -1,0 +1,1 @@
+../archlinux/distr_actions.sh
