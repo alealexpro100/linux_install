@@ -34,6 +34,15 @@ function locale_setup_voidlinux() {
   xbps-reconfigure -f glibc-locales
 }
 
+function setup_sudo() {
+  if [[ ! -d /etc/sudoers.d ]]; then
+    msg_print warning "Looks like sudo is not installed. Will create directory '/etc/sudoers.d'."
+    mkdir -m 0755 /etc/sudoers.d
+  fi
+  echo "%sudo ALL=(ALL) ALL" > /etc/sudoers.d/10-installer
+  chmod 0440 /etc/sudoers.d/10-installer
+}
+
 function grub_config() {
   if [[ $bootloader_type = uefi ]]; then
     [[ -f /usr/lib/grub/i386-efi/modinfo.sh ]] && grub-install --target=i386-efi --efi-directory=/boot --removable $grub_param
