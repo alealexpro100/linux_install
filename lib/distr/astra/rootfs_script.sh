@@ -53,12 +53,23 @@ if [[ $add_soft == "1" ]]; then
     to_install="$to_install ssh"
     to_enable="$to_enable ssh"
   fi
+  if [[ $graphics == "1" ]]; then
+    to_install="$to_install xorg-all-main astra-extra fly-all-main firefox"
+    [[ $bootloader_name == grub2 ]] && to_install="$to_install desktop-base"
+  fi
 fi
 
+[[ $kernel == "1" ]] && $apt_install initramfs-tools
+[[ $graphics == "1" ]] && $apt_install samba
 [[ -n $to_install ]] && $apt_install $to_install
 for service in $to_enable; do
   systemctl enable "$service"
 done
+
+msg_print note "Setting up admin user..."
+groupadd -g 1001 astra-admin
+[[ $graphics == "1" ]] && usermod -aG astra-console "$user_name"
+usermod -aG astra-admin "$user_name"
 
 msg_print note "Packages are installed."
 
