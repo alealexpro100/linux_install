@@ -1,7 +1,6 @@
 #!/bin/bash
 
-declare -A var_history_list=()
-declare -A var_history_num=()
+var_history_list=()
 var_history_index=$((0))
 
 #Weight and height parametres of terminal for UI.
@@ -20,7 +19,7 @@ function gen_menu() {
 function print_param() {
 case $ECHO_MODE in
     whiptail|dialog) 
-      local print_type=$1 text="$2"
+      local print_type=$1 text="$2" dialog="$3"
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.")
       "${options[@]}" --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
     ;;
@@ -32,49 +31,40 @@ case $ECHO_MODE in
 }
 
 function history_read_param() {
-  [[ $1 != 0 ]] || return_err "Operation cancelled by user!"
-  local params=() var
+  [[ $1 != "0" ]] || return_err "Operation cancelled by user!"
+  local params_h=() i_var
   #Based on https://superuser.com/questions/1066455.
-  eval 'for var in '"${var_history_list[${var_history_num[$1]}]}"'; do params=("${params[@]}" "${var}"); done'
+  eval 'for i_var in '"${var_history_list[$1]}"'; do params_h=("${params_h[@]}" "${i_var}"); done'
   _=$((var_history_index--))
-  read_param "${params[@]}"
-  _=$((var_history_index++))
+  read_param "${params_h[@]}"
 }
 
 #Enter parametres.
 function read_param() {
-  local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp=''
-  if [[ ( -z ${var_history_list[$var]} || -z ${var_history_num[$var_history_index]} ) && $NO_HISTORY != "1" ]]; then
-    _=$((var_history_index++))
-    var_history_num[$var_history_index]=$var;
-    var_history_list[$var]=${*@Q}
-  fi
+  local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp='' i_var params=() params_h=()
+  [[ $NO_HISTORY == "1" ]] || eval 'for i_var in '"${*@Q}"'; do params_h=("${params_h[@]}" "${i_var}"); done'
   shift 5
+  eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
   case $ECHO_MODE in
     auto)
       case $option in
-        print) echo -ne "$text$dialog";;
         yes_or_no) tmp=1;;
         no_or_yes) tmp=0;;
-        text) tmp=$default_var;;
-        text_empty) tmp=$default_var;;
-        secret) tmp=$default_var;;
-        secret_empty) tmp=$default_var;;
-        menu) tmp=$default_var;;
-        menu_var)
-          eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
-          for ((i=1; i<=${#params[@]}; i+=2)); do
-              [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
+        text|text_empty|secret|secret_empty|menu) tmp=$default_var;;
+        menu_var) 
+          for ((i=0; i<=${#params[@]}; i+=2)); do
+              if [[ "${params[$((i))]}" == "$default_var" ]]; then
+                tmp=${params[$((i+1))]}
+                break
+              fi
           done
-          tmp="${params[$((default_var*2+1))]}"
+          [[ -z $tmp ]] && tmp="$default_var"
         ;;
         *) return_err "Option $option is incorrect!";;
       esac
     ;;
     whiptail|dialog)
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.") return_code='' 
-      local params=() i_var
-      eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
       while [[ $return_code != 0 ]]; do
         case $option in
           yes_or_no)
@@ -115,12 +105,10 @@ function read_param() {
             return_err "Option $option is incorrect!"
           ;;
         esac
-        [[ $return_code != 1 ]] || history_read_param "$((var_history_index-1))"
+        [[ $return_code != 1 ]] || history_read_param "$((var_history_index))"
       done
     ;;
     cli|'')
-      local params=() i_var
-      eval 'for i_var in '"$*"'; do params=("${params[@]}" "${i_var}"); done'
       case $option in
         yes_or_no)
           while [[ $tmp == '' ]]; do
@@ -203,6 +191,11 @@ function read_param() {
       return_err "Incorrect paramater ECHO_MODE $ECHO_MODE! Mistake?"
     ;;
     esac
+  if [[ $NO_HISTORY != "1" ]]; then
+    _=$((var_history_index++))
+    params_h[2]="$tmp"
+    var_history_list[$var_history_index]=${params_h[*]@Q}
+  fi
   if [[ -n "$tmp" ]]; then
     add_var "declare -gx" "$var" "$tmp"
   else
