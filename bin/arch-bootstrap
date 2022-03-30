@@ -101,18 +101,6 @@ while IFS=$'\n' read -r line; do
 done < <(find "$core_repo_dir" -type f -exec cat {} \;)
 unset pkg_name pkg_file read_next
 
-# Replace depends with provides contents.
-pkg=''
-for pkg in ${!depends[*]}; do
-  dep_list=''
-  while IFS=$'\n' read -r line; do
-    [[ -z $line || $line == "\n" ]] && continue
-    dep_list+="${provides[$line]}\n"
-  done < <(echo -ne "${depends[$pkg]}" | sort -u)
-  depends[$pkg]="$(echo -ne "$dep_list")"
-done
-unset pkg dep_list
-
 #Resolve dependenices.
 msg_print note "Resolving dependencies..."
 declare -A to_download=()
@@ -120,12 +108,13 @@ function resolve_pkg() {
   local line pkg dep
   for dep in "$@"; do
     pkg="${provides[$dep]}"
-    if [[ -z ${to_download[$pkg]} ]]; then
+    # Some packages are located in other repository. Thus we ignore them.
+    if [[ -n $pkg && -z ${to_download[$pkg]} ]]; then
       to_download[$pkg]="${pkgs[$pkg]}"
       while IFS=$'\n' read -r line; do
         [[ -z $line || $line == "\n" ]] && continue
         resolve_pkg "$line"
-      done <<<"${depends[$pkg]}"
+      done < <(echo -e "${depends[$pkg]}")
     fi
   done
 }
