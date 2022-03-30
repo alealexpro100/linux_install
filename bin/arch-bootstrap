@@ -81,7 +81,7 @@ fi
 arccat gz "$db_file" | tar xf - -C "$core_repo_dir" &>/dev/null
 
 #Get dependenices and provides lists.
-declare -A pkgs=() provides=() depends=()
+declare -A pkgs=() provides=() depends=() md5_sums=()
 pkg_name='' pkg_file='' read_next=''
 while IFS=$'\n' read -r line; do
   if [[ $line =~ \%([A-Z0-9]+)\%$ ]]; then
@@ -95,6 +95,7 @@ while IFS=$'\n' read -r line; do
         NAME) pkg_name="$line"; provides[$pkg_name]="$pkg_name" depends[$pkg_name]='' pkgs[$pkg_name]="$pkg_file";;
         DEPENDS) [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && depends[$pkg_name]="${depends[$pkg_name]}\n${BASH_REMATCH[1]}";;
         PROVIDES) [[ $line =~ ([a-zA-Z][a-zA-Z0-9\._\.\+\-]+)[\>\=\<]? ]] && provides[${BASH_REMATCH[1]}]="$pkg_name";;
+        MD5SUM) md5_sums[$pkg_name]="$line";;
       esac
     fi
   fi
@@ -111,6 +112,7 @@ function resolve_pkg() {
     # Some packages are located in other repository. Thus we ignore them.
     if [[ -n $pkg && -z ${to_download[$pkg]} ]]; then
       to_download[$pkg]="${pkgs[$pkg]}"
+      #We use 'echo' to have correct newline symbols.
       while IFS=$'\n' read -r line; do
         [[ -z $line || $line == "\n" ]] && continue
         resolve_pkg "$line"
@@ -121,27 +123,34 @@ function resolve_pkg() {
 
 resolve_pkg pacman ca-certificates
 
-unset provides depends
-
-unset pkgs
+unset pkgs provides depends
 
 msg_print note "Downloading CORE packages: "
-for pkg_file in "${to_download[@]}"; do
-  echo -ne "I: Retriving $pkg_file... "
+for pkg in "${!to_download[@]}"; do
+  echo -ne "I: Retriving $pkg... "
   # Download packages.
-  if [[ ! -f "${cache_dir}/${pkg_file}" ]]; then
-    [[ -f "${cache_dir}/${pkg_file}.tmp" ]] && rm -rf "${cache_dir}/${pkg_file}.tmp"
-    if get_file_s "${cache_dir}/${pkg_file}.tmp" "${core_repo}/${pkg_file}"; then
-      mv "${cache_dir}/${pkg_file}.tmp" "${cache_dir}/${pkg_file}"
-      echo ""
+  if [[ -f "${cache_dir}/${to_download[$pkg]}" ]]; then
+    if echo "${md5_sums[$pkg]} ${cache_dir}/${to_download[$pkg]}" | md5sum -c - &>> /dev/null; then
+      echo -n "exists!"
     else
-      rm -rf "${cache_dir:?}/${pkg_file}"
-      return_err "Failed to download ${pkg_file}!"
+      rm -rf "${cache_dir:?}/${to_download[$pkg]}"
+      get_file_s "${cache_dir}/${to_download[$pkg]}" "${core_repo}/${to_download[$pkg]}"
     fi
   else
-    echo -e "exists!"
+    get_file_s "${cache_dir}/${to_download[$pkg]}" "${core_repo}/${to_download[$pkg]}"
+  fi
+  echo ""
+done
+
+msg_print note "Checking CORE packages integrity... "
+for pkg in "${!to_download[@]}"; do
+  if echo "${md5_sums[$pkg]} ${cache_dir}/${to_download[$pkg]}" | md5sum -c - &>> /dev/null; then
+    echo -ne "."
+  else
+    return_err "Wrong hash for package $pkg!"
   fi
 done
+echo -e "Good."
 
 msg_print note "Unpacking $CORE_NAME packages to temporary rootfs: "
 for pkg_file in "${to_download[@]}"; do
