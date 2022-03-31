@@ -22,6 +22,8 @@ Supported Linux distros for installation:
 * Debian
 * Voidlinux
 
+See presentaion of this project [here](https://mirror.alexpro100.cyou/scripts_files/other/presentations/Linux_install.pdf) (Russian).
+
 ## Dependencies
 
 ### Requried
