@@ -1,5 +1,6 @@
 # Version 0.6.1:
 * More perfomance and stability for archlinux bootstrap.
+* Less size of installer image.
 * Updated documentation.
 
 # Version 0.6.0:
