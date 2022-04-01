@@ -14,7 +14,7 @@ ARCH="${ARCH:-x86_64}"
 ALPINE_VERSION="3.14"
 ALPINE_FILES="${ALPINE_FILES:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/}"
 BUILDS_DIR="${BUILDS_DIR:-../linux_install_builds}"
-ALPINE_ISO="$ALPINE_FILES/alpine-standard-$ALPINE_VERSION.0-$ARCH.iso"
+ALPINE_ISO="$ALPINE_FILES/alpine-standard-$ALPINE_VERSION.5-$ARCH.iso"
 ALPINE_NETBOOT="$ALPINE_FILES/netboot"
 ALPINE_NEBOOT_VERSION="lts"
 LI_ISO="$BUILDS_DIR/linux_install-$ARCH-$LI_VERSION-$LI_TYPE.iso"
@@ -54,6 +54,9 @@ cp "./auto_configs/linux_install_$ARCH.sh" "$make_build/config.sh"
 CUSTOM_DIR="$make_build/custom" default_dir="$make_build/rootfs" "./install_sys.sh" "$make_build/config.sh"
 [[ "$LI_DEBUG" == "1" ]] && sed -ie '6s/=0/=1/' "$make_build/rootfs/root/installer.sh"
 cp -Rf . "$make_build/rootfs/root/linux_install"
+rm -rf "$make_build/rootfs/root/linux_install/.git" \
+    "$make_build/rootfs/root/linux_install/_config.yaml" \
+    "$make_build/rootfs/root/linux_install/bin/make_images"
 if [[ "$LI_TYPE" == "public" ]]; then
     rm -rf "$make_build/rootfs/root/linux_install/private_parameters" \
     "$make_build/rootfs/root/linux_install/custom/custom_script.sh" \
