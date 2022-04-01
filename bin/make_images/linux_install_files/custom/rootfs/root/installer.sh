@@ -134,6 +134,7 @@ msg_print note "$M_WELCOME $(cat ./linux_install/version_install)"
 
 if [[ -n "$AUTO_PROFILE" ]]; then
     msg_print note "$M_MODE_AUTO"
+    declare error_msg
     if is_url "$AUTO_PROFILE"; then
         if ! check_online; then
             msg_print warning "$M_HOST_OFFLINE"
@@ -141,21 +142,18 @@ if [[ -n "$AUTO_PROFILE" ]]; then
                 interface_setup_dhcp "$interface"
             done
         fi
-        wget -O /tmp/auto_profile.sh "$AUTO_PROFILE" || return_err "Couldn't download $AUTO_PROFILE."
+        wget -O /tmp/auto_profile.sh "$AUTO_PROFILE" || error_msg="Couldn't download $AUTO_PROFILE."
     else
-        cp -a "$AUTO_PROFILE" /tmp/auto_profile.sh || return_err "Couldn't copy $AUTO_PROFILE."
+        cp -a "$AUTO_PROFILE" /tmp/auto_profile.sh || error_msg="Couldn't copy $AUTO_PROFILE."
     fi
-    if ! ./linux_install/install_sys.sh /tmp/auto_profile.sh; then
-        return_err "$M_MODE_AUTO_FAIL"
+    if [[ -z $error_msg ]]; then
+        ./linux_install/install_sys.sh /tmp/auto_profile.sh || error_msg="$M_MODE_AUTO_FAIL"
     fi
-    bash
+    [[ -z $error_msg ]] || msg_print error "$error_msg"
+    unset error_msg
 fi
 
 msg_print note "$M_MODE_MANUAL"
-
-read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "$(gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g"))"
-# shellcheck disable=SC1090
-source "./linux_install/lib/msg/$LANG_INSTALLER.sh"
 
 while ! check_online; do
     msg_print warning "$M_HOST_OFFLINE"
@@ -189,6 +187,19 @@ while ! check_online; do
     esac
 done
 msg_print note "$M_HOST_ONLINE"
+
+while IFS= read -r interface; do
+    if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
+        if [[ $(ip addr) =~ inet\ ([0-9\.]+)\/[0-9]+\ [a-z0-9\.\ ]+\ $interface ]]; then
+            msg_print note "Your local IP adress is ${BASH_REMATCH[1]}."
+        fi
+        break
+    fi
+done < <(list_files /sys/class/net/ -type l | sed '/lo/d')
+
+read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "$(gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g"))"
+# shellcheck disable=SC1090
+source "./linux_install/lib/msg/$LANG_INSTALLER.sh"
 
 read_param "" "$M_WORK_MODE" "install" WORK_MODE menu_var "$(gen_menu < <(echo -e "install\nconsole"))"
 if [[ $WORK_MODE == "install" ]]; then
