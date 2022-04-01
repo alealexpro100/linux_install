@@ -191,7 +191,7 @@ msg_print note "$M_HOST_ONLINE"
 while IFS= read -r interface; do
     if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
         if [[ $(ip addr) =~ inet\ ([0-9\.]+)\/[0-9]+\ [a-z0-9\.\ ]+\ $interface ]]; then
-            msg_print note "Your local IP adress is ${BASH_REMATCH[1]}."
+            msg_print note "$M_LOCAL_IP: ${BASH_REMATCH[1]}."
         fi
         break
     fi
