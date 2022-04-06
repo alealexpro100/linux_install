@@ -25,7 +25,7 @@ echo "127.0.0.1	localhost
 ff02::1		ip6-allnodes
 ff02::2		ip6-allrouters
 
-$HOSTS_ADD" >> "$dir/etc/hosts"
+$HOSTS_ADD" > "$dir/etc/hosts"
 
 if [[ $fstab == "1" ]]; then
   msg_print note "Generationg fstab..."

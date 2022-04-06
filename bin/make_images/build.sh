@@ -55,7 +55,7 @@ CUSTOM_DIR="$make_build/custom" default_dir="$make_build/rootfs" "./install_sys.
 [[ "$LI_DEBUG" == "1" ]] && sed -ie '6s/=0/=1/' "$make_build/rootfs/root/installer.sh"
 cp -Rf . "$make_build/rootfs/root/linux_install"
 rm -rf "$make_build/rootfs/root/linux_install/.git" \
-    "$make_build/rootfs/root/linux_install/_config.yaml" \
+    "$make_build/rootfs/root/linux_install/_config.yml" \
     "$make_build/rootfs/root/linux_install/bin/make_images"
 if [[ "$LI_TYPE" == "public" ]]; then
     rm -rf "$make_build/rootfs/root/linux_install/private_parameters" \

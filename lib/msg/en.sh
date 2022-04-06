@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# shellcheck disable=SC2034
+
 #Default variables for translation.
 LANG_SYSTEM="en_US.UTF-8"
 

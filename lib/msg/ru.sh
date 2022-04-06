@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# shellcheck disable=SC2034
+
 #Default variables for translation.
 LANG_SYSTEM="ru_RU.UTF-8"
 
