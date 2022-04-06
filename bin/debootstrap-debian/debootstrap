@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-VERSION='@VERSION@'
+VERSION='1.0.126+nmu1'
 
 unset TMP TEMP TMPDIR || true
 
@@ -46,6 +46,7 @@ CERTIFICATE=""
 CHECKCERTIF=""
 PRIVATEKEY=""
 CACHE_DIR=""
+INRELEASE_PATH=""
 
 DEF_MIRROR="http://deb.debian.org/debian"
 DEF_HTTPS_MIRROR="https://deb.debian.org/debian"
@@ -129,6 +130,10 @@ usage()
       --private-key=file     read the private key from file
       --certificate=file     use the client certificate stored in file (PEM)
       --no-check-certificate do not check certificate against certificate authorities
+
+      --inrelease-path       determine the path to the InRelease file of the main
+                             archive relative to the normal position of an InRelease
+                             file
 EOF
 }
 
@@ -423,6 +428,17 @@ if [ $# != 0 ] ; then
 		CHECKCERTIF="--no-check-certificate"
 		shift
 		;;
+		--inrelease-path|--inrelease-path=?*)
+		if [ "$1" = "--inrelease-path" ] && [ -n "$2" ]; then
+			INRELEASE_PATH="$2"
+			shift 2
+		elif [ "$1" != "${1#--inrelease-path=}" ]; then
+			INRELEASE_PATH=${1#--inrelease-path=}
+			shift 1
+		else
+			error 1 NEEDARG "option requires an argument %s" "$1"
+		fi
+		;;
 	    -*)
 		error 1 BADARG "unrecognized or invalid option %s" "$1"
 		;;
@@ -437,7 +453,10 @@ fi
 # do auto proxy discovery
 AUTOPROXY=""
 if ! doing_variant fakechroot && command -v apt-config >/dev/null; then
-    eval "$(apt-config shell AUTOPROXY Acquire::http::ProxyAutoDetect)"
+    eval "$(apt-config shell AUTOPROXY Acquire::http::Proxy-Auto-Detect)"
+    if [ -z "$AUTOPROXY" ]; then
+        eval "$(apt-config shell AUTOPROXY Acquire::http::ProxyAutoDetect)"
+    fi
     if [ -z "$http_proxy" ] && [ -x "$AUTOPROXY" ]; then
         http_proxy="$($AUTOPROXY)"
         if [ -n "$http_proxy" ]; then

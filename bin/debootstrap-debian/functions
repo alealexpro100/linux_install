@@ -7,6 +7,7 @@ smallyes() {
 
 in_path () {
 	local OLD_IFS="$IFS"
+	local dir
 	IFS=":"
 	for dir in $PATH; do
 		if [ -x "$dir/$1" ]; then
@@ -22,7 +23,7 @@ in_path () {
 
 error () {
 	# <error code> <name> <string> <args>
-	local err name fmt
+	local err name fmt x
 	err="$1"
 	name="$2"
 	fmt="$3"
@@ -39,7 +40,7 @@ error () {
 
 warning () {
 	# <name> <string> <args>
-	local name fmt
+	local name fmt x
 	name="$1"
 	fmt="$2"
 	shift; shift
@@ -54,7 +55,7 @@ warning () {
 
 info () {
 	# <name> <string> <args>
-	local name fmt
+	local name fmt x
 	name="$1"
 	fmt="$2"
 	shift; shift
@@ -101,7 +102,7 @@ wgetprogress () {
 
 progress () {
 	# <now> <end> <name> <string> <args>
-	local now end name fmt
+	local now end name fmt x
 	now="$1"
 	end="$2"
 	name="$3"
@@ -236,7 +237,7 @@ detect_container () {
 		CONTAINER="lxc-libvirt"
 	elif grep -qs ^systemd-nspawn$ /run/systemd/container || grep -qs systemd-nspawn /proc/1/environ || [ "$container" = "systemd-nspawn" ]; then
 		CONTAINER="systemd-nspawn"
-	elif grep -qs '[[:space:]]/docker/.*/sys/fs/cgroup' /proc/1/mountinfo; then
+	elif grep -qs '[[:space:]]/docker/.*/sys/fs/cgroup' /proc/1/mountinfo || [ -e "/.dockerenv" ]; then
 		CONTAINER="docker"
 	else
 		CONTAINER=""
@@ -253,6 +254,7 @@ doing_variant () {
 
 SUPPORTED_VARIANTS="-"
 variants () {
+	local v
 	SUPPORTED_VARIANTS="$*"
 	for v in $*; do
 		if doing_variant "$v"; then return 0; fi
@@ -334,6 +336,7 @@ get () {
 	local dest_base
 	local nocache=""
 	local byhash=""
+	local a
 	from_base="$1"; shift
 	dest_base="$1"; shift
 	if [ "$1" = "nocache" ]; then
@@ -531,6 +534,7 @@ get_release_checksum () {
 }
 
 extract_release_components () {
+	local c
 	local reldest="$1"; shift
 	TMPCOMPONENTS="$(sed -n 's/Components: *//p' "$reldest")"
 	for c in $TMPCOMPONENTS ; do
@@ -551,7 +555,7 @@ extract_release_components () {
 
 CODENAME=""
 validate_suite () {
-	local reldest suite
+	local reldest suite s
 	reldest="$1"
 
 	CODENAME=$(sed -n "s/^Codename: *//p" "$reldest")
@@ -623,7 +627,13 @@ download_release_sig () {
 
 	progress 0 100 DOWNREL "Downloading Release file"
 	progress_next 100
-	if get "$m1/dists/$suite/InRelease" "$inreldest" nocache; then
+	if [ -n "$INRELEASE_PATH" ]; then
+		get "$m1/dists/$suite/$INRELEASE_PATH" "$inreldest" nocache ||
+			error 1 NOGETREL "Failed getting release file %s" \
+			"$m1/dists/$suite/$INRELEASE_PATH"
+		split_inline_sig "$inreldest" "$reldest" "$relsigdest"
+		progress 100 100 DOWNREL "Downloading Release file"
+	elif get "$m1/dists/$suite/InRelease" "$inreldest" nocache; then
 		split_inline_sig "$inreldest" "$reldest" "$relsigdest"
 		progress 100 100 DOWNREL "Downloading Release file"
 	else
@@ -653,7 +663,7 @@ download_release_sig () {
 download_release_indices () {
 	local m1 inreldest reldest relsigdest totalpkgs \
 	      subpath xzi bz2i gzi normi i ext \
-	      donepkgs pkgdest acquirebyhash
+	      donepkgs pkgdest acquirebyhash s c m
 	m1="${MIRRORS%% *}"
 	for s in $SUITE $EXTRA_SUITES; do
 		inreldest="$TARGET/$($DLDEST rel "$s" "$m1" "dists/$s/InRelease")"
@@ -792,7 +802,8 @@ download_debs () {
 }
 
 download_release () {
-	local m1 numdebs countdebs totaldebs leftoverdebs path pkgdest dloaddebs
+	local m1 numdebs countdebs totaldebs leftoverdebs path pkgdest \
+	      dloaddebs s c m
 	m1="${MIRRORS%% *}"
 
 	numdebs="$#"
@@ -859,7 +870,7 @@ download_release () {
 }
 
 download_main_indices () {
-	local m1 comp path pkgdest 
+	local m1 comp path pkgdest m s c
 	m1="${MIRRORS%% *}"
 	comp="${USE_COMPONENTS}"
 	progress 0 100 DOWNMAINPKGS "Downloading Packages file"
@@ -887,7 +898,7 @@ download_main_indices () {
 }
 
 download_main () {
-	local m1 path pkgdest debdest
+	local m1 path pkgdest debdest p s c m
 	m1="${MIRRORS%% *}"
 
 	:>"$TARGET/debootstrap/debpaths"
@@ -911,6 +922,8 @@ download_main () {
 						echo >>"$TARGET/debootstrap/debpaths" "$p $debdest"
 						details="done"
 						break
+					else
+						details=""
 					fi
 				done
 				if [ "$details" != "" ]; then
@@ -930,7 +943,7 @@ download_main () {
 ###################################################### deb choosing support
 
 get_debs () {
-	local field m1 c path pkgdest
+	local field m1 s c path pkgdest
 	field="$1"
 	shift
 	for m1 in $MIRRORS; do
@@ -974,6 +987,7 @@ extract_ar_deb_field () {
 	case "$tarball" in
 		control.tar.gz) cat_cmd=zcat ;;
 		control.tar.xz) cat_cmd=xzcat ;;
+		control.tar.zst) cat_cmd=zstdcat ;;
 		control.tar)    cat_cmd=cat ;;
 		*) error 1 UNKNOWNCONTROLCOMP "Unknown compression type for %s in %s" "$tarball" "$pkg" ;;
 	esac
@@ -996,6 +1010,7 @@ extract_ar_deb_data () {
 		data.tar.gz)  cat_cmd=zcat ;;
 		data.tar.bz2) cat_cmd=bzcat ;;
 		data.tar.xz)  cat_cmd=xzcat ;;
+		data.tar.zst) cat_cmd=zstdcat ;;
 		data.tar)     cat_cmd=cat ;;
 		*) error 1 UNKNOWNDATACOMP "Unknown compression type for %s in %s" "$tarball" "$pkg" ;;
 	esac
@@ -1009,6 +1024,7 @@ extract_ar_deb_data () {
 
 valid_extractor () {
 	local extractor="$1"
+	local E
 
 	for E in $EXTRACTORS_SUPPORTED; do
 		if [ "$extractor" = "$E" ]; then
@@ -1045,7 +1061,7 @@ choose_extractor () {
 
 extract () { (
 	cd "$TARGET" || exit 1
-	local p cat_cmd
+	local p cat_cmd pkg
 	p=0
 	for pkg in $(debfor "$@"); do
 		p=$(($p + 1))
@@ -1106,6 +1122,7 @@ conditional_cp () {
 
 
 setup_apt_sources () {
+	local m s c
 	mkdir -p "$TARGET/etc/apt"
 	for m in "$@"; do
 		for s in $SUITE $EXTRA_SUITES; do
@@ -1130,7 +1147,7 @@ setup_etc () {
 UMOUNT_DIRS=
 
 umount_exit_function () {
-	local realdir
+	local realdir dir
 	for dir in $UMOUNT_DIRS; do
 		realdir="$(in_target_nofail readlink -f "$dir")"
 		[ "$realdir" ] || continue
@@ -1176,7 +1193,12 @@ setup_proc () {
 		umount_on_exit /dev/shm
 		umount_on_exit /proc
 		umount_on_exit /proc/bus/usb
-		umount "$TARGET/proc" 2>/dev/null || true
+		if [ -L "$TARGET/proc" ];then
+			rm -f $TARGET/proc
+			mkdir $TARGET/proc
+		else
+			umount "$TARGET/proc" 2>/dev/null || true
+		fi
 
 		# some container environment are used at second-stage, it already treats /proc and so on
 		if [ -z "$(ls -A "$TARGET/proc")" ]; then
@@ -1296,6 +1318,7 @@ setup_devices_fakechroot () {
 }
 
 setup_devices_bind () {
+	local device
 	mount -t tmpfs nodev "$TARGET/dev"
 	umount_on_exit /dev
 	for device in null zero full random urandom tty pts shm ptmx; do
@@ -1343,7 +1366,7 @@ setup_merged_usr() {
 
 	if [ "$MERGED_USR" = "no" ]; then return 0; fi
 
-	local link_dir
+	local link_dir=""
 	case $ARCH in
 	    hurd-*)	return 0 ;;
 	    amd64)	link_dir="lib32 lib64 libx32" ;;
@@ -1530,6 +1553,7 @@ resolve_deps () {
 	local PKGS="$*"
 	local ALLPKGS="$PKGS";
 	local ALLPKGS2="";
+	local s c
 	while [ "$PKGS" != "" ]; do
 		local NEWPKGS=""
 		for s in $SUITE $EXTRA_SUITES; do
