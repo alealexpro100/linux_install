@@ -33,6 +33,8 @@ to_install="$postinstall" to_enable=''
 if [[ $networkmanager != "1" ]]; then
   msg_print note "Using default network config."
   echo -e "auto eth0\n\tallow-hotplug eth0\n\tiface eth0 inet dhcp\n\tiface eth0 inet6 auto" >> /etc/network/interfaces.d/net
+  msg_print warning "Masking udev's network renaming rule."
+  ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
   to_enable="networking"
 fi
 
@@ -44,13 +46,13 @@ if [[ $kernel == "1" ]]; then
   esac
   if [[ $backports_kernel == "1" ]]; then
     case "$kernel_type" in
-      vanilla) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" "linux-headers-$kernel_arch" firmware-linux dkms;;
+      vanilla) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" firmware-linux;;
       virtual) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch";;
       *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
     esac
   else
     case "$kernel_type" in
-      vanilla) to_install="$to_install linux-image-$kernel_arch linux-headers-$kernel_arch firmware-linux dkms";;
+      vanilla) to_install="$to_install linux-image-$kernel_arch firmware-linux";;
       virtual) to_install="$to_install linux-image-$kernel_arch";;
       *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
     esac

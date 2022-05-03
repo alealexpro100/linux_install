@@ -11,20 +11,15 @@ LI_TYPE="${LI_TYPE:-private}" LI_DEBUG="${LI_DEBUG:-0}"
 LI_VERSION="$(cat ./version_install)"
 [[ "$LI_DEBUG" == "1" ]] && LI_VERSION="${LI_VERSION}-dbg"
 ARCH="${ARCH:-x86_64}"
-ALPINE_VERSION="3.14"
-ALPINE_FILES="${ALPINE_FILES:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/}"
+ALPINE_VERSION="3.14" ALPINE_REVISION="6" ALPINE_NETBOOT_VERSION="lts"
 BUILDS_DIR="${BUILDS_DIR:-../linux_install_builds}"
-ALPINE_ISO="$ALPINE_FILES/alpine-standard-$ALPINE_VERSION.5-$ARCH.iso"
-ALPINE_NETBOOT="$ALPINE_FILES/netboot"
-ALPINE_NEBOOT_VERSION="lts"
+ALPINE_ISO="${ALPINE_ISO:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/alpine-standard-$ALPINE_VERSION.$ALPINE_REVISION-$ARCH.iso}"
+ALPINE_NETBOOT="${ALPINE_NETBOOT:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/netboot-$ALPINE_VERSION.$ALPINE_REVISION}"
 LI_ISO="$BUILDS_DIR/linux_install-$ARCH-$LI_VERSION-$LI_TYPE.iso"
 LI_NETBOOT="$BUILDS_DIR/linux_install-$ARCH-$LI_VERSION-$LI_TYPE.pxe"
 LI_BUILD_ISO="${LI_BUILD_ISO:-1}" LI_BUILD_NETBOOT="${LI_BUILD_NETBOOT:-1}"
-if [[ -d "$ALPINE_FILES" ]]; then
-    msg_print note "Using local directory: $ALPINE_FILES"
-else
-    return_err "Needed directory not found!"
-fi
+[[ "$LI_BUILD_ISO" == "1" && -f "$ALPINE_ISO" ]] || return_err "Needed file for ISO not found!"
+[[ "$LI_BUILD_NETBOOT" == "1" && -d "$ALPINE_NETBOOT" ]] || return_err "Needed directory for NETBOOT not found!"
 
 function make_bootable_iso() (
     local iso_location
@@ -52,7 +47,7 @@ cp -r "$build_files/custom/." "$make_build/custom"
 mount -t tmpfs tmpfs "$make_build/rootfs"
 cp "./auto_configs/linux_install_$ARCH.sh" "$make_build/config.sh"
 CUSTOM_DIR="$make_build/custom" default_dir="$make_build/rootfs" "./install_sys.sh" "$make_build/config.sh"
-[[ "$LI_DEBUG" == "1" ]] && sed -ie '6s/=0/=1/' "$make_build/rootfs/root/installer.sh"
+[[ "$LI_DEBUG" == "1" ]] && sed -i '6s/=0/=1/' "$make_build/rootfs/root/installer.sh"
 cp -Rf . "$make_build/rootfs/root/linux_install"
 rm -rf "$make_build/rootfs/root/linux_install/.git" \
     "$make_build/rootfs/root/linux_install/_config.yml" \
@@ -83,9 +78,8 @@ fi
 if [[ $LI_BUILD_NETBOOT == "1" ]]; then
     msg_print note "Building NETBOOT..."
     mkdir "$make_build/final_netboot" "$make_build/initfs"
-    cp -a "$ALPINE_NETBOOT"/{vmlinuz,initramfs,modloop}-"$ALPINE_NEBOOT_VERSION" "$make_build/final_netboot"
-    prepare_initfs "$(find "$make_build/final_netboot" -name "*initramfs-$ALPINE_NEBOOT_VERSION" | head -n 1)" "$make_build/final_netboot/initfs.img"
-    rm -rf "$(find "$make_build/final_netboot" -name "*initramfs-$ALPINE_NEBOOT_VERSION" | head -n 1)"
+    cp -a "$ALPINE_NETBOOT"/{vmlinuz,modloop}-"$ALPINE_NETBOOT_VERSION" "$make_build/final_netboot"
+    prepare_initfs "$ALPINE_NETBOOT/initramfs-$ALPINE_NETBOOT_VERSION" "$make_build/final_netboot/initfs.img"
     cp "$make_build/rootfs.img" "$make_build/final_netboot/rootfs.img"
     cp -a "$make_build/final_netboot/." "$LI_NETBOOT/"
 fi

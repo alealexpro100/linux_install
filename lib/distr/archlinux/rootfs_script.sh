@@ -23,12 +23,18 @@ to_install="$postinstall" to_enable=''
 #Network setup.
 if [[ $networkmanager != "1" ]]; then
   msg_print note "Using default network config."
-  echo -e "[Match]\nName=enp1s0\n\n[Network]\nDHCP=yes" >> /etc/systemd/network/20-wired.network
+  echo -e "[Match]\nName=eth0\n\n[Network]\nDHCP=yes" >> /etc/systemd/network/20-wired.network
+  msg_print warning "Masking udev's network renaming rule."
+  ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
   to_enable="$to_enable systemd-networkd"
 fi
 
 if [[ $kernel == "1" ]]; then
-  to_install="$to_install linux linux-firmware linux-headers"
+  case "$kernel_type" in
+    vanilla) to_install="$to_install linux linux-firmware linux-headers";;
+    virtual) to_install="$to_install linux";;
+    *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
+  esac
 fi
 
 if [[ $add_soft == "1" ]]; then

@@ -144,7 +144,7 @@ done
 
 msg_print note "Checking CORE packages integrity... "
 for pkg in "${!to_download[@]}"; do
-  if echo "${md5_sums[$pkg]} ${cache_dir}/${to_download[$pkg]}" | md5sum -c - &>> /dev/null; then
+  if echo "${md5_sums[$pkg]}  ${cache_dir}/${to_download[$pkg]}" | md5sum -c &>> /dev/null; then
     echo -ne "."
   else
     return_err "Wrong hash for package $pkg!"
