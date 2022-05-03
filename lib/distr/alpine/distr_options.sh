@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ $LIVE_MODE == "0" ]]; then
+  read_param "" "$M_ARCH_ENTER" "$alpine_arch" arch menu_var "$(gen_menu < <(echo -e "x86_64\nx86\naarch64\nmips64\nppc64le\ns390x"))"
+else
+  add_var "declare -gx" arch "$alpine_arch"
+fi
+
 if [[ $kernel == "1" ]]; then
   read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 1 || echo 0)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
 fi
@@ -11,8 +17,6 @@ if [[ $add_soft == "1" ]]; then
   read_param "" "$M_BLUETOOTH" '' bluetooth yes_or_no
   read_param "" "$M_PRINTERS" '' printers yes_or_no
 fi
-
-read_param "$M_ARCH_AVAL x86_64,i686,aarch64,armv7h,etc.\n" "$M_ARCH_ENTER" "$alpine_arch" arch menu_var "$(gen_menu < <(echo -e "x86_64\nx86\naarch64\nmips64\nppc64le\ns390x"))"
 
 read_param "" "$M_MIRROR" "$mirror_alpine" mirror_alpine text_empty
 

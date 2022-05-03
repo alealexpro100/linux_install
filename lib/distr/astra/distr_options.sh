@@ -1,6 +1,6 @@
 #!/bin/bash
 
-read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var "$(gen_menu < <(echo -e "amd64"))"
+add_var "declare -gx" arch "$debian_arch"
 
 read_param "" "$M_DISTR_VER" "$version_astra" version_debian text
 

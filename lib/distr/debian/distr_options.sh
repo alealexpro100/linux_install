@@ -1,6 +1,10 @@
 #!/bin/bash
 
-read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var "$(gen_menu < <(echo -e "amd64\ni386\narm64\narmel\narmhf\nmips\nmips64el\nmipsel\nppc64el\ns390x"))"
+if [[ $LIVE_MODE == "0" ]]; then
+  read_param "" "$M_ARCH_ENTER" "$debian_arch" arch menu_var "$(gen_menu < <(echo -e "amd64\ni386\narm64\narmel\narmhf\nmips\nmips64el\nmipsel\nppc64el\ns390x"))"
+else
+  add_var "declare -gx" arch "$debian_arch"
+fi
 
 read_param "" "$M_DISTR_VER" "$version_debian" version_debian text
 
