@@ -1,5 +1,3 @@
-[![ALEXPRO100](https://raw.githubusercontent.com/alealexpro100/various_files/main/logo/Logo_blue.svg)](#readme)
-
 linux_install
 =============
 
@@ -8,6 +6,10 @@ linux_install
 [![Commits](https://img.shields.io/github/commit-activity/m/alealexpro100/linux_install?label=commits&style=for-the-badge)](https://github.com/alealexpro100/linux_install/commits)
 [![Last Commit](https://img.shields.io/github/last-commit/alealexpro100/linux_install/master?label=&style=for-the-badge)](https://github.com/alealexpro100/linux_install/commits)
 [![Downloads](https://img.shields.io/github/downloads/alealexpro100/linux_install/total?style=for-the-badge&color=blue)](https://github.com/alealexpro100/linux_install/releases/latest)
+
+## Preview
+
+![preview](docs/preview.png)
 
 ## About
 
@@ -22,7 +24,15 @@ Supported Linux distros for installation:
 * Debian
 * Voidlinux
 
-See presentaion of this project [here](https://mirror.alexpro100.cyou/scripts_files/other/presentations/Linux_install.pdf) (Russian).
+If you want to install linux to your cloud with custom configuration, consider using [cloud-init](https://cloud-init.io/).
+If yow want complex enterprise solution for installing on many PCs, consider using [FAI](https://fai-project.org/).
+
+Differences:
+
+* From [FAI](https://fai-project.org/): Uses only chosen mirror, has less size of live images (1GB vs 170MB).
+* Distro-specific installer: Support variety of distribution, requires connection to mirror with packages.
+
+See presentation of this project [here](https://mirror.alexpro100.cyou/scripts_files/other/presentations/Linux_install.pdf) (Russian).
 
 ## Dependencies
 
@@ -62,13 +72,11 @@ See presentaion of this project [here](https://mirror.alexpro100.cyou/scripts_fi
 * Follow install instructions.
 * That's all. You have installed system. Good luck!
 
-#### Auto mode
+#### Auto mode (PXE)
 
-* Prepare auto live profile. (Build profile described [here](auto_configs/README.md))
+* Prepare auto live profile. (Build profile described [here](docs/auto_configs.md))
 * You will need add kernel option `AUTO_PROFILE=URL_TO_YOUR_PROFILE`. Examples: `AUTO_PROFILE=/auto_configs/example_auto_profile.sh` OR `AUTO_PROFILE=https://example.com/auto_profile.sh`.
-* (ISO) (!!ONLY UEFI!!) Add while booting from ISO in bootloader by pressing 'e' described kernel option.
-* (PXE) Boot it.
-* That's all. You have installed system. Good luck!
+* Installation will start and complete itself.
 
 ### Standalone
 

@@ -1,3 +1,11 @@
+# Version 0.6.3:
+* Move docs to its directory.
+* Try to reduce size of new builds.
+
+# Version 0.6.2:
+* Fix issues on busybox systems.
+* More automation.
+
 # Version 0.6.1:
 * More perfomance and stability for archlinux bootstrap.
 * Less size of installer image.
