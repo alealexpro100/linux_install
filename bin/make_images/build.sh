@@ -11,7 +11,8 @@ LI_TYPE="${LI_TYPE:-private}" LI_DEBUG="${LI_DEBUG:-0}"
 LI_VERSION="$(cat ./version_install)"
 [[ "$LI_DEBUG" == "1" ]] && LI_VERSION="${LI_VERSION}-dbg"
 ARCH="${ARCH:-x86_64}"
-ALPINE_VERSION="3.14" ALPINE_REVISION="6" ALPINE_NETBOOT_VERSION="lts"
+export ALPINE_VERSION="3.16"
+ALPINE_REVISION="0" ALPINE_NETBOOT_VERSION="lts"
 BUILDS_DIR="${BUILDS_DIR:-../linux_install_builds}"
 ALPINE_ISO="${ALPINE_ISO:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/alpine-standard-$ALPINE_VERSION.$ALPINE_REVISION-$ARCH.iso}"
 ALPINE_NETBOOT="${ALPINE_NETBOOT:-../../alpine/v$ALPINE_VERSION/releases/$ARCH/netboot-$ALPINE_VERSION.$ALPINE_REVISION}"
@@ -33,7 +34,7 @@ function prepare_initfs() {
     arccat gz "$1" | unpack_cpio "${make_build:?}/initfs"
     mv "$make_build/initfs/init" "$make_build/initfs/init_orig"
     cp "$build_files/init" "$make_build/initfs/init"
-    pack_initfs_cpio "$make_build/initfs" | zstd -T12 -10 > "$2"
+    pack_initfs_cpio "$make_build/initfs" | zstd -T"$(nproc)" -19 > "$2"
 }
 
 [[ "$LI_DEBUG" == "1" ]] && msg_print warning "Building DEBUG version..."
@@ -57,7 +58,7 @@ if [[ "$LI_TYPE" == "public" ]]; then
     "$make_build/rootfs/root/linux_install/custom/custom_script.sh" \
     "$make_build/rootfs/root/linux_install/custom/rootfs"
 fi
-squashfs_rootfs_pack "$make_build/rootfs" "$make_build/rootfs.img" xz
+squashfs_rootfs_pack "$make_build/rootfs" "$make_build/rootfs.img" -comp zstd -Xcompression-level 22
 umount "$make_build/rootfs"
 
 if [[ $LI_BUILD_ISO == "1" ]]; then
