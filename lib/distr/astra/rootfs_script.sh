@@ -56,6 +56,7 @@ if [[ $add_soft == "1" ]]; then
   if [[ $graphics == "1" ]]; then
     to_install="$to_install xorg-all-main astra-extra fly-all-main firefox"
     [[ $bootloader_name == grub2 ]] && to_install="$to_install desktop-base"
+    [[ $networkmanager == "1" ]] && to_install="$to_install network-manager-gnome"
   fi
 fi
 

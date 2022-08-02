@@ -35,7 +35,7 @@ if [[ $networkmanager != "1" ]]; then
   echo -e "auto eth0\n\tallow-hotplug eth0\n\tiface eth0 inet dhcp\n\tiface eth0 inet6 auto" >> /etc/network/interfaces.d/net
   msg_print warning "Masking udev's network renaming rule."
   ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
-  to_enable="networking"
+  to_enable="$to_enable networking"
 fi
 
 if [[ $kernel == "1" ]]; then
