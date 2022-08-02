@@ -25,14 +25,14 @@ Supported Linux distros for installation:
 * Voidlinux
 
 If you want to install linux to your cloud with custom configuration, consider using [cloud-init](https://cloud-init.io/).
-If yow want complex enterprise solution for installing on many PCs, consider using [FAI](https://fai-project.org/).
+If you want complex enterprise solution for installing on many PCs, consider using [FAI](https://fai-project.org/).
 
 Differences:
 
 * From [FAI](https://fai-project.org/): Uses only chosen mirror, has less size of live images (1GB vs 170MB).
 * Distro-specific installer: Support variety of distribution, requires connection to mirror with packages.
 
-See presentation of this project [here](https://mirror.alexpro100.cyou/scripts_files/other/presentations/Linux_install.pdf) (Russian).
+See presentation of this project [here](https://mirror.alexpro100.ru/scripts_files/other/presentations/Linux_install.pdf) (Russian).
 
 ## Dependencies
 

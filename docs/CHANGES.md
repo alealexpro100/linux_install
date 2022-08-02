@@ -1,8 +1,6 @@
-# Version 0.6.3:
+# Version 0.6.2:
 * Move docs to its directory.
 * Try to reduce size of new builds.
-
-# Version 0.6.2:
 * Fix issues on busybox systems.
 * More automation.
 
