@@ -121,7 +121,7 @@ function resolve_pkg() {
   done
 }
 
-resolve_pkg pacman ca-certificates
+resolve_pkg archlinux-keyring filesystem pacman ca-certificates
 
 unset pkgs provides depends
 
