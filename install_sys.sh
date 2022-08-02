@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ###############################################################
 ### Initial install script
 ### Copyright (C) 2021 ALEXPRO100 (alealexpro100)

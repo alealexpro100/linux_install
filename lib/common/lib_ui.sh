@@ -4,7 +4,8 @@ var_history_list=()
 var_history_index=$((0))
 
 #Weight and height parametres of terminal for UI.
-ui_terminal_weight=$(($(stty size | awk '{print $1;}')*5/10)) ui_terminal_height=$(($(stty size | awk '{print $2;}')*5/10))
+read -a ui_terminal < <(stty size)
+ui_terminal[0]=$((ui_terminal[0]/2)) ui_terminal[1]=$((ui_terminal[1]/2))
 
 #Generate menu.
 function gen_menu() {
@@ -21,7 +22,7 @@ case $ECHO_MODE in
     whiptail|dialog) 
       local print_type=$1 text="$2" dialog="$3"
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.")
-      "${options[@]}" --msgbox "$text$dialog" $ui_terminal_weight $ui_terminal_height
+      "${options[@]}" --msgbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]}
     ;;
     auto|cli|*) 
         local print_type=$1 text="$2"
@@ -68,37 +69,37 @@ function read_param() {
       while [[ $return_code != 0 ]]; do
         case $option in
           yes_or_no)
-            tmp=$("${options[@]}" --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --menu "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} 2 "1" "$M_YES" "0" "$M_NO" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           no_or_yes)
-            tmp=$("${options[@]}" --menu "$text$dialog" $ui_terminal_weight $ui_terminal_height 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --menu "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} 2 "0" "$M_NO" "1" "$M_YES" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           text)
             while [[ $tmp == '' ]]; do
-              tmp=$("${options[@]}" --inputbox "$text$dialog:" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+              tmp=$("${options[@]}" --inputbox "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
               [[ $return_code != 0 ]] && break
             done
           ;;
           text_empty)
-            tmp=$("${options[@]}" --inputbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --inputbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           secret)
             while [[ $tmp == '' ]]; do
-              tmp=$("${options[@]}" --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+              tmp=$("${options[@]}" --passwordbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
               [[ $return_code != 0 ]] && break
             done
           ;;
           secret_empty)
-            tmp=$("${options[@]}" --passwordbox "$text$dialog" $ui_terminal_weight $ui_terminal_height "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --passwordbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu)
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $(({ui_terminal[1]}/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu_var)
             for ((i=1; i<=${#params[@]}; i+=2)); do
               [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
             done
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" $ui_terminal_weight $ui_terminal_height $((ui_terminal_height/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $(({ui_terminal[1]}/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
             tmp="${params[$((tmp*2+1))]}"
           ;;
           *)
