@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.0"
+ALEXPRO100_LIB_VERSION="0.4.1"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -68,6 +68,7 @@ AP100_DBG echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION (Debug mode)"
 #--UI--
 
 function msg_print() {
+  # Prints decorated text. Has support for multi-line messages.
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} {alert|err|warn|note|msg|debug|prgs} [TEXT]]\nPrint decorated text."
   local line TYPE=$1; shift
   while IFS= read -r line; do
@@ -97,6 +98,8 @@ function echo_help() {
 export -f echo_help
 
 function show_progress() {
+  # Function to show progress while executing a command.
+  # To use it you have to run the command in background and pass its id to this function.
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
     sp) local sp="|\-/" s=1;;
@@ -115,6 +118,7 @@ export -f show_progress
 #--SYS--
 
 function try_exec() {
+  # Fail-safe function to execute a command.
   [[ -z $2 || ( $1 != "0" && $1 != "1" ) ]] && echo_help "Usage: ${FUNCNAME[0]} {0|1} [COMMAND]\nTry to execute command."
   local RETURN_ERR=$1; shift
   if "$@"; then
@@ -143,6 +147,7 @@ export -f is_function
 
 function list_files() {
   # Don't be afraid of this. It is hack for busybox.
+  # Busybox's find applet doesn't support option to shrink directory name.
   local DIR_SEARCH="$1"; shift
   find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d"
 }
@@ -156,6 +161,7 @@ function mv_big() {
 export -f mv_big
 
 function check_online() {
+  # It does NOT detect internet connection, only local link is checked.
   local offline=1
   while IFS= read -r interface; do
     AP100_DBG msg_print debug "Checking $interface for carrier."
@@ -183,6 +189,7 @@ function get_file_s() {
 export -f get_file_s
 
 function check_url() {
+  # Check url to get 200 response.
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to exist."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
@@ -241,16 +248,18 @@ function pack_initfs_cpio() (
 export -f pack_initfs_cpio
 
 function squashfs_rootfs_pack() (
-  cd -- "$1" || return_err "No directory $1!"
-  mksquashfs . "$2" -noappend -comp "$3"
+  local dir="$1" file="$2"; shift 2
+  cd -- "$dir" || return_err "No directory $dir!"
+  mksquashfs . "$file" -noappend "${@}"
 )
 export -f squashfs_rootfs_pack
 
 # -- PARSERS
 
 function get_file_list_html() {
-  # Use it for getting list of files from html file.
-  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | awk -F'/' '{print $NF}' | sort -rn
+  # Gets list of files from html file.
+  # Patched to work with Fancy Index of Nginx.
+  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | sed '/\?C=[NSM]&amp;O=[AD]/d;/[^"]*\//d'
 }
 export -f get_file_list_html
 
@@ -305,6 +314,7 @@ function chroot_setup() {
 export -f chroot_setup
 
 function chroot_setup_light() {
+  # Made primarly for using in WSL1. Not used now.
   for mount_point in proc sys dev dev/pts dev/shm run tmp; do
     chroot_add_mount dir "/$mount_point" "$1/$mount_point" --bind
   done
@@ -343,6 +353,7 @@ function chroot_rootfs() {
   esac
   local CHROOT_DIR="$2"; shift 2; [[ -z $CHROOT_COMMAND ]] && local CHROOT_COMMAND=chroot
   if [[ $ROOTFS_DIR_NO_FIX == 0 ]] && ! mountpoint -q "$CHROOT_DIR"; then
+    #Dirty hack to run some programs in chroot.
     msg_print warning "Not mounted directory. Bypassing..."
     chroot_add_mount dir "$CHROOT_DIR" "$CHROOT_DIR" --bind
   fi
@@ -358,6 +369,7 @@ function chroot_rootfs() {
 export -f chroot_rootfs
 
 function parse_arch() {
+  # Generally used to get distro-specific arch names.
   case $1 in
     i[3-6]86|x86) export alpine_arch=x86 debian_arch=i386 arch_arch=i686 rpm_arch=x86 void_arch=i686 qemu_arch=i386;;
     x86_64|amd64) export alpine_arch=x86_64 debian_arch=amd64 arch_arch=x86_64 rpm_arch=x86_64 void_arch=x86_64 qemu_arch=x86_64;;
@@ -392,6 +404,7 @@ function qemu_chroot() {
 export -f qemu_chroot
 
 function qemu_run_bin() {
+  #For running binary for foreign arch.
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu-static."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
@@ -404,6 +417,7 @@ function qemu_run_bin() {
 export -f qemu_run_bin
 
 function genfstab_light() {
+  # It is lightweight version of genfstab. It is used to generate fstab file.
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [DIRECTORY]\nMake fstab file for directory."
   local root
   root=$(realpath "$1")
