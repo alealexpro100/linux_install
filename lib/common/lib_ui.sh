@@ -93,13 +93,13 @@ function read_param() {
             tmp=$("${options[@]}" --passwordbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]} "$default_var" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu)
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $(({ui_terminal[1]}/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $((ui_terminal[1]/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
           ;;
           menu_var)
             for ((i=1; i<=${#params[@]}; i+=2)); do
               [[ "${params[$((i))]}" == "$default_var" ]] && default_var=$((i/2)) && break
             done
-            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $(({ui_terminal[1]}/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
+            tmp=$("${options[@]}" --default-item "${default_var:-0}" --menu "$text$dialog:" ${ui_terminal[0]} ${ui_terminal[1]} $((ui_terminal[1]/7)) "${params[@]}" 3>&1 1>&2 2>&3) && return_code=$? || return_code=$?
             tmp="${params[$((tmp*2+1))]}"
           ;;
           *)
