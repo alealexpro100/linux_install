@@ -50,11 +50,12 @@ fi
 #Find, download and unpack apktools-static and install system with it.
 create_tmp_dir alpine_apk
 msg_print note "Getting link for apktools-static $alpine_arch..."
+# TODO: Replace html parsing with database parse.
 apktools_pkg=$(get_file_s - "$download_repo/" | get_file_list_html | grep apk-tools-static)
 msg_print note "Downloading and extracting apk-tools static..."
 get_file_s - "$download_repo/$apktools_pkg" | tar -xzf - -C "$alpine_apk" "sbin/apk.static" &>/dev/null
 msg_print note "Installing alpine-base..."
-SSL_NO_VERIFY_PEER=1 "$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
+"$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
 rm -rf "$alpine_apk"
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
