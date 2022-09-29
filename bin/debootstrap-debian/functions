@@ -538,6 +538,10 @@ extract_release_components () {
 	local reldest="$1"; shift
 	TMPCOMPONENTS="$(sed -n 's/Components: *//p' "$reldest")"
 	for c in $TMPCOMPONENTS ; do
+		case " $COMPONENTS " in
+			*" $c "*) continue ;;
+		esac;
+
 		eval "
 		case \"\$c\" in
 		    $USE_COMPONENTS)
@@ -1127,6 +1131,7 @@ setup_apt_sources () {
 	for m in "$@"; do
 		for s in $SUITE $EXTRA_SUITES; do
 			local cs c path pkgdest
+			cs=""
 			for c in ${COMPONENTS:-$USE_COMPONENTS}; do
 				path="dists/$s/$c/binary-$ARCH/Packages"
 				pkgdest="$TARGET/$($DLDEST pkg "$s" "$c" "$ARCH" "$m" "$path")"
@@ -1174,6 +1179,7 @@ setup_proc () {
 	case "$HOST_OS" in
 	    *freebsd*)
 		umount_on_exit /dev
+		umount_on_exit /dev/fd
 		umount_on_exit /proc
 		umount "$TARGET/proc" 2>/dev/null || true
 		if [ "$HOST_OS" = kfreebsd ]; then
@@ -1264,7 +1270,8 @@ setup_dynamic_devices () {
 	    kfreebsd*)
 		in_target mount -t devfs devfs /dev ;;
 	    freebsd)
-		mount -t devfs devfs "$TARGET/dev" ;;
+		mount -t devfs devfs "$TARGET/dev"
+		mount -t fdescfs -o linrdlnk fdescfs "$TARGET/dev/fd" ;;
 	    hurd*)
 	        # Use the setup-translators of the hurd package
 	        in_target /usr/lib/hurd/setup-translators -k ;;
@@ -1364,17 +1371,34 @@ setup_merged_usr() {
 		MERGED_USR="no"
 	fi
 
-	if [ "$MERGED_USR" = "no" ]; then return 0; fi
+	if [ "$MERGED_USR" = "no" ]; then
+	    # With the usrmerge becoming pseudo-essential we need to use this flag
+	    # to ensure that even if it gets installed the buildd is not converted
+	    # when debootstrap needs to create an unmerged-usr installation.
+	    case "$CODENAME" in
+		etch*|lenny|squeeze|wheezy|jessie*|stretch|buster|bullseye)
+		    ;;
+		*)
+		    mkdir -p "$TARGET/etc"
+		    echo "this system will not be supported in the future" > "$TARGET/etc/unsupported-skip-usrmerge-conversion"
+		    if ! doing_variant buildd; then
+			warning SANITYCHECK "Upgrading non-merged-/usr environments post-bookworm is unsupported. Only do this for CI/QA infrastructure that will be re-bootstrapped rather than upgraded."
+		    fi
+		    ;;
+	    esac
+	    return 0;
+	fi
 
 	local link_dir=""
 	case $ARCH in
-	    hurd-*)	return 0 ;;
 	    amd64)	link_dir="lib32 lib64 libx32" ;;
 	    i386)	link_dir="lib64 libx32" ;;
 	    mips|mipsel)
 			link_dir="lib32 lib64" ;;
 	    mips64*|mipsn32*)
 			link_dir="lib32 lib64 libo32" ;;
+	    loongarch64*)
+			link_dir="lib32 lib64" ;;
 	    powerpc)	link_dir="lib64" ;;
 	    ppc64)	link_dir="lib32 lib64" ;;
 	    ppc64el)	link_dir="lib64" ;;

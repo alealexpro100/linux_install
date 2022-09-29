@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-VERSION='1.0.126+nmu1'
+VERSION='1.0.127+nmu1-patched'
 
 unset TMP TEMP TMPDIR || true
 
@@ -41,6 +41,7 @@ EXTRACTOR_OVERRIDE=""
 UNPACK_TARBALL=""
 ADDITIONAL=""
 EXCLUDE=""
+EXCLUDE_DEPENDENCY=""
 VERBOSE=""
 CERTIFICATE=""
 CHECKCERTIF=""
@@ -723,9 +724,10 @@ if am_doing_phase finddebs; then
 
 		info RESOLVEREQ "Resolving dependencies of required packages..."
 		required=$(resolve_deps "$requiredX")
+		required=$(without "$required" "$EXCLUDE_DEPENDENCY")
 		info RESOLVEBASE "Resolving dependencies of base packages..."
 		base=$(resolve_deps "$baseX")
-		base=$(without "$base" "$required")
+		base=$(without "$base" "$required $EXCLUDE_DEPENDENCY")
 
 		if [ "$LOG_EXTRA_DEPS" = true ]; then
 			baseN=$(without "$baseX" "$requiredX")

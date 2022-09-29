@@ -40,6 +40,24 @@ work_out_debs () {
 		esac
 		;;
 	esac
+
+	#Astra linux is based on debian 10 so it does not have usr-is-merged.
+	[[ $ASTRA_MODE != 1 ]] || return 0
+
+	# On suites >= bookworm, either we set up a merged-/usr system
+	# via setup_merged_usr, or we deliberately avoided that migration
+	# by creating the flag file. This means there's no need for the
+	# live migration 'usrmerge' package and its extra dependencies:
+	# we can install the empty 'usr-is-merged' metapackage to indicate
+	# that the transition has been done.
+	case "$CODENAME" in
+		etch*|lenny|squeeze|wheezy|jessie*|stretch|buster|bullseye)
+			;;
+		*)
+			required="$required usr-is-merged"
+			EXCLUDE_DEPENDENCY="$EXCLUDE_DEPENDENCY usrmerge"
+			;;
+	esac
 }
 
 first_stage_install () {
@@ -57,7 +75,7 @@ first_stage_install () {
 	if [ "$CODENAME" = "stretch" ] && [ -z "$MERGED_USR" ]; then
 		MERGED_USR="no"
 	fi
-		
+
 	setup_merged_usr
 	extract $required
 
