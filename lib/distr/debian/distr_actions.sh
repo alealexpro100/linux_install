@@ -11,12 +11,8 @@ else
 fi
 
 [[ $debian_arch != $arch ]] && add_option='--foreign'
-if command_exists debootstrap; then
-  DEBOOTSTRAP_BIN=debootstrap
-else
-  export DEBOOTSTRAP_DIR=./bin/debootstrap-debian
-  DEBOOTSTRAP_BIN="$DEBOOTSTRAP_DIR/debootstrap"
-fi
+export DEBOOTSTRAP_DIR=./bin/debootstrap-debian
+DEBOOTSTRAP_BIN="$DEBOOTSTRAP_DIR/debootstrap"
 bash -c "$DEBOOTSTRAP_BIN --arch $arch $add_option --include=gnupg,$preinstall $version_debian $dir \"$(echo "${debian_repos[main]}" | cut -d" " -f2)\""
 [[ $add_option == "--foreign" ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
 

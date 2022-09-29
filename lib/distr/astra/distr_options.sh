@@ -1,16 +1,21 @@
 #!/bin/bash
 
 add_var "declare -gx" arch "$debian_arch"
+# Important line to keep astra avaliable to be installed
+add_var "declare -gx" ASTRA_MODE "1"
 
 read_param "" "$M_DISTR_VER" "$version_astra" version_debian text
 
 #Add all known repos.
 add_var "declare -gA" "debian_repos"
 add_var "declare -ga" "debian_repos_order"
+# By default astralinux (orel) from debootstrap does not work with https.
 if [[ $astra_mirror =~ https* ]]; then
   msg_print warning "Detected https mirror! Will use http for installation."
   astra_mirror="${astra_mirror/https\:/http\:}"
 fi
+# Yes, there are also SE edition with additional repos, but there are license problems.
+# To use it please build your own profile.
 add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_debian main non-free contrib"
 add_var "declare -gx" "debian_repos_order[0]" "main"
 
