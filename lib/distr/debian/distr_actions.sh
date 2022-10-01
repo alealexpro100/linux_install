@@ -10,11 +10,12 @@ else
   fi
 fi
 
-[[ $debian_arch != $arch ]] && add_option='--foreign'
+[[ $debian_arch != $arch ]] && deb_add_option="$deb_add_option --foreign"
 export DEBOOTSTRAP_DIR=./bin/debootstrap-debian
 DEBOOTSTRAP_BIN="$DEBOOTSTRAP_DIR/debootstrap"
-bash -c "$DEBOOTSTRAP_BIN --arch $arch $add_option --include=gnupg,$preinstall $version_debian $dir \"$(echo "${debian_repos[main]}" | cut -d" " -f2)\""
-[[ $add_option == "--foreign" ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
+[[ -z $preinstall ]] || preinstall=",$preinstall"
+bash -c "$DEBOOTSTRAP_BIN --arch $arch $deb_add_option --include=gnupg$preinstall $version_debian $dir \"$(echo "${debian_repos[main]}" | cut -d" " -f2)\""
+[[ $debian_arch != $arch ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
 
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 source ./lib/common/common_actions_1.sh

@@ -3,7 +3,7 @@
 add_var "declare -gx" arch "$debian_arch"
 # We set ASTRA_MODE to skip 'usr-is-merged' dependency and set component to install dependency 'libparsec-base3'
 add_var "declare -gx" ASTRA_MODE "1"
-add_var "declare -gx" "deb_add_option" "-components=main,contrib,non-free"
+add_var "declare -gx" "deb_add_option" "--components=main,contrib,non-free"
 
 read_param "" "$M_DISTR_VER" "$version_astra" version_debian text
 
