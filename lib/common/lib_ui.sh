@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# History variables. Array contains full `read_param` options. Variable contains actual index.
 var_history_list=()
 var_history_index=$((0))
 
@@ -7,7 +8,8 @@ var_history_index=$((0))
 read -a ui_terminal < <(stty size)
 ui_terminal[0]=$((ui_terminal[0]/2)) ui_terminal[1]=$((ui_terminal[1]/2))
 
-#Generate menu.
+# Generate menu. Reads by lines and return array of it.
+# Used for whiptail or dialog in read_params to show menus.
 function gen_menu() {
   local tmp_gen_menu=() i=0
   while IFS=$'\n' read -r var; do
@@ -16,7 +18,9 @@ function gen_menu() {
   echo -ne "${tmp_gen_menu[@]@Q}"
 }
 
-#Print info
+# Print info
+# Use it with read_param.
+# Please do not use `msg_print` by yourself in user-mode step.
 function print_param() {
 case $ECHO_MODE in
     whiptail|dialog) 
@@ -41,6 +45,15 @@ function history_read_param() {
 }
 
 #Enter parametres.
+# Supported modes: 
+# * auto (no user input);
+# * cli (for plain terminals or automation);
+# * whiptail or dialog (recommended, handy to use).
+# Mode 'cli' is default because its good compatibility.
+# Only whiptail or dialog mode has support for using history.
+# Other modes still write history.
+# Options:
+# NO_HISTORY=1 - Prevents current command to be kept in history. Does not affect variable set.
 function read_param() {
   local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp='' i_var params=() params_h=()
   [[ $NO_HISTORY == "1" ]] || eval 'for i_var in '"${*@Q}"'; do params_h=("${params_h[@]}" "${i_var}"); done'

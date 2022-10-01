@@ -1,8 +1,12 @@
 #!/bin/bash
 
-#Add and change variables.
+# Actual variable set.
 declare -a var_num
 declare -A var_list
+
+# Add variable to array (variable set)
+# Options:
+# * NO_VAR=1 - Do not add variable to variable set.
 function add_var() {
   local type="$1" var="$2" content="$3"
   if [[ $NO_VAR != "1" ]]; then
@@ -17,7 +21,7 @@ function add_var() {
   fi
 }
 
-#Exports all variables for add_var.
+# Output commands to write back options.
 function var_export() {
   for var in "${var_num[@]}"; do
     echo -e "$1${var_list[$var]}"
