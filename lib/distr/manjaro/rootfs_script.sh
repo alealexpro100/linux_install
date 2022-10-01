@@ -61,3 +61,7 @@ case "$bootloader_name" in
   ;;
   *) msg_print note "Bootloader not chosen."
 esac
+
+# Keep more space free
+msg_print note "Cleaning up..."
+rm -rf /var/lib/pacman/sync/* /var/cache/pacman/pkg/*
