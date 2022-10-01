@@ -34,7 +34,7 @@ function make_bootable_iso() (
     local iso_location
     iso_location="$(realpath "$2")"
     cd -- "$1" || return_err "No directory $1!"
-    mkisofs -o "$iso_location"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table \
+    xorriso -as mkisofs -o "$iso_location"  -b boot/syslinux/isolinux.bin -c boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table \
       -eltorito-alt-boot -eltorito-platform 0xEF -eltorito-boot boot/grub/efi.img -no-emul-boot -lJR .; 
 )
 
@@ -61,6 +61,7 @@ cp -Rf . "$make_build/rootfs/root/linux_install"
 rm -rf "$make_build/rootfs/root/linux_install/.git" \
     "$make_build/rootfs/root/linux_install/.github" \
     "$make_build/rootfs/root/linux_install/_config.yml" \
+    "$make_build/rootfs/root/linux_install/releases" \
     "$make_build/rootfs/root/linux_install/bin/make_images"
 if [[ "$LI_TYPE" == "public" ]]; then
     rm -rf "$make_build/rootfs/root/linux_install/private_parameters" \

@@ -49,7 +49,7 @@ See presentation of this project [here](https://mirror.alexpro100.ru/scripts_fil
 
 ### Build
 
-* `squashfs-tools cdrtools` - live installer build
+* `git squashfs-tools xorriso p7zip-full wget` - live installer build (ubuntu)
 
 ## Usage
 
