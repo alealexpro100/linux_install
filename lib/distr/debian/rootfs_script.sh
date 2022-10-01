@@ -10,10 +10,9 @@ declare -gx DEBIAN_FRONTEND=noninteractive
 apt_install="apt -y install"
 [[ $debian_no_recommends == 1 ]] && apt_install="$apt_install --no-install-recommends"
 
-[[ -f /etc/apt/sources.list ]] && mv /etc/apt/sources.list /etc/apt/sources.list.bak
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
 for repo_name in "${debian_repos_order[@]}"; do
-  [[ -n "${debian_repos[$repo_name]}" ]] || continue
+  [[ -n "${debian_repos[$repo_name]}" && $repo_name != "main" ]] || continue
   echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
   if [[ -f "/root/certs/$repo_name.key" ]]; then
     gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"
@@ -21,6 +20,8 @@ for repo_name in "${debian_repos_order[@]}"; do
   fi
 done
 apt update
+# By default update repo contains additional updates
+apt upgrade -y
 
 msg_print note "Apt is ready."
 
