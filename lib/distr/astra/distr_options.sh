@@ -1,23 +1,19 @@
 #!/bin/bash
 
 add_var "declare -gx" arch "$debian_arch"
-# We set ASTRA_MODE to skip 'usr-is-merged' dependency and set component to install dependency 'libparsec-base3'
-add_var "declare -gx" ASTRA_MODE "1"
-add_var "declare -gx" "deb_add_option" "--components=main,contrib,non-free"
+# We disable gpg check, exclude 'usr-is-merged' dependency and set component to install dependency 'libparsec-base3'
+add_var "declare -gx" "deb_add_option" "--no-check-gpg --exclude=usr-is-merged --components=main,contrib,non-free"
 
-read_param "" "$M_DISTR_VER" "$version_astra" version_debian text
+read_param "" "$M_DISTR_VER" "$version_astra" version_astra text
+# There are now scripts for version of astra, so we use stable as fallback.
+add_var "declare -gx" version_debian "stable"
 
 #Add all known repos.
 add_var "declare -gA" "debian_repos"
 add_var "declare -ga" "debian_repos_order"
-# By default astralinux (orel) from debootstrap does not work with https.
-if [[ $astra_mirror =~ https* ]]; then
-  msg_print warning "Detected https mirror! Will use http for installation."
-  astra_mirror="${astra_mirror/https\:/http\:}"
-fi
 # Yes, there are also SE edition with additional repos, but there are license problems.
 # To use it please build your own profile.
-add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_debian main non-free contrib"
+add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_astra main non-free contrib"
 add_var "declare -gx" "debian_repos_order[0]" "main"
 
 if [[ $kernel == "1" ]]; then
@@ -31,6 +27,5 @@ if [[ $add_soft == "1" ]]; then
 fi
 
 read_param "" "$M_DEB_NO_RECOMMENDS" '' debian_no_recommends no_or_yes
-[[ $debian_arch == amd64 ]] && read_param "" "$M_MULTILIB" '' debian_add_i386 yes_or_no
 add_var "declare -gx" "preinstall" "sudo,locales"
 read_param "" "$M_PACK" "usbutils pciutils dosfstools software-properties-common screen htop rsync bash-completion" postinstall text_empty

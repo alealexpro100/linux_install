@@ -13,7 +13,7 @@ declare -A debian_repos_add=(
     [wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main' 
     [webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
 astra_mirror="http://download.astralinux.ru/astra/stable/2.12_x86-64/repository/"
-version_astra=stable
+version_astra=orel
 mirror_archlinux='http://mirror.dotsrc.org/archlinux'
 mirror_archlinux_32='https://mirror.archlinux32.org'
 mirror_archlinux_arm='https://mirror.archlinuxarm.org'
