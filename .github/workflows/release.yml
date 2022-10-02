@@ -1,0 +1,24 @@
+name: "Build new ISO and PXE archive on version change"
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build_files:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo apt install -y git squashfs-tools genisoimage p7zip-full wget zstd cpio
+      - name: Build
+        run: |
+          sudo env LI_TYPE=public ./bin/make_images/build.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            - "releases/linux_install-*"
