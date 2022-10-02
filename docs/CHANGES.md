@@ -1,3 +1,8 @@
+# Version 0.6.3:
+* Fix astralinux installation
+* Redone build process
+* Add cleanup after installation
+
 # Version 0.6.2:
 * Move docs to its directory.
 * Try to reduce size of new builds.
