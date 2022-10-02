@@ -1,4 +1,4 @@
-name: "Build new ISO and PXE archive on version change"
+name: "Build new ISO and PXE archive"
 
 on:
   push:
@@ -21,4 +21,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            - "releases/linux_install-*"
+            releases/linux_install-x86_64-*.*.*-public.iso
+            releases/linux_install-x86_64-*.*.*-public.pxe.tgz
