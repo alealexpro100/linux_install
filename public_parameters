@@ -9,9 +9,10 @@ passwd_default='pass'
 version_debian=bullseye
 debian_mirror='https://deb.debian.org/debian'
 debian_mirror_security='https://security.debian.org'
-declare -A debian_repos_add=(
-    [wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main' 
-    [webmin]='deb [arch=$arch] https://download.webmin.com/download/repository sarge contrib')
+# For adding repos please place certificates for them (certificate name is name of repo)
+# Example: declare -A debian_repos_add=([wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main')
+# wine.key is searched in LI_CERTS
+declare -A debian_repos_add=()
 astra_mirror="http://download.astralinux.ru/astra/stable/2.12_x86-64/repository/"
 version_astra=orel
 mirror_archlinux='http://mirror.dotsrc.org/archlinux'

@@ -13,7 +13,7 @@ apt_install="apt -y install"
 for repo_name in "${debian_repos_order[@]}"; do
   [[ -n "${debian_repos[$repo_name]}" && $repo_name != "main" ]] || continue
   echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
-  if [[ -f "/root/certs/$repo_name.key" ]]; then
+  if [[ -f "/root/LI_certs/$repo_name.key" ]]; then
     gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"
     chmod 644 "/etc/apt/trusted.gpg.d/$repo_name.gpg"
   fi
