@@ -16,9 +16,8 @@ source ./lib/common/lib_connect.sh
 
 # Check options.
 if [[ -z $4 ]]; then
-  echo "Void linux boostrap script. It uses only choosed mirror."
-  echo "Example: $0 x86_64 musl https://alpha.de.repo.voidlinux.org/current /mnt htop"
-  exit 1
+  echo_help "Void linux boostrap script.\n" \
+  "Example: $0 x86_64 musl https://alpha.de.repo.voidlinux.org/current /mnt htop"
 fi
 
 arch=$1 version=$2 mirror=$3 dir="$(realpath "$4")"; shift 4; add_packages="$*"
@@ -58,14 +57,22 @@ get_file_s - "$repo_xbps/$arch-musl-repodata" | arccat zst - | tar xf - -C "$xbp
 xbps_name=$(< "$xbps_tmp/index.plist" grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
 get_file_s - "$repo_xbps/$xbps_name.$arch-musl.xbps" | arccat zst - | tar xf - -C "$xbps_tmp"
 
-msg_print note "(2) Installing to choosed directory..."
-ROOTFS_DIR_NO_FIX=1
-chroot_add_mount dir "$dir" "$xbps_tmp/mnt" --rbind --make-rslave
-yes | XBPS_TARGET_ARCH=$install_arch SSL_NO_VERIFY_PEER=1 $arch_chroot_command "$xbps_tmp" /usr/bin/xbps-install.static -r /mnt -R "$mirror" -A -Suy base-voidstrap $add_packages
-rm -rf "$xbps_tmp"
-unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED # Bug left. Dirty fix.
-msg_print note "(3) Configuring..."
-$arch_chroot_command "$dir" /usr/bin/xbps-reconfigure -af
-echo "#repository=$mirror" >> "$dir/etc/xbps.d/install_repo.conf"
+function do_install() {
+  ROOTFS_DIR_NO_FIX=1
+  chroot_add_mount dir "$dir" "$xbps_tmp/mnt" --rbind --make-rslave
+  yes | XBPS_TARGET_ARCH=$install_arch SSL_NO_VERIFY_PEER=1 $arch_chroot_command "$xbps_tmp" /usr/bin/xbps-install.static -r /mnt -R "$mirror" -A -Suy base-voidstrap $add_packages
+  rm -rf "$xbps_tmp"
+  unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED # Bug left. Dirty fix.
+  msg_print note "(3) Configuring..."
+  $arch_chroot_command "$dir" /usr/bin/xbps-reconfigure -af
+  echo "#repository=$mirror" >> "$dir/etc/xbps.d/install_repo.conf"
+}
+if [[ $AP100_DBG_ON == 1 ]]; then
+  msg_print debug "(2) Installing to chosen directory..."
+  do_install
+else
+  do_install &>/dev/null &
+  show_progress train $! "(2) Installing to chosen directory..."
+fi
 
 msg_print note "Voidlinux was succesfully bootstrapped to $dir."

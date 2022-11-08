@@ -16,11 +16,10 @@ source ./lib/common/lib_connect.sh
 
 # Check options.
 if [[ -z $3 ]]; then
-  echo "Arch linux boostrap script."
-  echo "Supports CUSTOM_ARCH_REPO, CORE_NAME flags."
-  echo "Example 1: $0 x86_64 https://mirrors.evowise.com/archlinux /mnt base-devel mc htop"
-  echo "Example 2: CUSTOM_ARCH_REPO=1 CORE_NAME=arch_repo $0 x86_64 http://mirror.site/arch_repo /mnt base-devel mc htop"
-  exit 1
+  echo_help "Arch linux boostrap script.\n" \
+  "Supports CUSTOM_ARCH_REPO, CORE_NAME flags.\n" \
+  "Example 1: $0 x86_64 https://mirrors.evowise.com/archlinux /mnt base-devel mc htop\n" \
+  "Example 2: CUSTOM_ARCH_REPO=1 CORE_NAME=arch_repo $0 x86_64 http://mirror.site/arch_repo /mnt base-devel mc htop\n"
 fi
 
 arch=$1 mirror=$2 dir="$(realpath "$3")"; shift 3
@@ -43,7 +42,7 @@ CORE_NAME="${CORE_NAME:-core}"
 db_file="$dir/var/lib/pacman/sync/$CORE_NAME.db"
 core_repo_dir="$arch_sys/var/lib/pacman/local"
 
-echo "Preparing rootfs... "
+AP100_DBG msg_print debug "Preparing rootfs... "
 mkdir "$dir" &>/dev/null || :
 mkdir -m 0755 "$dir/var" "$dir/var/lib" "$dir/var/lib/pacman" "$dir/log" "$dir/dev" "$dir/run" "$dir/etc" "$dir/etc/pacman.d" &>/dev/null || :
 mkdir -m 1777 "$dir/tmp" &>/dev/null || :
@@ -52,7 +51,7 @@ mkdir -p "$cache_dir" "$dir/var/lib/pacman/sync" &>/dev/null || :
 mkdir -p "$core_repo_dir" &>/dev/null || :
 
 
-msg_print note "Downloading $CORE_NAME repo file..."
+msg_print note "(1) Downloading $CORE_NAME repo file..."
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   get_file_s "$db_file" "$mirror/$CORE_NAME.db"
   repo="$mirror" core_repo="$mirror"
@@ -103,7 +102,7 @@ done < <(find "$core_repo_dir" -type f -exec cat {} \;)
 unset pkg_name pkg_file read_next
 
 #Resolve dependenices.
-msg_print note "Resolving dependencies..."
+msg_print note "(2) Resolving dependencies..."
 declare -A to_download=()
 function resolve_pkg() {
   local line pkg dep
@@ -120,51 +119,55 @@ function resolve_pkg() {
     fi
   done
 }
-
 resolve_pkg archlinux-keyring filesystem pacman ca-certificates
-
 unset pkgs provides depends
 
-msg_print note "Downloading CORE packages: "
-for pkg in "${!to_download[@]}"; do
-  echo -ne "I: Retriving $pkg... "
-  # Download packages.
-  if [[ -f "${cache_dir}/${to_download[$pkg]}" ]]; then
-    if echo "${md5_sums[$pkg]} ${cache_dir}/${to_download[$pkg]}" | md5sum -c - &>> /dev/null; then
-      echo -n "exists!"
+function do_download() {
+  for pkg in "${!to_download[@]}"; do
+    AP100_DBG msg_print debug "I: Retriving $pkg... "
+    # Download packages.
+    if [[ -f "${cache_dir}/${to_download[$pkg]}" ]]; then
+      if echo "${md5_sums[$pkg]} ${cache_dir}/${to_download[$pkg]}" | md5sum -c - &>> /dev/null; then
+        AP100_DBG echo -n "exists!"
+      else
+        rm -rf "${cache_dir:?}/${to_download[$pkg]}"
+        get_file_s "${cache_dir}/${to_download[$pkg]}" "${core_repo}/${to_download[$pkg]}"
+      fi
     else
-      rm -rf "${cache_dir:?}/${to_download[$pkg]}"
       get_file_s "${cache_dir}/${to_download[$pkg]}" "${core_repo}/${to_download[$pkg]}"
     fi
-  else
-    get_file_s "${cache_dir}/${to_download[$pkg]}" "${core_repo}/${to_download[$pkg]}"
-  fi
-  echo ""
-done
+    AP100_DBG echo ""
+  done
+}
+do_download &
+show_progress train $! "(3) Downloading CORE packages: "
 
-msg_print note "Checking CORE packages integrity... "
-for pkg in "${!to_download[@]}"; do
-  if echo "${md5_sums[$pkg]}  ${cache_dir}/${to_download[$pkg]}" | md5sum -c &>> /dev/null; then
-    echo -ne "."
-  else
-    return_err "Wrong hash for package $pkg!"
-  fi
-done
-echo -e "Good."
+function do_check() {
+  for pkg in "${!to_download[@]}"; do
+    if ! echo "${md5_sums[$pkg]}  ${cache_dir}/${to_download[$pkg]}" | md5sum -c &>> /dev/null; then
+      return_err "Wrong hash for package $pkg!"
+    fi
+  done
+}
+do_check &
+show_progress train $! "(4) Checking packages integrity..."
 
-msg_print note "Unpacking $CORE_NAME packages to temporary rootfs: "
-for pkg_file in "${to_download[@]}"; do
-  echo "I: Unpacking $pkg_file... "
-  case "${pkg_file}" in
-    *.gz) tar -xzf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
-    *.bz2) tar -xjf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
-    *.xz) tar -xJf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
-    *.zst) arccat zst "${cache_dir}/${pkg_file}" | tar -xf - -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
-    *) return_err "Incorrect format of archive ${pkg_file}! Exiting...";;
-  esac
-done
+function do_unpack() {
+  for pkg_file in "${to_download[@]}"; do
+    AP100_DBG msg_print debug "I: Unpacking $pkg_file... "
+    case "${pkg_file}" in
+      *.gz) tar -xzf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
+      *.bz2) tar -xjf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
+      *.xz) tar -xJf "${cache_dir}/${pkg_file}" -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
+      *.zst) arccat zst "${cache_dir}/${pkg_file}" | tar -xf - -C "$arch_sys" --exclude='.INSTALL' --exclude='.MTREE' --exclude='.PKGINFO' --exclude='.BUILDINFO' 2>/dev/null || return_err "Failed extraction ${pkg_file}!";;
+      *) return_err "Incorrect format of archive ${pkg_file}! Exiting...";;
+    esac
+  done
+}
+do_unpack &
+show_progress train $! "(5) Unpacking packages to temporary rootfs: "
 
-msg_print note "Preparing temporary rootfs..."
+AP100_DBG msg_print debug "Preparing temporary rootfs..."
 mkdir -p "$arch_sys/etc/pacman.d"
 if [[ $CUSTOM_ARCH_REPO == "1" ]]; then
   sed -i 's|SigLevel    = Required DatabaseOptional|SigLevel = Never|;/Include =/d;/\[[a-z]\+\]/d;' "$arch_sys/etc/pacman.conf"
@@ -176,17 +179,25 @@ echo -e "update-ca-trust\npacman-key --init\npacman-key --populate\ncp -a {,/mnt
 echo "pacman -r /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm -Sy base $install_packages" >> "$arch_sys/root/run.sh"
 chmod +x "$arch_sys/root/run.sh"
 
-msg_print note "Installing system..."
-#Avoid "fixing" directory in order to mount filesystems normally (requried by pacman).
-ROOTFS_DIR_NO_FIX=1
-chroot_add_mount dir "$dir" "$arch_sys/mnt" --rbind --make-rslave
-chroot_setup "$arch_sys/mnt"
-$arch_chroot_command "$arch_sys" /bin/bash /root/run.sh
-msg_print note "Cleaning up..."
-rm -rf "$arch_sys"
-# Failsafe (file may does not exist)
-mv "$dir"/etc/resolv.conf{.pacnew,} || :
-mv "$dir"/etc/hosts{.pacnew,} || :
-[[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$dir"/etc/pacman.d/mirrorlist.used
+function do_install() {
+  #Avoid "fixing" directory in order to mount filesystems normally (requried by pacman).
+  ROOTFS_DIR_NO_FIX=1
+  chroot_add_mount dir "$dir" "$arch_sys/mnt" --rbind --make-rslave
+  chroot_setup "$arch_sys/mnt"
+  $arch_chroot_command "$arch_sys" /bin/bash /root/run.sh
+  msg_print note "Cleaning up..."
+  rm -rf "$arch_sys"
+  # Failsafe (file may does not exist)
+  mv "$dir"/etc/resolv.conf{.pacnew,} || :
+  mv "$dir"/etc/hosts{.pacnew,} || :
+  [[ $CUSTOM_ARCH_REPO != "1" ]] && echo "Server = $repo" >> "$dir"/etc/pacman.d/mirrorlist.used
+}
+if [[ $AP100_DBG_ON == 1 ]]; then
+  msg_print debug "(6) Installing to chosen directory..."
+  do_install
+else
+  do_install &>/dev/null &
+  show_progress train $! "(6) Installing to chosen directory..."
+fi
 
 msg_print note "Archlinux was succesfully bootstrapped to $dir."

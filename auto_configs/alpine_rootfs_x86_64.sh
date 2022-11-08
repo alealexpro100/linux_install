@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 #Make alpine minimal rootfs.
 
 add_var "declare -gx" "dir" "${default_dir:-/mnt/mnt}"

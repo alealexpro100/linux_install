@@ -16,10 +16,9 @@ source ./lib/common/lib_connect.sh
 
 # Check options.
 if [[ -z $4 ]]; then
-  echo "Alpine linux boostrap script. It uses only choosed mirror."
-  echo "Supports CUSTOM_ALPINE_REPO flag."
-  echo "Example: $0 x86_64 v3.13 https://nl.alpinelinux.org/alpine /mnt htop"
-  exit 1
+  echo_help "Alpine linux boostrap script.\n" \
+  "Supports CUSTOM_ALPINE_REPO flag.\n" \
+  "Example: $0 x86_64 v3.13 https://nl.alpinelinux.org/alpine /mnt htop"
 fi
 
 arch=$1 version=$2 mirror="$3"; dir="$(realpath "$4")"; shift 4; add_packages="$*"
@@ -49,23 +48,32 @@ fi
 
 #Find, download and unpack apktools-static and install system with it.
 create_tmp_dir alpine_apk
-msg_print note "Getting link for apktools-static $alpine_arch..."
+msg_print note "(1) Getting link for apktools-static $alpine_arch..."
 # TODO: Replace html parsing with database parse.
 apktools_pkg=$(get_file_s - "$download_repo/" | get_file_list_html | grep apk-tools-static)
-msg_print note "Downloading and extracting apk-tools static..."
-get_file_s - "$download_repo/$apktools_pkg" | tar -xzf - -C "$alpine_apk" "sbin/apk.static" &>/dev/null
-msg_print note "Installing alpine-base..."
-"$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
-rm -rf "$alpine_apk"
+get_file_s - "$download_repo/$apktools_pkg" | tar -xzf - -C "$alpine_apk" "sbin/apk.static" &>/dev/null &
+show_progress train $! "(2) Downloading and extracting apk-tools static..."
 
-PATH=/usr/sbin:/usr/bin:/sbin:/bin
-apk_command="/sbin/apk $arg_repos"
-$arch_chroot_command "$dir" $apk_command upgrade
-[[ -n $NEED_FIX ]] && $arch_chroot_command "$dir" $apk_command fix '*'
-[[ -n $add_packages ]] && $arch_chroot_command "$dir" $apk_command add $add_packages
-if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
-  echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
-  [[ $version == "edge" ]] && echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
+function do_install() {
+  "$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
+  rm -rf "$alpine_apk"
+
+  PATH=/usr/sbin:/usr/bin:/sbin:/bin
+  apk_command="/sbin/apk $arg_repos"
+  $arch_chroot_command "$dir" $apk_command upgrade
+  [[ -n $NEED_FIX ]] && $arch_chroot_command "$dir" $apk_command fix '*'
+  [[ -n $add_packages ]] && $arch_chroot_command "$dir" $apk_command add $add_packages
+  if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
+    echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
+    [[ $version == "edge" ]] && echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
+  fi
+}
+if [[ $AP100_DBG_ON == 1 ]]; then
+  msg_print debug "(3) Installing to chosen directory..."
+  do_install
+else
+  do_install &>/dev/null &
+  show_progress train $! "(3) Installing to chosen directory..."
 fi
 
 msg_print note "Alpinelinux was succesfully bootstrapped to $dir."

@@ -18,7 +18,10 @@ fi
 
 LI_TYPE="${LI_TYPE:-private}" LI_DEBUG="${LI_DEBUG:-0}"
 LI_VERSION="$(cat ./version_install)"
-[[ "$LI_DEBUG" == "1" ]] && LI_VERSION="${LI_VERSION}-dbg"
+if [[ "$LI_DEBUG" == "1" ]]; then
+    LI_VERSION="${LI_VERSION}-dbg"
+    msg_print warn "Building DEBUG version..."
+fi
 ARCH="${ARCH:-x86_64}"
 export ALPINE_VERSION="3.16" # used in install_sys.sh
 ALPINE_REVISION="0"
@@ -44,8 +47,6 @@ function prepare_initfs() {
     cp "$build_files/init" "$make_build/initfs/init"
     pack_initfs_cpio "$make_build/initfs" | zstd -T"$(nproc)" -19 > "$2"
 }
-
-[[ "$LI_DEBUG" == "1" ]] && msg_print warning "Building DEBUG version..."
 
 [[ -d "$BUILDS_DIR" ]] || mkdir -p "$BUILDS_DIR"
 build_files="./bin/make_images/linux_install_files"
@@ -75,13 +76,16 @@ if [[ $LI_BUILD_ISO == "1" ]]; then
     msg_print note "Building ISO..."
     [[ -e "$LI_ISO" ]] && rm -rf "$LI_ISO"
     mkdir "$make_build/orig_iso" "$make_build/final_iso" "$make_build/initfs"
-    get_file_s "$make_build/alpine.iso" "$ALPINE_ISO"
+    get_file_s "$make_build/alpine.iso" "$ALPINE_ISO" &
+    show_progress train $! "Downloading alpine.iso..."
     7z x -o"$make_build/final_iso" "$make_build/alpine.iso"
     rm -rf "$make_build/final_iso/[BOOT]"
+    msg_print note "Preparing initfs..."
     prepare_initfs "$(find "$make_build/final_iso/boot" -name "*initramfs-*" | head -n 1)" "$(find "$make_build/final_iso/boot" -name "*initramfs-*" | head -n 1)"
     cp "$make_build/rootfs.img" "$make_build/final_iso/apks/rootfs.img"
     sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_build/final_iso/boot/syslinux/syslinux.cfg"
     sed -ie 's/quiet/quiet rootfs_net=rootfs.img/' "$make_build/final_iso/boot/grub/grub.cfg"
+    msg_print note "Making ISO..."
     make_bootable_iso "$make_build/final_iso" "$LI_ISO"
     rm -rf "$make_build/alpine.iso" "$make_build/final_iso" "$make_build/initfs"
 fi
@@ -89,11 +93,16 @@ fi
 if [[ $LI_BUILD_NETBOOT == "1" ]]; then
     msg_print note "Building NETBOOT..."
     mkdir "$make_build/final_netboot" "$make_build/initfs"
-    get_file_s "$make_build/final_netboot/vmlinuz" "$ALPINE_NETBOOT/vmlinuz-$ALPINE_NETBOOT_VERSION"
-    get_file_s "$make_build/final_netboot/modloop" "$ALPINE_NETBOOT/modloop-$ALPINE_NETBOOT_VERSION"
-    get_file_s "$make_build/initramfs" "$ALPINE_NETBOOT/initramfs-$ALPINE_NETBOOT_VERSION"
+    get_file_s "$make_build/final_netboot/vmlinuz" "$ALPINE_NETBOOT/vmlinuz-$ALPINE_NETBOOT_VERSION" &
+    show_progress train $! "Downloading vmlinuz..."
+    get_file_s "$make_build/final_netboot/modloop" "$ALPINE_NETBOOT/modloop-$ALPINE_NETBOOT_VERSION" &
+    show_progress train $! "Downloading modloop..."
+    get_file_s "$make_build/initramfs" "$ALPINE_NETBOOT/initramfs-$ALPINE_NETBOOT_VERSION" &
+    show_progress train $! "Downloading initramfs..."
+    msg_print note "Preparing initfs..."
     prepare_initfs "$make_build/initramfs" "$make_build/final_netboot/initfs.img"
     cp "$make_build/rootfs.img" "$make_build/final_netboot/rootfs.img"
+    msg_print note "Archiving NETBOOT..."
     (
         cd "$make_build/final_netboot"
         tar czf "../arc.tgz" ./*
