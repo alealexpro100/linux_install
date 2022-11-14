@@ -55,6 +55,7 @@ function history_read_param() {
 # Options:
 # NO_HISTORY=1 - Prevents current command to be kept in history. Does not affect variable set.
 function read_param() {
+  # shellcheck disable=SC2034
   local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp='' i_var params=() params_h=()
   [[ $NO_HISTORY == "1" ]] || eval 'for i_var in '"${*@Q}"'; do params_h=("${params_h[@]}" "${i_var}"); done'
   shift 5

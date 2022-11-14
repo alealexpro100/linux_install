@@ -16,6 +16,7 @@ add_var "declare -ga" "debian_repos_order"
 add_var "declare -gx" "debian_repos[main]" "deb $astra_mirror $version_astra main non-free contrib"
 add_var "declare -gx" "debian_repos_order[0]" "main"
 
+# TODO: fix installation (kernel panic because of no module `parsec` in initramfs)
 if [[ $kernel == "1" ]]; then
   read_param "" "$M_KERNEL_TYPE" "$([[ $(detect_vm) || "$kernel_type" == "virtual" ]] && echo 1 || echo 0)" kernel_type menu_var "$(gen_menu < <(echo -e "vanilla\nvirtual"))"
 fi
@@ -23,6 +24,7 @@ fi
 if [[ $add_soft == "1" ]]; then
   read_param "" "$M_NETWORKMANAGER" '' networkmanager yes_or_no
   read_param "" "$M_SSH" '' ssh yes_or_no
+  # TODO: Fix rsyslog problem (installation from alpine).
   read_param "" "$M_GRAPH" '' graphics yes_or_no
 fi
 
