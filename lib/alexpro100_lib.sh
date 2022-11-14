@@ -8,13 +8,14 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.1"
+ALEXPRO100_LIB_VERSION="0.4.2"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 
 #NOTE: Take attention to the parentheses (() or {}). They may vary.
+#Quick info about them: https://stackoverflow.com/questions/6270440.
 
 # Colors for text.
 
@@ -58,8 +59,10 @@ export DUnderline="\e[21m"	# Double Underlined
 
 #--DEBUG--
 
+export AP100_DBG_ON="$ALEXPRO100_LIB_DEBUG"
+
 function AP100_DBG() {
-  [[ ! $ALEXPRO100_LIB_DEBUG == 1 ]] || "$@"
+  [[ ! $AP100_DBG_ON == 1 ]] || "$@"
 }
 export -f AP100_DBG
 
@@ -92,14 +95,20 @@ function return_err() {
 export -f return_err
 
 function echo_help() {
-  msg_print note "$1"
-  return_err "No arguments!"
+  msg_print warning "Printing help message."
+  msg_print note "$*"
+  return_err "No or incorrect arguments!"
 }
 export -f echo_help
 
 function show_progress() {
   # Function to show progress while executing a command.
+  #
   # To use it you have to run the command in background and pass its id to this function.
+  # To get id of background process You can use `$!` variable after running command with end ` &`.
+  #
+  # Do not use it for functions, that modify external variables or arrays.
+  # The function in that case will work in sub-shell and won't modify external variables.
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
     sp) local sp="|\-/" s=1;;
@@ -112,6 +121,7 @@ function show_progress() {
     echo -ne "\e[2K [${sp:(i++)*s%${#sp}:s}]:$3 \r"
     sleep 0.5s
   done
+  echo ""
 }
 export -f show_progress
 
@@ -146,7 +156,7 @@ function is_function() {
 export -f is_function
 
 function list_files() {
-  # Don't be afraid of this. It is hack for busybox.
+  # Hack for busybox. Prints list of files in directory.
   # Busybox's find applet doesn't support option to shrink directory name.
   local DIR_SEARCH="$1"; shift
   find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d"
@@ -162,6 +172,7 @@ export -f mv_big
 
 function check_online() {
   # It does NOT detect internet connection, only local link is checked.
+  # It is intended to check local connection like enterprise network.
   local offline=1
   while IFS= read -r interface; do
     AP100_DBG msg_print debug "Checking $interface for carrier."
@@ -189,11 +200,13 @@ function get_file_s() {
 export -f get_file_s
 
 function check_url() {
-  # Check url to get 200 response.
-  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to exist."
+  # Check to be available to download this URL.
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to be downloadable."
+  is_url "$1" || return_err "Parameter $1 is not downloadable URL."
+  AP100_DBG msg_print debug "Checking URL: $1..."
   if command_exists wget; then
     AP100_DBG msg_print debug "Using wget."
-    wget -q --spider "$1"
+    wget -q --spider "$1" &>/dev/null
   elif command_exists curl; then
     AP100_DBG msg_print debug "Using curl."
     curl --head --fail "$1" &>/dev/null
@@ -212,15 +225,21 @@ function is_url() {
 export -f is_url
 
 function create_tmp_dir() {
-  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate tempory directory and assign it to variable."
-  export "$1=/tmp/.$1_tmp_$RANDOM"
-  AP100_DBG msg_print debug "Created tmp dir $1=${!1}."
-  mkdir -p "${!1}" &>/dev/null
+  [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate temporary directory and assign it to variable."
+  local dir="/tmp/.$1_tmp_$RANDOM"
+  if [[ -d $dir ]]; then
+    create_tmp_dir "$1"
+  else
+    export "$1=/tmp/.$1_tmp_$RANDOM"
+    mkdir -p "${!1}" &>/dev/null
+    AP100_DBG msg_print debug "Created tmp dir $1=${!1}."
+  fi
 }
 export -f create_tmp_dir
 
 function arccat() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdout."
+  [[ $2 == "-" || -f $2 ]] || return_err "File $2 does NOT exist."
   case "$1" in
     zst|zstd) zstd -dcf "$2";;
     bz2)  bunzip2 "$2";;
@@ -236,20 +255,20 @@ function arccat() {
 export -f arccat
 
 function unpack_cpio() (
-  cd -- "$1" || return_err "No directory $1!"
+  cd -- "$1" || return_err "Cannot cd to $1!"
   cpio -idm &>/dev/null
 )
 export -f unpack_cpio
 
 function pack_initfs_cpio() (
-  cd -- "$1" || return_err "No directory $1!"
+  cd -- "$1" || return_err "Cannot cd to $1!"
   find . | cpio --quiet -H newc -o
 )
 export -f pack_initfs_cpio
 
 function squashfs_rootfs_pack() (
   local dir="$1" file="$2"; shift 2
-  cd -- "$dir" || return_err "No directory $dir!"
+  cd -- "$dir" || return_err "Cannot cd to $dir!"
   mksquashfs . "$file" -noappend "${@}"
 )
 export -f squashfs_rootfs_pack
@@ -259,7 +278,7 @@ export -f squashfs_rootfs_pack
 function get_file_list_html() {
   # Gets list of files from html file.
   # Patched to work with Fancy Index of Nginx.
-  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | sed '/\?C=[NSM]&amp;O=[AD]/d;/[^"]*\//d'
+  sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | sed '/?C=[NSM]&amp;O=[AD]/d;/[^"]*\//d'
 }
 export -f get_file_list_html
 
@@ -281,6 +300,7 @@ export -f detect_vm
 # Aim of this bunch of functions is to correctly mount rootfs for correct work of many scripts and package managers (such as pacman).
 
 function chroot_add_mount() {
+  # Internal function to mount and to array pointed target.
   if [[ ! -e $3 ]]; then
     [[ $1 == dir ]] && mkdir -p "$3"; [[ $1 == file ]] && touch "$3"
     AP100_DBG msg_print debug "Created $1 $3."
@@ -293,6 +313,8 @@ function chroot_add_mount() {
 export -f chroot_add_mount
 
 function chroot_setup() {
+  # Internal function intended to correctly mount chroot.
+  # It it used to make system tools work correctly.
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   chroot_add_mount dir proc "$1/proc" -t proc -o nosuid,noexec,nodev
   chroot_add_mount dir sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro
@@ -314,7 +336,8 @@ function chroot_setup() {
 export -f chroot_setup
 
 function chroot_setup_light() {
-  # Made primarly for using in WSL1. Not used now.
+  # Internal function like `chroot_setup` except it is made to work on non-UNIX systems (WSL1).
+  # Kept for manual usage.
   for mount_point in proc sys dev dev/pts dev/shm run tmp; do
     chroot_add_mount dir "/$mount_point" "$1/$mount_point" --bind
   done
@@ -325,6 +348,9 @@ function chroot_setup_light() {
 export -f chroot_setup_light
 
 function chroot_teardown() {
+  # Internal function to umount target correctly.
+  # By default keeps create files. 
+  # Think twice before using `--remove-created` option.
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   if (( ${#CHROOT_ACTIVE_MOUNTS[@]} )); then
     for name in "${CHROOT_ACTIVE_MOUNTS[@]}"; do
@@ -344,20 +370,21 @@ function chroot_teardown() {
 export -f chroot_teardown
 
 function chroot_rootfs() {
+  # Main function to correctly run rootfs with given command.
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
   [[ -d $2 ]] || return_err "$2 is not a directory!"
   AP100_DBG msg_print debug "Preparing to chroot..."
-  case $1 in
-    light) local ADD_COMMAND=_light;;
-    main|*) :;;
-  esac
+  local mode=$1
   local CHROOT_DIR="$2"; shift 2; [[ -z $CHROOT_COMMAND ]] && local CHROOT_COMMAND=chroot
   if [[ $ROOTFS_DIR_NO_FIX == 0 ]] && ! mountpoint -q "$CHROOT_DIR"; then
     #Dirty hack to run some programs in chroot.
     msg_print warning "Not mounted directory. Bypassing..."
     chroot_add_mount dir "$CHROOT_DIR" "$CHROOT_DIR" --bind
   fi
-  chroot_setup"$ADD_COMMAND" "$CHROOT_DIR"
+  case $mode in
+    light) chroot_setup_light "$CHROOT_DIR";;
+    main|*) chroot_setup "$CHROOT_DIR";;
+  esac
   AP100_DBG msg_print debug "Running chroot..."
   unshare --fork $CHROOT_COMMAND "$CHROOT_DIR" "$@" || local EXIT_CODE=$? 
   chroot_teardown ""
