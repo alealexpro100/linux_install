@@ -31,7 +31,7 @@ rc-update add modules boot
 #rc-update add swap boot
 rc-update add sysctl boot
 rc-update add syslog boot
-rc-update add urandom boot
+[[ -f /etc/init.d/urandom ]] && rc-update add urandom boot
 rc-update add mount-ro shutdown
 rc-update add killprocs shutdown
 rc-update add savecache shutdown
