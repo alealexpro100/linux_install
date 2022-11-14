@@ -11,21 +11,52 @@ linux_install
 
 ![preview](docs/preview.png)
 
+## TL;DR
+
+One of _base_ features of this project is usage of __auto-profiles__:
+
+```bash
+add_var "declare -gx" "dir" "${default_dir:-/mnt/mnt}"
+add_var "declare -gx" "distr" "alpine"
+add_var "declare -gx" "hostname" "$distr"
+add_var "declare -gx" "user_name" "$user_name"
+add_var "declare -gx" "user_shell" "$user_shell"
+add_var "declare -gx" "passwd" "$passwd_default"
+add_var "declare -gx" "arch" "x86_64"
+add_var "declare -gx" "mirror_alpine" "$mirror_alpine"
+add_var "declare -gx" "version_alpine" "edge"
+```
+
+Just run `./install_sys.sh <path_to_profile>` and all work will be done.
+
+This is minimal working auto-installation profile. It installs Alpine rootfs and configures it: adds user, setup hostname, set correct mirror.
+
 ## About
+
+Supported features table:
+
+|Feature          | Auto-mode | Manual-mode|
+|-----------------|:---------:|:----------:|
+|Offline install  | WIP       | No         |
+|Online install   | Yes       | Yes        |
+|Localization     | Yes       | Yes        |
+|User scripts     | Yes       | No         |
 
 This script installs a base linux system from any linux distribution.
 Connection to mirror with packages for installing distribution is required.
 Tested on Alpinelinux (musl) and Archlinux (glibc).
 Supported Linux distros for installation:
 
-* Alpine
-* Archlinux
-* Astra
-* Debian
-* Voidlinux
+1. Alpine
+2. Archlinux
+3. Astra
+4. Debian
+5. Voidlinux
 
-If you want to install linux to your cloud with custom configuration, consider using [cloud-init](https://cloud-init.io/).
-If you want complex enterprise solution for installing on many PCs, consider using [FAI](https://fai-project.org/).
+Alternatives:
+
+* For cloud-based linux instance, consider using [cloud-init](https://cloud-init.io/).
+* Enterprise solution for installing on many PCs, consider using [FAI](https://fai-project.org/).
 
 Differences:
 
@@ -34,12 +65,14 @@ Differences:
 
 See presentation of this project [here](https://mirror.alexpro100.ru/scripts_files/other/presentations/Linux_install.pdf) (Russian).
 
+> Project is actively developed and it is ready to be used in a production environment
+
 ## Dependencies
 
 ### Requried
 
 * `coreutils util-linux bash wget tar zstd` - For normal system
-* `busybox bash zstd findmnt lsblk` - For busybox system
+* `busybox bash zstd findmnt lsblk` - For busybox system (ex. Alpine)
 
 ### Optional
 
@@ -80,11 +113,17 @@ See presentation of this project [here](https://mirror.alexpro100.ru/scripts_fil
 
 ### Standalone
 
+#### Manual mode
+
 * Prepare directory for installation.
 * Clone this repo.
 * Execute `./profile_gen.sh` and answer questions OR use one of prepared in `./auto_configs`.
 * Execute `./install_sys.sh your/profile.sh` using installation profile to install system.
 * That's all. You have installed system. Good luck!
+
+#### Auto mode
+
+[In TL;DR](#tldr)
 
 ## Building
 

@@ -1,32 +1,32 @@
-# Version 0.6.3
+## Version 0.6.3
 
 * Fix astralinux installation
 * Redone build process
 * Add cleanup after installation
 
-# Version 0.6.2
+## Version 0.6.2
 
 * Move docs to its directory.
 * Try to reduce size of new builds.
 * Fix issues on busybox systems.
 * More automation.
 
-# Version 0.6.1
+## Version 0.6.1
 
 * More perfomance and stability for archlinux bootstrap.
 * Less size of installer image.
 * Updated documentation.
 
-# Version 0.6.0
+## Version 0.6.0
 
 * Minor fixes.
 * Dynamic dependency resoltuion for archlinux installation.
 
-# Version 0.5.9
+## Version 0.5.9
 
 * Minor fixes.
 
-# Version 0.5.8
+## Version 0.5.8
 
 * Interface fixes: added "back" button, clean up.
 * Added support for astra installation.
@@ -34,81 +34,81 @@
 * Reworked live installer: added function for auto profiles, added auto partition.
 * Minor fixes: fixed alpine installation, made build simplier.
 
-# Version 0.5.7
+## Version 0.5.7
 
 * Minor fixes (mostly interface).
 * Added choose of type of kernel of Alpine.
 * Start working on new arch-bootstrap script.
 
-# Version 0.5.6
+## Version 0.5.6
 
 * Minor fixes.
 
-# Version 0.5.5
+## Version 0.5.5
 
 * Added choice of reboot or power off in live installer.
 * Interface fixes.
 * Minor fixes.
 
-# Version 0.5.4
+## Version 0.5.4
 
 * Fixed UEFI PXE live installer.
 * Minor interface fixes.
 * Minor fixes.
 
-# Version 0.5.3
+## Version 0.5.3
 
 * Added flag AUTO_PROFILE.
 * Reworked debian repo install.
 * Added RPM bootstrap (testing).
 * Interface fixes.
 
-# Version 0.5.3
+## Version 0.5.3
 
 * Minor fixes.
 * Optimization of build.
 
-# Version 0.5.2
+## Version 0.5.2
 
 * Minor fixes.
 
-# Version 0.5.1
+## Version 0.5.1
 
 * More handy interface.
 * Fixed disk partition.
 
-# Version 0.5.0
+## Version 0.5.0
 
 * Made suitable to package.
 * Fixed regressions.
 
-# Version 0.4.9
+## Version 0.4.9
 
 * Added handy build.
 * Fix grammar.
 * Minor fixes.
 
-# Version 0.4.8
+## Version 0.4.8
 
 * Added support for wireless connections.
 * Minor fixes.
 
-# Version 0.4.7
+## Version 0.4.7
 
 * Minor fixes.
 
-# Version 0.4.6
+## Version 0.4.6
 
 * Minor fixes.
 * Fixed live uefi installation.
 * Library (alexpro100_lib) fixes.
 
-# Version 0.4.5
+## Version 0.4.5
 
 * Minor fixes.
 * Removed errors on start of live installer.
 
-# Version 0.4.4
+## Version 0.4.4
 
 * Added disk operations to live mode.
 * Replaced pulseaudio with pipewire (temporaly except debian).
