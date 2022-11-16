@@ -28,7 +28,7 @@ for profile in "$@"; do
   mkdir "$tmp_distr_install/rootfs"
   mount -t tmpfs tmpfs "$tmp_distr_install/rootfs"
   default_dir="$tmp_distr_install/rootfs" ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
-  umount --lazy "$tmp_distr_install/rootfs"
+  umount -l "$tmp_distr_install/rootfs"
   rm -rf "$tmp_distr_install"
   msg_print msg "Ended on $(date -u)."
 done

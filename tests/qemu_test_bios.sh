@@ -33,7 +33,7 @@ for distr_install in "$@"; do
   cat "$tmp_distr_install/used_config"
   msg_print warn "End of profile file."
   ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
-  umount --lazy "$tmp_distr_install/rootfs"
+  umount -l "$tmp_distr_install/rootfs"
   losetup -D "${disk_id}"
   qemu-system-x86_64 -hda "$tmp_distr_install/disk.img" -m 3G || msg_print error "Qemu returned error $?."
   rm -rf "$tmp_distr_install"
