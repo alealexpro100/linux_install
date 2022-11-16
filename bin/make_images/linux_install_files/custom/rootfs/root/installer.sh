@@ -28,6 +28,7 @@ source "./linux_install/lib/msg/${LANG_INSTALLER:-en}.sh"
 # These functions are designed for using not only in installer, but in automatic profiles.
 
 function do_end_action() {
+    umount_partitions
     case $1 in
         0) msg_print note "Rebooting..."; reboot;;
         1) msg_print note "Powering off..."; poweroff;;

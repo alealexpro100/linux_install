@@ -145,7 +145,7 @@ export -f format_and_mount
 
 function umount_partitions() {
     local bootloader_type="${1:-BOOTLOADER_TYPE_DEFAULT}" mount_dir=${2:-/mnt/mnt}
-    [[ $bootloader_type == "uefi" ]] && umount "$mount_dir/boot"
-    umount "$mount_dir"
+    [[ $bootloader_type == "uefi" ]] && try_exec 0 umount "$mount_dir/boot"
+    try_exec 0 umount "$mount_dir"
 }
 export -f umount_partitions
