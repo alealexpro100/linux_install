@@ -11,8 +11,9 @@ apt_install="apt -y install"
 [[ $debian_no_recommends == 1 ]] && apt_install="$apt_install --no-install-recommends"
 
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
+rm -rf /etc/apt/sources.list
 for repo_name in "${debian_repos_order[@]}"; do
-  [[ -n "${debian_repos[$repo_name]}" && $repo_name != "main" ]] || continue
+  [[ -n "${debian_repos[$repo_name]}" ]] || continue
   echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
   if [[ -f "/root/certs/$repo_name.key" ]]; then
     gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"

@@ -12,7 +12,8 @@ fi
 
 [[ $debian_arch != $arch ]] && deb_add_option="$deb_add_option --foreign"
 [[ -z $preinstall ]] || preinstall=",$preinstall"
-bash -c "debootstrap --arch $arch $deb_add_option --include=gnupg$preinstall $version_debian $dir \"$(echo "${debian_repos[main]}" | cut -d" " -f2)\""
+debootstrap_component="${debian_repos_order[0]}"
+bash -c "debootstrap --arch $arch $deb_add_option --include=gnupg$preinstall $version_debian $dir \"$(echo "${debian_repos[$debootstrap_component]}" | cut -d" " -f2)\""
 [[ $debian_arch != $arch ]] && $arch_chroot_command $dir /debootstrap/debootstrap --second-stage
 
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
