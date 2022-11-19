@@ -55,7 +55,7 @@ create_tmp_dir make_build
 mkdir "$make_build/rootfs" "$make_build/custom" 
 cp -r "$build_files/custom/." "$make_build/custom"
 mount -t tmpfs tmpfs "$make_build/rootfs"
-cp "./auto_configs/linux_install_$ARCH.sh" "$make_build/config.sh"
+cp "$build_files/linux_install_$ARCH.sh" "$make_build/config.sh"
 CUSTOM_DIR="$make_build/custom" default_dir="$make_build/rootfs" "./install_sys.sh" "$make_build/config.sh"
 [[ "$LI_DEBUG" == "1" ]] && sed -i '6s/=0/=1/' "$make_build/rootfs/root/installer.sh"
 cp -Rf . "$make_build/rootfs/root/linux_install"
