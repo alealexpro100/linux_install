@@ -1,3 +1,4 @@
+#!/bin/bash
 
 HOSTS_ADD='
 0.0.0.0	local.site  localhost
@@ -18,8 +19,6 @@ version_astra=orel
 mirror_archlinux='http://mirror.dotsrc.org/archlinux'
 mirror_archlinux_32='https://mirror.archlinux32.org'
 mirror_archlinux_arm='https://mirror.archlinuxarm.org'
-mirror_manjaro='https://manjaro.moson.eu/stable'
-mirror_manjaro_arm='http://mirror.dotsrc.org/manjaro-arm/stable'
 mirror_alpine='https://dl-cdn.alpinelinux.org/alpine'
 mirror_voidlinux='https://alpha.de.repo.voidlinux.org/current'
 version_void=glibc
