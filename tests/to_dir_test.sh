@@ -17,6 +17,7 @@ source ./lib/common/lib_connect.sh
 [[ -z "$*" ]] && return_err "No options!"
 
 err_count=$((0)) succ_count=$((0)) iter_count=$((0))
+failed_lines=""
 test_name="install distro with default profile to directory"
 
 msg_print note "Started test: $test_name."
@@ -37,6 +38,7 @@ for distr_install in "$@"; do
     : $((succ_count++))
   else
     msg_print error "Something went wrong!"
+    failed_lines+="\n$distr_install"
     : $((err_count++))
   fi
   umount -l "$tmp_distr_install/rootfs"
@@ -46,3 +48,10 @@ done
 
 msg_print note "Completed test: $test_name."
 msg_print msg "Results: success: $succ_count, error: $err_count, iterations: $iter_count."
+
+if [[ $err_count == 0 ]]; then
+  exit 0
+else
+  msg_print err "Failed lines: $failed_lines"
+  exit 1
+fi
