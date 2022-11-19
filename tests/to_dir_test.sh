@@ -16,10 +16,16 @@ source ./lib/common/lib_connect.sh
 
 [[ -z "$*" ]] && return_err "No options!"
 
+err_count=$((0)) succ_count=$((0)) iter_count=$((0))
+test_name="install distro with default profile to directory"
+
+msg_print note "Started test: $test_name."
+
 for distr_install in "$@"; do
   [[ ! -d ./lib/distr/$distr_install ]] && return_err "Directory $distr_install not found!"
+  : $((iter_count++))
   msg_print msg "Started on $(date -u)."
-  msg_print msg "Testing $distr_install..."
+  msg_print msg "==\nTesting $distr_install...\n=="
   create_tmp_dir tmp_distr_install
   DEFAULT_DISTR=$distr_install DEFAULT_DIR="${tmp_distr_install:?}/rootfs" ECHO_MODE=auto bash ./profile_gen.sh "$tmp_distr_install/used_config"
   msg_print warn "Start of profile file."
@@ -27,8 +33,16 @@ for distr_install in "$@"; do
   msg_print warn "End of profile file."
   mkdir "$tmp_distr_install/rootfs"
   mount -t tmpfs tmpfs "$tmp_distr_install/rootfs"
-  ./install_sys.sh "$tmp_distr_install/used_config" || msg_print error "Something went wrong!"
+  if ./install_sys.sh "$tmp_distr_install/used_config"; then
+    : $((succ_count++))
+  else
+    msg_print error "Something went wrong!"
+    : $((err_count++))
+  fi
   umount -l "$tmp_distr_install/rootfs"
   rm -rf "$tmp_distr_install"
   msg_print msg "Ended on $(date -u)."
 done
+
+msg_print note "Completed test: $test_name."
+msg_print msg "Results: success: $succ_count, error: $err_count, iterations: $iter_count."

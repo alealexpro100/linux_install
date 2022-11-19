@@ -1,0 +1,24 @@
+name: "Test directory default and by-profile install"
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test_default:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test default install to directory
+        run: |
+          sudo ./tests/to_dir_test.sh $(echo $(find ./lib/distr/ -maxdepth 1 -type d | sort | sed "s|./lib/distr/||g;/^$/d"))
+  test_profiles:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test all included profiles
+        run: |
+          sudo ./tests/profile_test.sh $(echo $(find ./auto_configs/ -name '*.sh' | sed -e 's|\n| |g'))
