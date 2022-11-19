@@ -3,10 +3,14 @@
 # History variables. Array contains full `read_param` options. Variable contains actual index.
 var_history_list=()
 var_history_index=$((0))
+ui_terminal=[]
 
-#Weight and height parametres of terminal for UI.
-read -a ui_terminal < <(stty size)
-ui_terminal[0]=$((ui_terminal[0]/2)) ui_terminal[1]=$((ui_terminal[1]/2))
+# Weight and height parametres of terminal for UI.
+# We will recalculate it each time.
+function calc_ui_terminal() {
+  read -a ui_terminal < <(stty size)
+  ui_terminal[0]=$((ui_terminal[0]/2)) ui_terminal[1]=$((ui_terminal[1]/2))
+}
 
 # Generate menu. Reads by lines and return array of it.
 # Used for whiptail or dialog in read_params to show menus.
@@ -23,14 +27,15 @@ function gen_menu() {
 # Please do not use `msg_print` by yourself in user-mode step.
 function print_param() {
 case $ECHO_MODE in
-    whiptail|dialog) 
+    whiptail|dialog)
+      calc_ui_terminal
       local print_type=$1 text="$2" dialog="$3"
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.")
       "${options[@]}" --msgbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]}
     ;;
     auto|cli|*) 
-        local print_type=$1 text="$2"
-        msg_print "$print_type" "$text"
+      local print_type=$1 text="$2"
+      msg_print "$print_type" "$text"
     ;;
   esac
 }
@@ -79,6 +84,7 @@ function read_param() {
       esac
     ;;
     whiptail|dialog)
+      calc_ui_terminal
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.") return_code='' 
       while [[ $return_code != 0 ]]; do
         case $option in
