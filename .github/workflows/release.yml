@@ -20,5 +20,8 @@ jobs:
       - name: Upload images to Release
         uses: ncipollo/release-action@main
         with:
-          generateReleaseNotes: true
           artifacts: releases/*
+          body: |
+            For change log, plesase see this [file](docs/CHANGES.md)
+            Default user:password are root:pass
+            SSH is working on port 22.
