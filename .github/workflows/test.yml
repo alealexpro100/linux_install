@@ -27,6 +27,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y debootstrap
-      - name: Test all included profiles
+      - name: Test all included profiles (except live ones)
         run: |
-          sudo ./tests/profile_test.sh $(echo $(find ./auto_configs/ -name '*.sh' | sed -e 's|\n| |g'))
+          sudo ./tests/profile_test.sh $(echo $(find ./auto_configs/ -not -path "./auto_configs/live/*" -name '*.sh' | sed -e 's|\n| |g'))
