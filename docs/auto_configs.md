@@ -38,7 +38,7 @@ It can be generated using `profile_gen.sh`, then edited in text editor, then use
 
 ### Notes
 
-* It is strongly recommended to see example auto live profile: [`./auto_configs/example_auto_profile.sh`](./example_auto_profile.sh).
+* It is strongly recommended to see example auto live profile: [`./auto_configs/live/example_auto_profile.sh`](./example_auto_profile.sh).
 * Keep in mind that `install_sys.sh` by default installs only rootfs. It does not do partition or mount filesystems, but makes system bootable.
 
 ### Building live auto profile

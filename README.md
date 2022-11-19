@@ -108,7 +108,7 @@ See presentation of this project [here](https://mirror.alexpro100.ru/scripts_fil
 #### Auto mode (PXE)
 
 * Prepare auto live profile. (Build profile described [here](docs/auto_configs.md))
-* You will need add kernel option `AUTO_PROFILE=URL_TO_YOUR_PROFILE`. Examples: `AUTO_PROFILE=/auto_configs/example_auto_profile.sh` OR `AUTO_PROFILE=https://example.com/auto_profile.sh`.
+* You will need add kernel option `AUTO_PROFILE=URL_TO_YOUR_PROFILE`. Examples: `AUTO_PROFILE=/auto_configs/live/example_auto_profile.sh` OR `AUTO_PROFILE=https://example.com/auto_profile.sh`.
 * Installation will start and complete itself.
 
 ### Standalone
