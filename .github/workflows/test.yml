@@ -11,6 +11,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Install needed packages
+        run: |
+          sudo apt update
+          sudo apt install -y debootstrap
       - name: Test default install to directory
         run: |
           sudo ./tests/to_dir_test.sh $(echo $(find ./lib/distr/ -maxdepth 1 -type d | sort | sed "s|./lib/distr/||g;/^$/d"))
@@ -19,6 +23,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Install needed packages
+        run: |
+          sudo apt update
+          sudo apt install -y debootstrap
       - name: Test all included profiles
         run: |
           sudo ./tests/profile_test.sh $(echo $(find ./auto_configs/ -name '*.sh' | sed -e 's|\n| |g'))
