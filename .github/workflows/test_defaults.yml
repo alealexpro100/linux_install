@@ -1,0 +1,24 @@
+name: "Test directory default and by-profile install"
+
+on:
+  pull_request:
+    - paths:
+      - 'lib/distr/**'
+  push:
+    - paths:
+      - 'lib/distr/**'
+  workflow_dispatch:
+
+jobs:
+  test_defaults:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install needed packages
+        run: |
+          sudo apt update
+          sudo apt install -y debootstrap
+      - name: Test default install to directory
+        run: |
+          sudo ./tests/to_dir_test.sh $(echo $(find ./lib/distr/ -maxdepth 1 -type d | sort | sed "s|./lib/distr/||g;/^$/d"))
