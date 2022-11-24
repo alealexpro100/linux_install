@@ -1,11 +1,11 @@
-name: "Test directory default and by-profile install"
+name: "Test by-profile install"
 
 on:
   pull_request:
-    - paths:
+    paths:
       - 'auto_configs/**'
   push:
-    - paths:
+    paths:
       - 'auto_configs/**'
   workflow_dispatch:
 

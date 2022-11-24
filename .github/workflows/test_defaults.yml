@@ -1,11 +1,11 @@
-name: "Test directory default and by-profile install"
+name: "Test directory default install"
 
 on:
   pull_request:
-    - paths:
+    paths:
       - 'lib/distr/**'
   push:
-    - paths:
+    paths:
       - 'lib/distr/**'
   workflow_dispatch:
 
