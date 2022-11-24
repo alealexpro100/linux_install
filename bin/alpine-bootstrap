@@ -12,8 +12,6 @@ export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 
-[[ $UID != 0 ]] && return_err "This script requries root permissions!"
-
 # Check options.
 if [[ -z $4 ]]; then
   echo_help "Alpine linux boostrap script.\n" \
@@ -60,12 +58,12 @@ function do_install() {
 
   PATH=/usr/sbin:/usr/bin:/sbin:/bin
   apk_command="/sbin/apk $arg_repos"
+  [[ -z $NEED_FIX ]] || $arch_chroot_command "$dir" $apk_command fix '*'
   $arch_chroot_command "$dir" $apk_command upgrade
-  [[ -n $NEED_FIX ]] && $arch_chroot_command "$dir" $apk_command fix '*'
-  [[ -n $add_packages ]] && $arch_chroot_command "$dir" $apk_command add $add_packages
+  [[ -z $add_packages ]] || $arch_chroot_command "$dir" $apk_command add $add_packages
   if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
     echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
-    [[ $version == "edge" ]] && echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
+    [[ $version != "edge" ]] || echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
   fi
 }
 if [[ $AP100_DBG_ON == 1 ]]; then
