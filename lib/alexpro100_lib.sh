@@ -8,10 +8,11 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.2"
+ALEXPRO100_LIB_VERSION="0.4.3"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
+export PROOT_MOUNTS=() FORCE_PROOT=0 PROOT_ROOT=""
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 
 #NOTE: Take attention to the parentheses (() or {}). They may vary.
@@ -116,16 +117,35 @@ function show_progress() {
     train) local sp="     < <=<=======>=> >  " s=3;;
     *) local sp="incorrect option! "; s=9;;
   esac
-  local i=0;
+  local i=0 EXIT_CODE=0
   while [[ -d /proc/$2 ]]; do
     echo -ne "\e[2K [${sp:(i++)*s%${#sp}:s}]:$3 \r"
     sleep 0.5s
   done
+  # See https://stackoverflow.com/questions/1570262
+  wait "$2" || EXIT_CODE=$?
   echo ""
+  if [[ $EXIT_CODE != 0 ]]; then
+    return_err "Process $2 exited with code $EXIT_CODE!" $EXIT_CODE
+  else
+    return 0
+  fi
 }
 export -f show_progress
 
 #--SYS--
+
+# We check to have root rights, even if they are fake
+function has_root() {
+  if [[ $UID != 0 ]]; then
+    AP100_DBG msg_print debug "No root permission detected."
+    return 1;
+  else
+    AP100_DBG msg_print debug "Root permission detected."
+    return 0;
+  fi
+}
+export -f has_root
 
 function try_exec() {
   # Fail-safe function to execute a command.
@@ -307,14 +327,27 @@ function chroot_add_mount() {
     CHROOT_CREATED=("$3" "${CHROOT_CREATED[@]}")
   fi
   AP100_DBG msg_print debug "Mounting $2..."
-  shift; mount "$@" || msg_print warning "$2 not mounted!"
-  CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
+  shift;
+  if [[ $FORCE_PROOT == "1" ]] || has_root; then
+    AP100_DBG msg_print debug "Root detected. Using real mount."
+    mount "$@" || msg_print warning "$2 not mounted!"
+    CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
+  else
+    AP100_DBG msg_print debug "Root not detected. Using proot mount (cmd params)."
+    [[ -n $PROOT_ROOT ]] || msg_print warning "Variable PROOT_ROOT is empty. Incorrect mount will be set."
+    PROOT_MOUNTS=("${PROOT_MOUNTS[@]}" "-b" "$1:${2#"$PROOT_ROOT"}")
+  fi
 }
 export -f chroot_add_mount
 
 function chroot_setup() {
   # Internal function intended to correctly mount chroot.
   # It it used to make system tools work correctly.
+  if ! has_root; then
+    AP100_DBG msg_print debug "Root is required for chroot_setup. Switching to chroot_setup_light..."
+    PROOT_ROOT="$1" chroot_setup_light "$@"
+    PROOT_ROOT=""
+  fi
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   chroot_add_mount dir proc "$1/proc" -t proc -o nosuid,noexec,nodev
   chroot_add_mount dir sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro
@@ -357,14 +390,19 @@ function chroot_teardown() {
       AP100_DBG msg_print debug "Unmounting $name..."
       umount -l "$name" || msg_print warning "Not 0 code exit!"
     done
-    if [[ "$1" == "--remove-created" ]]; then
-      for name in "${CHROOT_CREATED[@]}"; do
-        AP100_DBG msg_print debug "Removing $name..."
-        rm -rf "$name" || msg_print warning "Not 0 code exit!"
-      done
-    fi
+    CHROOT_ACTIVE_MOUNTS=()
   fi
-  unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED
+  if (( ${#PROOT_MOUNTS[@]} )); then
+    AP100_DBG msg_print debug "Cleaning up proot mount params..."
+    PROOT_MOUNTS=()
+  fi
+  if [[ (( ${#CHROOT_CREATED[@]} )) && "$1" == "--remove-created" ]]; then
+    for name in "${CHROOT_CREATED[@]}"; do
+      AP100_DBG msg_print debug "Removing $name..."
+      rm -rf "$name" || msg_print warning "Not 0 code exit!"
+    done
+    CHROOT_CREATED=()
+  fi
   AP100_DBG msg_print debug "Completed ${FUNCNAME[*]}."
 }
 export -f chroot_teardown
@@ -374,20 +412,36 @@ function chroot_rootfs() {
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
   [[ -d $2 ]] || return_err "$2 is not a directory!"
   AP100_DBG msg_print debug "Preparing to chroot..."
-  local mode=$1
-  local CHROOT_DIR="$2"; shift 2; [[ -z $CHROOT_COMMAND ]] && local CHROOT_COMMAND=chroot
-  if [[ $ROOTFS_DIR_NO_FIX == 0 ]] && ! mountpoint -q "$CHROOT_DIR"; then
+  local mode=$1 CHROOT_DIR="$2"
+  shift 2;
+  if has_root && [[ $ROOTFS_DIR_NO_FIX == 0 ]] && ! mountpoint -q "$CHROOT_DIR"; then
     #Dirty hack to run some programs in chroot.
     msg_print warning "Not mounted directory. Bypassing..."
     chroot_add_mount dir "$CHROOT_DIR" "$CHROOT_DIR" --bind
   fi
+  if [[ $mode == "auto" ]]; then
+    if has_root && [[ $FORCE_PROOT != "1" ]]; then
+      AP100_DBG msg_print debug "Auto mode enabled. Using main mode."
+      mode="main"
+    else
+      AP100_DBG msg_print debug "Auto mode enabled. Using no_root mode."
+      mode="no_root"
+    fi
+  fi
   case $mode in
-    light) chroot_setup_light "$CHROOT_DIR";;
-    main|*) chroot_setup "$CHROOT_DIR";;
+    main)
+      chroot_setup "$CHROOT_DIR"
+      AP100_DBG msg_print debug "Running chroot..."
+      unshare --fork chroot "$CHROOT_DIR" "$@" || local EXIT_CODE=$?
+      chroot_teardown ""
+    ;;
+    no_root)
+      # We do not use chroot_setup here. Proot will do the job itself
+      AP100_DBG msg_print debug "Running proot..."
+      proot "${PROOT_MOUNTS[@]}" -S "$CHROOT_DIR" "$@" || local EXIT_CODE=$?
+    ;;
+    *) return_err "Incorrect switch for mode $mode";;
   esac
-  AP100_DBG msg_print debug "Running chroot..."
-  unshare --fork $CHROOT_COMMAND "$CHROOT_DIR" "$@" || local EXIT_CODE=$? 
-  chroot_teardown ""
   if [[ -n $EXIT_CODE && $EXIT_CODE != "0" ]]; then 
     msg_print err "Something went wrong! Code exit is $EXIT_CODE."
     return $EXIT_CODE
