@@ -18,7 +18,7 @@ if [[ $version_debian != "sid" ]]; then
     add_var "declare -gx" "debian_repos_order[1]" "updates"
     add_var "declare -gx" "debian_repos[backports]" "deb $debian_mirror $version_debian-backports main non-free contrib"
     add_var "declare -gx" "debian_repos_order[2]" "backports"
-    if [[ $version_debian == "bullseye" || $version_debian == "testing" ]]; then
+    if ! [[ $1 == "jessie" || $1 == "stretch" ]]; then
       add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian-security main non-free contrib"
     else
       add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian/updates main non-free contrib"

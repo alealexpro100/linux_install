@@ -48,8 +48,8 @@ if [[ $kernel == "1" ]]; then
   esac
   if [[ $backports_kernel == "1" ]]; then
     case "$kernel_type" in
-      vanilla) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch" firmware-linux;;
-      virtual) $apt_install -t "$debian_distr-backports" "linux-image-$kernel_arch";;
+      vanilla) $apt_install -t "$version_debian-backports" "linux-image-$kernel_arch" firmware-linux;;
+      virtual) $apt_install -t "$version_debian-backports" "linux-image-$kernel_arch";;
       *) return_err "Incorrect paramater kernel_type=$kernel_type! Mistake?"
     esac
   else
