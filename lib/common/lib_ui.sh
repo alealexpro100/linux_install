@@ -14,6 +14,7 @@ function calc_ui_terminal() {
 
 # Generate menu. Reads by lines and return array of it.
 # Used for whiptail or dialog in read_params to show menus.
+# Example: "$(gen_menu < <(echo -e "glibc\nmusl"))"
 function gen_menu() {
   local tmp_gen_menu=() i=0
   while IFS=$'\n' read -r var; do
@@ -25,21 +26,25 @@ function gen_menu() {
 # Print info
 # Use it with read_param.
 # Please do not use `msg_print` by yourself in user-mode step.
+# Syntax: print_param {note|warn|err|*} [TEXT]
+# Example: print_param note "Your carrot is here."
 function print_param() {
 case $ECHO_MODE in
     whiptail|dialog)
       calc_ui_terminal
       local print_type=$1 text="$2" dialog="$3"
       local options=("$ECHO_MODE" "--cancel-button" "$M_CANCEL_BUTTON" "--backtitle" "$M_PROJECT_NAME $LI_VERSION.")
-      "${options[@]}" --msgbox "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]}
+      "${options[@]}" "--msgbox" "$text$dialog" ${ui_terminal[0]} ${ui_terminal[1]}
     ;;
     auto|cli|*) 
-      local print_type=$1 text="$2"
+      local print_type=$1 text="$2$3"
       msg_print "$print_type" "$text"
     ;;
   esac
 }
 
+# Function to go back in history. Uses eval, but still pretty safe.
+# This function is recursive, so be cautious when editing it.
 function history_read_param() {
   [[ $1 != "0" ]] || return_err "Operation cancelled by user!"
   local params_h=() i_var
@@ -49,7 +54,7 @@ function history_read_param() {
   read_param "${params_h[@]}"
 }
 
-#Enter parametres.
+# Enter parameters.
 # Supported modes: 
 # * auto (no user input);
 # * cli (for plain terminals or automation);
@@ -58,7 +63,11 @@ function history_read_param() {
 # Only whiptail or dialog mode has support for using history.
 # Other modes still write history.
 # Options:
-# NO_HISTORY=1 - Prevents current command to be kept in history. Does not affect variable set.
+# * NO_HISTORY=1 - Prevents current command to be kept in history. Does not affect variable set.
+# * NO_VAR=1 - Do not set variable in local environment. From function `add_var`.
+# Syntax: read_param [TEXT] [DIALOG] {0-99} [VARIABLE] {yes_or_no|no_or_yes|text|text_empty|secret|secret_empty|menu|menu_var} [ADDITIONAL_PARAMS]
+# Example 1: read_param "" "${M_VAR_DESCRIPTION[$var]:-$var}" "" "$var" yes_or_no
+# Example 2: NO_VAR=1 NO_HISTORY=1 read_param "$M_DEB_REPO_TEXT\n" "$M_LIST_DIALOG" "0" repos menu "$(gen_menu < <(echo -e "$vars_list"))"
 function read_param() {
   # shellcheck disable=SC2034
   local text="$1" dialog="$2" default_var=$3 var=$4 option=$5 tmp='' i_var params=() params_h=()

@@ -101,7 +101,7 @@ See presentation of this project [here](https://mirror.alexpro100.ru/scripts_fil
 
 * Download latest `linux_install-*.pxe.tar.gz` file from [releases](https://github.com/alealexpro100/linux_install/releases).
 * Unpack it to boot server. Variable `${linux_url}` is a url to directory with needed files.
-* To boot it from [IPXE](https://ipxe.org/) there is two necessary kernel options: `modloop=${linux_url}/modloop-lts rootfs_net=${linux_url}/rootfs.img`.
+* To boot it from [IPXE](https://ipxe.org/) there is two necessary kernel options: `modloop=${linux_url}/modloop-lts rootfs_net=${linux_url}/rootfs.img BOOTIF=01-${netX/mac}`.
 * Follow install instructions.
 * That's all. You have installed system. Good luck!
 
