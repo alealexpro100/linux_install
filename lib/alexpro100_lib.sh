@@ -8,10 +8,10 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.3"
+ALEXPRO100_LIB_VERSION="0.4.4"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
-export TMP='' CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
+export CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
 export PROOT_MOUNTS=() FORCE_PROOT=0 PROOT_ROOT=""
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 
@@ -71,9 +71,12 @@ AP100_DBG echo -e "ALEXPRO100 BASH LIBRARY $ALEXPRO100_LIB_VERSION (Debug mode)"
 
 #--UI--
 
+# Print decorated text.
+# Has support for multi-line messages.
+# Syntax: msg_print {alert|err|warn|note|msg|debug|prgs} [TEXT]
+# Example: msg_print note "Your message"
 function msg_print() {
-  # Prints decorated text. Has support for multi-line messages.
-  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} {alert|err|warn|note|msg|debug|prgs} [TEXT]]\nPrint decorated text."
+  [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} {alert|err|warn|note|msg|debug|prgs} [TEXT]\nPrint decorated text."
   local line TYPE=$1; shift
   while IFS= read -r line; do
     case $TYPE in
@@ -102,14 +105,14 @@ function echo_help() {
 }
 export -f echo_help
 
+# Function to show progress while executing a command.
+# To use it you have to run the command in background and pass its id to this function.
+# To get id of background process You can use `$!` variable after running command with end ` &`.
+# Do not use it for functions, that modify external variables or arrays.
+# The function in that case will work in sub-shell and won't modify external variables.
+# Syntax: show_progress {sp|kit|train} [PROCESS_ID] [TEXT]
+# Example: show_progress sp 1 "Your system is running..."
 function show_progress() {
-  # Function to show progress while executing a command.
-  #
-  # To use it you have to run the command in background and pass its id to this function.
-  # To get id of background process You can use `$!` variable after running command with end ` &`.
-  #
-  # Do not use it for functions, that modify external variables or arrays.
-  # The function in that case will work in sub-shell and won't modify external variables.
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {sp|kit|train} [PROCESS_ID] [TEXT]\nShow progress while until program complete."
   case $1 in
     sp) local sp="|\-/" s=1;;
@@ -147,8 +150,10 @@ function has_root() {
 }
 export -f has_root
 
+# Fail-safe function to execute a command.
+# Syntax: try_exec {0|1} [COMMAND]
+# Example: try_exec 0 sleep
 function try_exec() {
-  # Fail-safe function to execute a command.
   [[ -z $2 || ( $1 != "0" && $1 != "1" ) ]] && echo_help "Usage: ${FUNCNAME[0]} {0|1} [COMMAND]\nTry to execute command."
   local RETURN_ERR=$1; shift
   if "$@"; then
@@ -175,14 +180,18 @@ function is_function() {
 }
 export -f is_function
 
+# Hack for busybox. Prints list of files in directory.
+# Busybox's find applet doesn't support option to shrink directory name.
+# WARNING: last / is important!
+# Example: list_files /mnt/ext4_1/
 function list_files() {
-  # Hack for busybox. Prints list of files in directory.
-  # Busybox's find applet doesn't support option to shrink directory name.
   local DIR_SEARCH="$1"; shift
   find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d"
 }
 export -f list_files
 
+# Stable, but slow way to copy bunch of files.
+# Example: mv_big folder1 folder2
 function mv_big() {
   for file in "$1"/*; do
     mv "$1/$file" "$2"
@@ -190,9 +199,9 @@ function mv_big() {
 }
 export -f mv_big
 
+# This function checks only local link, NOT internet connection.
+# It is intended to check local connection like enterprise network.
 function check_online() {
-  # It does NOT detect internet connection, only local link is checked.
-  # It is intended to check local connection like enterprise network.
   local offline=1
   while IFS= read -r interface; do
     AP100_DBG msg_print debug "Checking $interface for carrier."
@@ -205,6 +214,9 @@ function check_online() {
 }
 export -f check_online
 
+# Download file to path
+# Syntax: get_file_s [FILE] [URL]
+# Example: get_file_s /tmp/file.bin "https://test.com/favicon.ico"
 function get_file_s() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [FILE] [URL]\nDownload to file from url."
   if command_exists wget &>/dev/null; then
@@ -219,8 +231,10 @@ function get_file_s() {
 }
 export -f get_file_s
 
+# Check to be available to download this URL.
+# Syntax: check_url [URL]
+# Example: check_url "http://test.com"
 function check_url() {
-  # Check to be available to download this URL.
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [URL]\nCheck url to be downloadable."
   is_url "$1" || return_err "Parameter $1 is not downloadable URL."
   AP100_DBG msg_print debug "Checking URL: $1..."
@@ -236,6 +250,8 @@ function check_url() {
 }
 export -f check_url
 
+# Check if param is url (http, https or ftp).
+# Example: is_url folder2
 function is_url() {
 	case "$1" in
   http://*|https://*|ftp://*) return 0;;
@@ -244,6 +260,7 @@ function is_url() {
 }
 export -f is_url
 
+# Create tmp directory
 function create_tmp_dir() {
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [VARIABLE]\nCreate temporary directory and assign it to variable."
   local dir="/tmp/.$1_tmp_$RANDOM"
@@ -257,6 +274,8 @@ function create_tmp_dir() {
 }
 export -f create_tmp_dir
 
+# Extract archive to stdout.
+# Example: arccat file.tar.gz | grep test
 function arccat() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [TYPE] [FILE]\nExtract archive to stdout."
   [[ $2 == "-" || -f $2 ]] || return_err "File $2 does NOT exist."
@@ -295,15 +314,15 @@ export -f squashfs_rootfs_pack
 
 # -- PARSERS
 
+# Gets list of files from html file.
+# Patched to work with Fancy Index of Nginx.
 function get_file_list_html() {
-  # Gets list of files from html file.
-  # Patched to work with Fancy Index of Nginx.
   sed -n '/<a / s/^.*<a [^>]*href="\([^\"]*\)".*$/\1/p' | sed '/?C=[NSM]&amp;O=[AD]/d;/[^"]*\//d'
 }
 export -f get_file_list_html
 
+# Write to stdout type of machine and return result (0 - if virtual, 1 - if real).
 function detect_vm() {
-  # Will write to stdout detected type and/or return result.
   for type in ${1:-'VMware, Inc.' 'Xen' 'KVM' 'VirtualBox' 'Standard PC (Q35 + ICH9, 2009)' 'Standard PC (i440FX + PIIX, 1996)'}; do
     AP100_DBG msg_print debug "Testing $type..."
     if [[ "$(dmidecode -s system-product-name)" == "$type" ]]; then
@@ -319,9 +338,12 @@ export -f detect_vm
 
 # Aim of this bunch of functions is to correctly mount rootfs for correct work of many scripts and package managers (such as pacman).
 
+# Internal function to mount and to array pointed target.
+# Example (1): chroot_add_mount dir shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev
+# Example (2): chroot_add_mount dir "/dev" "$1/dev" --bind
 function chroot_add_mount() {
-  # Internal function to mount and to array pointed target.
-  if [[ ! -e $3 ]]; then
+  [[ $1 == dir || $1 == file ]] || return_err "Wrong mount type $1!"
+  if has_root && [[ ! -e $3 ]]; then
     [[ $1 == dir ]] && mkdir -p "$3"; [[ $1 == file ]] && touch "$3"
     AP100_DBG msg_print debug "Created $1 $3."
     CHROOT_CREATED=("$3" "${CHROOT_CREATED[@]}")
@@ -340,13 +362,14 @@ function chroot_add_mount() {
 }
 export -f chroot_add_mount
 
+# Internal function intended to correctly mount chroot.
+# It it used to make system tools work correctly (like pacman, xbps and etc.).
 function chroot_setup() {
-  # Internal function intended to correctly mount chroot.
-  # It it used to make system tools work correctly.
+  [[ -d "$1" ]] || return_err "Location $1 is not directory or does not exist!"
   if ! has_root; then
     AP100_DBG msg_print debug "Root is required for chroot_setup. Switching to chroot_setup_light..."
-    PROOT_ROOT="$1" chroot_setup_light "$@"
-    PROOT_ROOT=""
+    PROOT_ROOT="${PROOT_ROOT-:$1}" chroot_setup_light "$@" || return_err "chroot_setup_light failed with code $?!"
+    return 0
   fi
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   chroot_add_mount dir proc "$1/proc" -t proc -o nosuid,noexec,nodev
@@ -368,9 +391,10 @@ function chroot_setup() {
 }
 export -f chroot_setup
 
+# Internal function like `chroot_setup` except it is made to work on non-UNIX systems (WSL1).
+# Kept for manual usage.
 function chroot_setup_light() {
-  # Internal function like `chroot_setup` except it is made to work on non-UNIX systems (WSL1).
-  # Kept for manual usage.
+  [[ -d "$1" ]] || return_err "Location $1 is not directory or does not exist!"
   for mount_point in proc sys dev dev/pts dev/shm run tmp; do
     chroot_add_mount dir "/$mount_point" "$1/$mount_point" --bind
   done
@@ -380,15 +404,15 @@ function chroot_setup_light() {
 }
 export -f chroot_setup_light
 
+# Internal function to umount target correctly.
+# By default keeps create files. 
+# Think twice before using `--remove-created` option (it removes dirs and files created by this function).
 function chroot_teardown() {
-  # Internal function to umount target correctly.
-  # By default keeps create files. 
-  # Think twice before using `--remove-created` option.
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
   if (( ${#CHROOT_ACTIVE_MOUNTS[@]} )); then
     for name in "${CHROOT_ACTIVE_MOUNTS[@]}"; do
       AP100_DBG msg_print debug "Unmounting $name..."
-      umount -l "$name" || msg_print warning "Not 0 code exit!"
+      umount -l "$name" || msg_print warning "Not 0 code exit ($?)!"
     done
     CHROOT_ACTIVE_MOUNTS=()
   fi
@@ -399,7 +423,7 @@ function chroot_teardown() {
   if [[ (( ${#CHROOT_CREATED[@]} )) && "$1" == "--remove-created" ]]; then
     for name in "${CHROOT_CREATED[@]}"; do
       AP100_DBG msg_print debug "Removing $name..."
-      rm -rf "$name" || msg_print warning "Not 0 code exit!"
+      rm -rf "$name" || msg_print warning "Not 0 code exit ($?)!"
     done
     CHROOT_CREATED=()
   fi
@@ -407,9 +431,11 @@ function chroot_teardown() {
 }
 export -f chroot_teardown
 
+# Chroot to directory with correct mount.
+# Example: chroot_rootfs main /mnt/mnt bash
 function chroot_rootfs() {
   # Main function to correctly run rootfs with given command.
-  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory mounting necessary directories."
+  [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} {main|light} [DIRECTORY] [SHELL]\nChroot to directory with some fixes."
   [[ -d $2 ]] || return_err "$2 is not a directory!"
   AP100_DBG msg_print debug "Preparing to chroot..."
   local mode=$1 CHROOT_DIR="$2"
@@ -449,6 +475,8 @@ function chroot_rootfs() {
 }
 export -f chroot_rootfs
 
+# Export distro-specific current arch in variables.
+# Variables: alpine_arch debian_arch arch_arch rpm_arch void_arch qemu_arch
 function parse_arch() {
   # Generally used to get distro-specific arch names.
   case $1 in
@@ -465,10 +493,11 @@ function parse_arch() {
 }
 export -f parse_arch
 
+# Do chroot_rootfs using qemu to run binaries for foreign arch.
+# If arch is set to check, we just check ability to use qemu static.
 function qemu_chroot() {
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu-static, mounting necessary directories."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
-  # If arch is set to check, we just check ability to use qemu static.
   [[ "$1" == "check" ]] && shift
   parse_arch "$1"; shift
   if [[ -f $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static ]]; then
@@ -484,8 +513,8 @@ function qemu_chroot() {
 }
 export -f qemu_chroot
 
+# For running binary for foreign arch.
 function qemu_run_bin() {
-  #For running binary for foreign arch.
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu-static."
   local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
@@ -497,8 +526,8 @@ function qemu_run_bin() {
 }
 export -f qemu_run_bin
 
+# Lightweight version of genfstab. Generates fstab file.
 function genfstab_light() {
-  # It is lightweight version of genfstab. It is used to generate fstab file.
   [[ -z $1 ]] && echo_help "Usage: ${FUNCNAME[0]} [DIRECTORY]\nMake fstab file for directory."
   local root
   root=$(realpath "$1")
