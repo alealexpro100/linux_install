@@ -44,14 +44,14 @@ else
     export BOOTLOADER_TYPE_DEFAULT=bios
 fi
 
-msg_print note "$M_WELCOME $(cat ./linux_install/version_install)"
+print_param note "$M_WELCOME $(cat ./linux_install/version_install)"
 
 if [[ -n "$AUTO_PROFILE" ]]; then
-    msg_print note "$M_MODE_AUTO"
+    print_param note "$M_MODE_AUTO"
     declare error_msg
     if is_url "$AUTO_PROFILE"; then
         if ! check_online; then
-            msg_print warning "$M_HOST_OFFLINE"
+            print_param warning "$M_HOST_OFFLINE"
             for interface in $(list_files "/sys/class/net/" -type l | sed '/lo/d'); do
                 interface_setup_dhcp "$interface"
             done
@@ -63,14 +63,14 @@ if [[ -n "$AUTO_PROFILE" ]]; then
     if [[ -z $error_msg ]]; then
         ./linux_install/install_sys.sh /tmp/auto_profile.sh || error_msg="$M_MODE_AUTO_FAIL"
     fi
-    [[ -z $error_msg ]] || msg_print error "$error_msg"
+    [[ -z $error_msg ]] || print_param error "$error_msg"
     unset error_msg
 fi
 
-msg_print note "$M_MODE_MANUAL"
+print_param note "$M_MODE_MANUAL"
 
 while ! check_online; do
-    msg_print warning "$M_HOST_OFFLINE"
+    print_param warning "$M_HOST_OFFLINE"
     read_param "$M_NET_INTERFACE_DETECTED_LIST:\n" "$M_NET_INTERFACE_CHOOSE" "0" INTERFACE menu_var "$(gen_menu < <(interfaces_get_list))"
     #shellcheck disable=SC2153
     case $INTERFACE in
@@ -96,13 +96,15 @@ while ! check_online; do
             esac
         ;;
         *)
-            msg_print error "Incorrect interface $interface!"
+            print_param error "Incorrect interface $interface!"
         ;;
     esac
 done
-msg_print note "$M_HOST_ONLINE"
+print_param note "$M_HOST_ONLINE"
 
 interfaces_get_ip
+
+print_param note "To connect use \`ssh -o \"UserKnownHostsFile /dev/null\" root@{given_ip}\`"
 
 read_param "" "$M_MSG_OPT" "${LANG_INSTALLER:-en}" LANG_INSTALLER menu_var "$(gen_menu < <(list_files "./linux_install/lib/msg/" | sed "s|.sh||g"))"
 # shellcheck disable=SC1090
@@ -114,9 +116,9 @@ if [[ $WORK_MODE == "install" ]]; then
     PART_BOOT="" PART_ROOT="" PART_DO=""
     while [[ $PART_DO != "0" ]]; do
         read_param "" "$M_PART" "" PART_DO no_or_yes
-        print_param note "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
+        print_param note "" "$M_BOOTLOADER_TYPE: $BOOTLOADER_TYPE_DEFAULT.\n$M_PART_D_M:\n$(lsblk | sed -e '/loop[0-10]/d')"
         if [[ $PART_DO == "1" ]]; then
-            msg_print warning "$M_PART_WARN"
+            print_param warning "$M_PART_WARN"
             read_param "" "$M_PART_D" '0' PART_ROOT menu_var "$(gen_menu < <(disk_list_get -d))"
             read_param "" "$M_PART_MODE" "auto" PART_MODE menu_var "$(gen_menu < <(echo -e "auto\nmanual"))"
             if [[ $PART_MODE == "auto" ]]; then
