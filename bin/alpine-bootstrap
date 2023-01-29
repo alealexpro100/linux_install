@@ -29,18 +29,18 @@ if [[ $mirror =~ https* ]]; then
 fi
 if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then
   check_url "$mirror" || return_err "Incorrect mirror $mirror!"
-  download_repo="$mirror/$alpine_arch"
+  download_repo="$mirror/$arch"
   arg_repos="-X ${mirror/https\:/http\:}"
 else
   check_url "$mirror/$version/main/$arch" || return_err "Incorrect arch $arch, version $version or mirror $mirror!"
-  download_repo="$mirror/$version/main/$alpine_arch"
+  download_repo="$mirror/$version/main/$arch"
   arg_repos="-X ${mirror/https\:/http\:}/$version/main -X ${mirror/https\:/http\:}/$version/community"
 fi
 if [[ $arch == "$alpine_arch" ]]; then
-  arch_chroot_command="chroot_rootfs auto"
+  apk_static_run=""
 else
   if qemu_chroot check "$arch" ok; then
-    arch_chroot_command="qemu_chroot $arch"
+    apk_static_run="qemu_run_bin $arch"
   else
     exit 1
   fi
@@ -55,14 +55,9 @@ get_file_s - "$download_repo/$apktools_pkg" | tar -xzf - -C "$alpine_apk" "sbin/
 show_progress train $! "(2) Downloading and extracting apk-tools static..."
 
 function do_install() {
-  "$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base || NEED_FIX=1
+  $apk_static_run "$alpine_apk/sbin/apk.static" $arg_repos --allow-untrusted --root "$dir" --arch "$arch" --initdb add alpine-base $add_packages
   rm -rf "$alpine_apk"
 
-  PATH=/usr/sbin:/usr/bin:/sbin:/bin
-  apk_command="/sbin/apk $arg_repos"
-  [[ -z $NEED_FIX ]] || $arch_chroot_command "$dir" $apk_command fix '*'
-  $arch_chroot_command "$dir" $apk_command upgrade
-  [[ -z $add_packages ]] || $arch_chroot_command "$dir" $apk_command add $add_packages
   if [[ $CUSTOM_ALPINE_REPO != "1" ]]; then
     echo -e "#$mirror/$version/main\n#$mirror/$version/community" >> "$dir/etc/apk/repositories"
     [[ $version != "edge" ]] || echo -e "#$mirror/$version/testing" >> "$dir/etc/apk/repositories"
