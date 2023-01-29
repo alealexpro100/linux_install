@@ -47,7 +47,7 @@ function interface_con_wlan() {
     try_exec 0 ip link set "$interface" up
     iwconfig "$interface" essid "$ssid"
     if wpa_conf="$(wpa_passphrase "$ssid" "$ssid_pass")"; then
-        if echo -n "$wpa_conf" | wpa_supplicant -B -i "$interface"; then
+        if wpa_supplicant -B -i "$interface" -c <(echo -n "$wpa_conf"); then
             case $ip_method in
                 auto|dhcp) interface_setup_dhcp "$interface";;
                 static) interface_setup_static "$interface" "$ip_client" "$ip_netmask" "$ip_gateway" "$ip_dns";;
@@ -55,11 +55,12 @@ function interface_con_wlan() {
             esac
         fi
     else
-        msg_print error "$wpa_conf"
+        return_err "$wpa_conf"
     fi
 }
 export -f interface_con_wlan
 
+# Get IP address on interface
 function interface_get_ip() {
     local interface="$1"
     if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
@@ -71,9 +72,11 @@ function interface_get_ip() {
     fi
 }
 
+# Get IP address on first available network interface
 function interfaces_get_ip() {
     local interface ip_addr
     while IFS= read -r interface; do
+        [[ $interface != "lo" ]] || continue
         if [[ $(cat "/sys/class/net/$interface/carrier" 2>/dev/null) = 1 ]]; then
             if ip_addr=$(interface_get_ip $interface); then
                 msg_print note "$M_LOCAL_IP ($interface): $ip_addr."
