@@ -21,9 +21,7 @@ source ./lib/common/lib_connect.sh
 # shellcheck disable=SC1091
 source ./lib/common/lib_var_op.sh
 
-if [[ $UID != 0 ]]; then
-  return_err "This script requries root permissions!"
-fi
+has_root || return_err "This script requries root permissions!"
 
 # shellcheck disable=SC1091
 [[ -f ./public_parameters ]] && source ./public_parameters

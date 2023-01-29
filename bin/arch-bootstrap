@@ -12,7 +12,7 @@ export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 
-[[ $UID != 0 ]] && return_err "This script requries root permissions!"
+has_root || return_err "This script requries root permissions!"
 
 # Check options.
 if [[ -z $3 ]]; then

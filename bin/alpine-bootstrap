@@ -12,6 +12,8 @@ export ALEXPRO100_LIB_LOCATION="${ALEXPRO100_LIB_LOCATION:-./lib/alexpro100_lib.
 # shellcheck disable=SC1091
 source ./lib/common/lib_connect.sh
 
+has_root || return_err "This script requries root permissions!"
+
 # Check options.
 if [[ -z $4 ]]; then
   echo_help "Alpine linux boostrap script.\n" \
