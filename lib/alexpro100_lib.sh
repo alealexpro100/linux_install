@@ -8,7 +8,7 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.4"
+ALEXPRO100_LIB_VERSION="0.4.5"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -497,32 +497,55 @@ export -f parse_arch
 # If arch is set to check, we just check ability to use qemu static.
 function qemu_chroot() {
   [[ -z $3 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [DIRECTORY] [SHELL]\nChroot to directory using qemu-static, mounting necessary directories."
-  local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
   [[ "$1" == "check" ]] && shift
-  parse_arch "$1"; shift
-  if [[ -f $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static ]]; then
-    AP100_DBG msg_print debug "Using $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
-    [[ "$#" == 1 ]] && return 0
-    cp "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" "$1/usr/bin/qemu-$qemu_arch-static"
-    local qemu_dir=$1; shift
-	  chroot_rootfs main "$qemu_dir" "qemu-$qemu_arch-static" "$@"
-    rm -rf "$1/usr/bin/qemu-$qemu_arch-static"
-  else
-    return_err "File $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static not found! Check qemu-static package."
+  local QEMU_STATIC_BIN_FILE="" QEMU_ARCH="$1"
+  if [[ -n $QEMU_STATIC_BIN_DIR ]]; then
+    [[ -d $QEMU_STATIC_BIN_DIR ]] || msg_print warn "Directory $QEMU_STATIC_BIN_DIR does not exist!"
+    [[ ! -f $QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH-static ]] || QEMU_STATIC_BIN_FILE="$QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH-static"
+    if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
+      if [[ -f $QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH ]]; then
+        QEMU_STATIC_BIN_FILE="$QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH"
+      else
+        msg_print warn "Directory $QEMU_STATIC_BIN_DIR does not contain qemu-$QEMU_ARCH-static or qemu-$QEMU_ARCH!"
+      fi
+    fi
   fi
+  if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
+    QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH-static || echo -n)"
+    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH || echo -n)"
+  fi
+  [[ -n $QEMU_STATIC_BIN_FILE ]] || return_err "File qemu-$QEMU_ARCH or qemu-$QEMU_ARCH-static not found! Check qemu-static package or QEMU_STATIC_BIN_DIR variable."
+  shift; [[ "$#" == 1 ]] && return 0
+  cp "$QEMU_STATIC_BIN_FILE" "$1/usr/bin/qemu-$QEMU_ARCH-static"
+  local qemu_dir=$1; shift
+  AP100_DBG msg_print debug "Using $QEMU_STATIC_BIN_FILE."
+	chroot_rootfs main "$qemu_dir" "$@"
+  rm -rf "$qemu_dir/usr/bin/qemu-$QEMU_ARCH-static"
 }
 export -f qemu_chroot
 
 # For running binary for foreign arch.
 function qemu_run_bin() {
   [[ -z $2 ]] && echo_help "Usage: ${FUNCNAME[0]} [ARCH] [BINARY]\nRun binary using qemu-static."
-  local QEMU_STATIC_BIN_DIR=${QEMU_STATIC_BIN_DIR:-"/usr/bin"}
-  if [[ -f "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" ]]; then
-    AP100_DBG msg_print debug "Found $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static."
-    shift; "$QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static" "$@"
-  else
-    return_err "File $QEMU_STATIC_BIN_DIR/qemu-$qemu_arch-static not found! Check qemu-static package."
+  local QEMU_STATIC_BIN_FILE="" QEMU_ARCH="$1"
+  if [[ -n $QEMU_STATIC_BIN_DIR ]]; then
+    [[ -d $QEMU_STATIC_BIN_DIR ]] || msg_print warn "Directory $QEMU_STATIC_BIN_DIR does not exist!"
+    [[ ! -f $QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH-static ]] || QEMU_STATIC_BIN_FILE="$QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH-static"
+    if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
+      if [[ -f $QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH ]]; then
+        QEMU_STATIC_BIN_FILE="$QEMU_STATIC_BIN_FILE/qemu-$QEMU_ARCH"
+      else
+        msg_print warn "Directory $QEMU_STATIC_BIN_DIR does not contain qemu-$QEMU_ARCH-static or qemu-$QEMU_ARCH!"
+      fi
+    fi
   fi
+  if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
+    QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH-static || echo -n)"
+    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH || echo -n)"
+  fi
+  [[ -n $QEMU_STATIC_BIN_FILE ]] || return_err "File qemu-$QEMU_ARCH or qemu-$QEMU_ARCH-static not found! Check qemu-static package or QEMU_STATIC_BIN_DIR variable."
+  AP100_DBG msg_print debug "Using $QEMU_STATIC_BIN_FILE."
+  shift; "$QEMU_STATIC_BIN_FILE" "$@"
 }
 export -f qemu_run_bin
 
