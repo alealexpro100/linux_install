@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $LIVE_MODE == "0" ]]; then
-  read_param "" "$M_ARCH_ENTER" "$void_arch" arch menu_var "$(gen_menu < <(echo -e "x86_64\ni686\naarch64\narmv6l\narmv7l"))"
+  read_param "" "$M_ARCH_ENTER" "$void_arch" arch menu_var "$(gen_menu < <(echo -e "x86_64\naarch64\narmv6l\narmv7l"))"
 else
   add_var "declare -gx" arch "$void_arch"
 fi
