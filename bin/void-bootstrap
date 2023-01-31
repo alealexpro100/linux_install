@@ -22,6 +22,13 @@ fi
 
 arch=$1 version=$2 mirror=$3 dir="$(realpath "$4")"; shift 4; add_packages="$*"
 
+# Offline parameters verify
+[[ $arch == "x86_64" || $arch == "aarch64" || $arch == "armv6l" || $arch == "armv7l" || $arch == "i686" ]] || return_err "Incorrect arch $arch! Supported: x86_64,aarch64,armv6l,armv7l"
+[[ $arch != "i686" ]] || return_err "Arch $arch is not supported!"
+[[ $version == "musl" || $version == "glibc" ]] || return_err "Incorrect version $version! Supported: musl,glibc."
+is_url "$mirror" || return_err "Link $mirror does not seem to be URL!"
+[[ -d $dir ]] || return_err "Directory $dir does not exist!"
+
 parse_arch "$(uname -m)"
 if [[ $arch == "$void_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
@@ -35,7 +42,6 @@ else
   fi
 fi
 
-[[ $arch == "i686" ]] && return_err "Arch $arch is not supported!"
 install_arch=$arch
 if [[ "$arch" == "aarch64" ]]; then
   repo_xbps="$mirror/$arch"

@@ -21,10 +21,17 @@ if [[ -z $4 ]]; then
   "Example: $0 x86_64 v3.13 https://nl.alpinelinux.org/alpine /mnt htop"
 fi
 
-arch=$1 version=$2 mirror="$3"; dir="$(realpath "$4")"; shift 4; add_packages="$*"
+arch=$1 version=$2 mirror="$3" dir="$(realpath "$4")"; shift 4; add_packages="$*"
+
+# Offline parameters verify
+[[ $arch == "x86_64" || $arch == "aarch64" || $arch == "armhf" || $arch == "armv7" || $arch == "x86" ]] || return_err "Incorrect arch $arch! Supported: x86_64,x86,aarch64,armhf,armv7"
+is_url "$mirror" || return_err "Link $mirror does not seem to be URL!"
+[[ -d $dir ]] || return_err "Directory $dir does not exist!"
+
 parse_arch "$(uname -m)"
 if [[ $mirror =~ https* ]]; then
   msg_print warning "Detected https mirror! Will try to use http for initial install."
+  # Due to new mechanism of download, we need to either ignore https or use temporary rootfs.
   check_url "${mirror/https\:/http\:}" || return_err "Mirror $mirror does NOT support http!"
 fi
 if [[ $CUSTOM_ALPINE_REPO == "1" ]]; then

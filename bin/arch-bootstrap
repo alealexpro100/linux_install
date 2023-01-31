@@ -25,6 +25,12 @@ fi
 arch=$1 mirror=$2 dir="$(realpath "$3")"; shift 3
 install_packages="$*"
 
+# Offline parameters verify
+[[ $arch == "x86_64" || $arch == "aarch64" || $arch == "arm" || $arch == "armv6h" || $arch == "armv7h" || $arch == "i686" ]] || return_err "Incorrect arch $arch! Supported: x86_64,i686,aarch64,arm,armv6h,armv7h"
+is_url "$mirror" || return_err "Link $mirror does not seem to be URL!"
+[[ -d $dir ]] || return_err "Directory $dir does not exist!"
+
+
 parse_arch "$(uname -m)"
 if [[ $arch == "$arch_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
