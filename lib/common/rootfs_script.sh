@@ -45,8 +45,10 @@ function setup_sudo() {
 
 function grub_config() {
   if [[ $bootloader_type = uefi ]]; then
+    removable_add=""
+    [[ $removable_add != "1" ]] || removable_add="--removable"
     [[ -f /usr/lib/grub/i386-efi/modinfo.sh ]] && grub-install --target=i386-efi --efi-directory=/boot --removable $grub_param
-    grub-install --target=x86_64-efi --efi-directory=/boot --removable $grub_param
+    grub-install --target=x86_64-efi --efi-directory=/boot $removable_add $grub_param
   else
     grub-install --target=i386-pc --force $grub_param $bootloader_bios_place
   fi
