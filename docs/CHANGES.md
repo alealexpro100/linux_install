@@ -1,3 +1,10 @@
+## Version 0.6.4
+
+* Work on stability
+* Add CI (fixes and image build)
+* Work on docs
+* Support boot from Ventoy
+
 ## Version 0.6.3
 
 * Fix astralinux installation
@@ -20,7 +27,7 @@
 ## Version 0.6.0
 
 * Minor fixes.
-* Dynamic dependency resoltuion for archlinux installation.
+* Dynamic dependency resolution for archlinux installation.
 
 ## Version 0.5.9
 
@@ -63,13 +70,9 @@
 * Added RPM bootstrap (testing).
 * Interface fixes.
 
-## Version 0.5.3
-
-* Minor fixes.
-* Optimization of build.
-
 ## Version 0.5.2
 
+* Optimization of build.
 * Minor fixes.
 
 ## Version 0.5.1
@@ -128,7 +131,7 @@
 
 ## Version 0.4.1
 
-* Added feature to change options and the end.
+* Added feature to change options at the end.
 * Some rework of code.
 * Fixes for arch and debian install.
 * Library (alexpro100_lib) fixes.
