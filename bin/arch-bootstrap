@@ -35,8 +35,9 @@ parse_arch "$(uname -m)"
 if [[ $arch == "$arch_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if qemu_chroot check "$arch" ok; then
-    arch_chroot_command="qemu_chroot $arch"
+  parse_arch "$arch"
+  if qemu_chroot check "$qemu_arch" ok; then
+    arch_chroot_command="qemu_chroot $qemu_arch"
   else
     return_err "Qemu emulation is not supported by your system. Aboring."
   fi

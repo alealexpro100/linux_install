@@ -34,9 +34,10 @@ if [[ $arch == "$void_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
   xbps_static_run=""
 else
-  if qemu_chroot check "$arch" ok; then
-    arch_chroot_command="qemu_chroot $arch"
-    xbps_static_run="qemu_run_bin $arch"
+  parse_arch "$arch"
+  if qemu_chroot check "$qemu_arch" ok; then
+    arch_chroot_command="qemu_chroot $qemu_arch"
+    xbps_static_run="qemu_run_bin $qemu_arch"
   else
     exit 1
   fi

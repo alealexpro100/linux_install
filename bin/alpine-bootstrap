@@ -46,8 +46,9 @@ fi
 if [[ $arch == "$alpine_arch" ]]; then
   apk_static_run=""
 else
-  if qemu_chroot check "$arch" ok; then
-    apk_static_run="qemu_run_bin $arch"
+  parse_arch "$arch"
+  if qemu_chroot check "$qemu_arch" ok; then
+    apk_static_run="qemu_run_bin $qemu_arch"
   else
     exit 1
   fi

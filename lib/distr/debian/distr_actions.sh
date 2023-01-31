@@ -3,8 +3,9 @@
 if [[ $arch == $debian_arch ]]; then
   arch_chroot_command="chroot_rootfs auto"
 else
-  if qemu_chroot check $arch ok; then
-    arch_chroot_command="qemu_chroot $arch"
+  parse_arch "$qemu_arch"
+  if qemu_chroot check $qemu_arch ok; then
+    arch_chroot_command="qemu_chroot $qemu_arch"
   else
     exit 1
   fi
