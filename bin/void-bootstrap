@@ -25,9 +25,11 @@ arch=$1 version=$2 mirror=$3 dir="$(realpath "$4")"; shift 4; add_packages="$*"
 parse_arch "$(uname -m)"
 if [[ $arch == "$void_arch" ]]; then
   arch_chroot_command="chroot_rootfs auto"
+  xbps_static_run=""
 else
   if qemu_chroot check "$arch" ok; then
     arch_chroot_command="qemu_chroot $arch"
+    xbps_static_run="qemu_run_bin $arch"
   else
     exit 1
   fi
@@ -35,10 +37,10 @@ fi
 
 [[ $arch == "i686" ]] && return_err "Arch $arch is not supported!"
 install_arch=$arch
-if [[ "$void_arch" == "aarch64" ]]; then
-  repo_xbps="$mirror/$void_arch/"
+if [[ "$arch" == "aarch64" ]]; then
+  repo_xbps="$mirror/$arch"
 else
-  repo_xbps="$mirror/musl/"
+  repo_xbps="$mirror/musl"
 fi
 if [[ "$arch" == "aarch64" ]]; then
   mirror="$mirror/$arch"
@@ -55,15 +57,14 @@ create_tmp_dir xbps_tmp
 msg_print note "(1) Downloading and extracting static xbps..."
 get_file_s - "$repo_xbps/$arch-musl-repodata" | arccat zst - | tar xf - -C "$xbps_tmp"
 xbps_name=$(< "$xbps_tmp/index.plist" grep xbps-static- | sed -e 's/<string>//;s/<\/string>//;s/\t\t//')
+check_url "$repo_xbps/$xbps_name.$arch-musl.xbps" || return_err "URL $repo_xbps/$xbps_name.$arch-musl.xbps is incorrect!"
 get_file_s - "$repo_xbps/$xbps_name.$arch-musl.xbps" | arccat zst - | tar xf - -C "$xbps_tmp"
 
 function do_install() {
-  ROOTFS_DIR_NO_FIX=1
-  chroot_add_mount dir "$dir" "$xbps_tmp/mnt" --rbind --make-rslave
-  yes | XBPS_TARGET_ARCH=$install_arch SSL_NO_VERIFY_PEER=1 $arch_chroot_command "$xbps_tmp" /usr/bin/xbps-install.static -r /mnt -R "$mirror" -A -Suy base-voidstrap $add_packages
+  msg_print debug "(2.1) Installing..."
+  yes | XBPS_TARGET_ARCH="$install_arch" SSL_NO_VERIFY_PEER=1 $xbps_static_run "$xbps_tmp/usr/bin/xbps-install.static" -r "$dir" -R "$mirror" -A -Suy base-voidstrap $add_packages
   rm -rf "$xbps_tmp"
-  unset CHROOT_ACTIVE_MOUNTS CHROOT_CREATED # Bug left. Dirty fix.
-  msg_print note "(3) Configuring..."
+  msg_print debug "(2.2) Configuring..."
   $arch_chroot_command "$dir" /usr/bin/xbps-reconfigure -af
   echo "#repository=$mirror" >> "$dir/etc/xbps.d/install_repo.conf"
 }
