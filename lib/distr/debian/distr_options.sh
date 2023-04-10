@@ -6,27 +6,64 @@ else
   add_var "declare -gx" arch "$debian_arch"
 fi
 
-read_param "" "$M_DISTR_VER" "$version_debian" version_debian text
+deb_distros="oldoldstable\noldstable\nstable\ntesting
+stretch\nbuster\nbullseye\nbookworm\nsid"
+read_param "" "$M_DISTR_VER" "$version_debian" version_debian menu_var "$(gen_menu < <(echo -e "$deb_distros"))"
+unset deb_distros
+
+distr_debian=""
+case $version_debian in
+  oldoldstable) distr_debian=stretch;;
+  oldstable) distr_debian=buster;;
+  stable) distr_debian=bullseye;;
+  testing) distr_debian=bookworm;;
+  *) distr_debian=$version_debian;;
+esac
 
 #Add all known repos.
 add_var "declare -gA" "debian_repos"
 add_var "declare -ga" "debian_repos_order"
-add_var "declare -gx" "debian_repos[main]" "deb $debian_mirror $version_debian main non-free contrib"
-add_var "declare -gx" "debian_repos_order[0]" "main"
-if [[ $version_debian != "sid" ]]; then
-    add_var "declare -gx" "debian_repos[updates]" "deb $debian_mirror $version_debian-updates main non-free contrib"
-    add_var "declare -gx" "debian_repos_order[1]" "updates"
-    add_var "declare -gx" "debian_repos[backports]" "deb $debian_mirror $version_debian-backports main non-free contrib"
-    add_var "declare -gx" "debian_repos_order[2]" "backports"
-    if ! [[ $1 == "jessie" || $1 == "stretch" ]]; then
-      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian-security main non-free contrib"
+components=""
+case $distr_debian in
+  buzz|rex|bo|hamm|slink|potato|woody|sarge|etch|lenny|squeeze|wheezy|jessie)
+    print_param warn "NOT TESTED!"
+    if [[ $distr_debian == "buzz" || $distr_debian == "rex" ]]; then
+      components="main contrib"
     else
-      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $version_debian/updates main non-free contrib"
+      components="main non-free contrib"
+    fi
+    add_var "declare -gx" "debian_repos[main]" "deb $debian_archive_mirror $distr_debian $components"
+    add_var "declare -gx" "debian_repos_order[0]" "main"
+  ;;
+  stretch|buster|bullseye|bookworm)
+    if [[ $distr_debian == "bookworm" ]]; then
+      components="main non-free contrib non-free-firmware"
+    else
+      components="main non-free contrib"
+    fi
+    add_var "declare -gx" "debian_repos[main]" "deb $debian_mirror $distr_debian $components"
+    add_var "declare -gx" "debian_repos_order[0]" "main"
+    add_var "declare -gx" "debian_repos[updates]" "deb $debian_mirror $distr_debian-updates $components"
+    add_var "declare -gx" "debian_repos_order[1]" "updates"
+    add_var "declare -gx" "debian_repos[backports]" "deb $debian_mirror $distr_debian-backports $components"
+    add_var "declare -gx" "debian_repos_order[2]" "backports"
+    if [[ $distr_debian == "stretch" || $distr_debian == "buster" ]]; then
+      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $distr_debian/updates $components"
+    else
+      add_var "declare -gx" "debian_repos[security]" "deb $debian_mirror_security $distr_debian-security $components"
     fi
     add_var "declare -gx" "debian_repos_order[3]" "security"
-fi
+  ;;
+  experimental|sid)
+    components="main non-free contrib non-free-firmware"
+    add_var "declare -gx" "debian_repos[main]" "deb $debian_mirror $distr_debian $components"
+    add_var "declare -gx" "debian_repos_order[0]" "main"
+  ;;
+  *) return_err "Incorrect paramater distr_debian=$distr_debian! Mistake?"
+esac
+unset components
 for repo_name in "${!debian_repos_add[@]}"; do
-  add_var "declare -gx" "debian_repos[$repo_name]" "$(echo -e "${debian_repos_add[$repo_name]}" | sed "s/\$version_debian/$version_debian/g")"
+  add_var "declare -gx" "debian_repos[$repo_name]" "$(echo -e "${debian_repos_add[$repo_name]}" | sed "s/\$version_debian/$distr_debian/g")"
   add_var "declare -gx" "debian_repos_order[${#debian_repos_order[@]}]" "$repo_name"
 done
 

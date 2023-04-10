@@ -10,6 +10,7 @@ passwd_default='pass'
 version_debian=bullseye
 debian_mirror='https://deb.debian.org/debian'
 debian_mirror_security='https://security.debian.org'
+debian_archive_mirror='https://archive.debian.org/debian'
 # For adding repos please place certificates for them (certificate name is name of repo)
 # Example: declare -A debian_repos_add=([wine]='deb https://dl.winehq.org/wine-builds/debian/ $version_debian main')
 # wine.key is searched in LI_CERTS
