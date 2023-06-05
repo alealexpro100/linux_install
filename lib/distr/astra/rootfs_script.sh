@@ -37,7 +37,7 @@ if [[ $networkmanager != "1" ]]; then
 fi
 
 if [[ $kernel == "1" ]]; then
-  echo "Installing linux kernel and its additions..."
+  msg_print note "Installing linux kernel and its additions..."
   case "$kernel_type" in
     vanilla) to_install="$to_install linux-5.10-generic linux-headers-5.10-generic linux-firmware dkms";;
     virtual) to_install="$to_install linux-5.10-generic";;
@@ -70,6 +70,15 @@ fi
 for service in $to_enable; do
   systemctl enable "$service"
 done
+
+if [[ $kernel == "1" ]]; then
+  # Kernel is installed. Now we can check if it uses parsec module or not.
+  # If yes, we add directory to avoid init kill (boot fail).
+  if [[ -f /usr/share/initramfs-tools/modules.d/parsec ]]; then
+    msg_print note "Parsec module found. Creatins /parsecfs directory..."
+    mkdir -p /parsecfs
+  fi
+fi
 
 # It is required because of 'security'. It wil not work otherwise
 msg_print note "Setting up admin user..."
