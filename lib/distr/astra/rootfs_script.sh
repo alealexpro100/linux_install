@@ -64,7 +64,17 @@ fi
 # These steps fix installaion (do NOT merge them)
 
 [[ $kernel == "1" ]] && $apt_install initramfs-tools
-[[ $graphics == "1" ]] && $apt_install samba
+if [[ $graphics == "1" ]]; then
+  # /usr/sbin/invoke-rc.d is buggy. It causes rsyslog restart to fail
+  # We need to fake systemd avability
+  if [[ ! -d /run/systemd/system ]]; then
+    mkdir -p /run/systemd/system
+    fake_systemd=1
+  else
+    fake_systemd=0
+  fi
+  $apt_install samba
+fi
 
 [[ -n $to_install ]] && $apt_install $to_install
 for service in $to_enable; do
@@ -79,6 +89,7 @@ if [[ $kernel == "1" ]]; then
     mkdir -p /parsecfs
   fi
 fi
+[[ $fake_systemd == "1" ]] && try_exec 0 rm -rf /run/systemd
 
 # It is required because of 'security'. It wil not work otherwise
 msg_print note "Setting up admin user..."
