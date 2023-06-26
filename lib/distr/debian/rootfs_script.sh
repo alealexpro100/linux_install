@@ -7,7 +7,7 @@ locale_setup /etc/default/locale
 #Apt config
 msg_print note "Apt setup..."
 declare -gx DEBIAN_FRONTEND=noninteractive
-apt_install="apt -y install"
+apt_install="apt-get -y install"
 [[ $debian_no_recommends == 1 ]] && apt_install="$apt_install --no-install-recommends"
 
 [[ $debian_add_i386 == "1" ]] && dpkg --add-architecture i386
@@ -16,15 +16,19 @@ for repo_name in "${debian_repos_order[@]}"; do
   [[ -n "${debian_repos[$repo_name]}" ]] || continue
   echo -e "#Repository $repo_name\n${debian_repos[$repo_name]}\n" >> /etc/apt/sources.list
   if [[ -f "/root/certs/$repo_name.key" ]]; then
-    gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"
+    if is_binary "/root/certs/$repo_name.key"; then
+      cp "/root/certs/$repo_name.key" "/etc/apt/trusted.gpg.d/$repo_name.gpg"
+    else
+      gpg --no-default-keyring --keyring "gnupg-ring:/etc/apt/trusted.gpg.d/$repo_name.gpg" --import < "/root/certs/$repo_name.key"
+    fi
     chmod 644 "/etc/apt/trusted.gpg.d/$repo_name.gpg"
   fi
 done
-apt update
+apt-get update
 # By default update repo contains additional updates
-apt upgrade -y
+apt-get upgrade -y
 
-msg_print note "Apt is ready."
+msg_print note "Apt-get is ready."
 
 #Debian setup.
 msg_print note "Installing addational packages..."
