@@ -1,14 +1,14 @@
 #!/bin/bash
 ###############################################################
 ### alexpro100 BASH LIBRARY
-### Works both on GNU  and busybox systems. Requries Bash.
-### Copyright (C) 2021 ALEXPRO100 (alealexpro100)
+### Works both on GNU and busybox systems. Requries Bash.
+### Copyright (C) 2023 ALEXPRO100 (alealexpro100)
 ### License: GPL v3.0
 ###############################################################
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.5"
+ALEXPRO100_LIB_VERSION="0.4.6"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
@@ -199,6 +199,14 @@ function mv_big() {
 }
 export -f mv_big
 
+# Simple check if file is binary or not.
+# NOTE: May not work: https://stackoverflow.com/a/49806047
+# Example: is_binary file
+function is_binary() {
+  (grep -q "\^@" < "$1") && return 0 || return 1
+}
+export -f is_binary
+
 # This function checks only local link, NOT internet connection.
 # It is intended to check local connection like enterprise network.
 function check_online() {
@@ -337,6 +345,7 @@ export -f detect_vm
 #--- ROOTFS MOUNT: BEGIN
 
 # Aim of this bunch of functions is to correctly mount rootfs for correct work of many scripts and package managers (such as pacman).
+# NOTE: Non-root is WIP. For now, recursive mount is broken.
 
 # Internal function to mount and to array pointed target.
 # Example (1): chroot_add_mount dir shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev
@@ -511,8 +520,8 @@ function qemu_chroot() {
     fi
   fi
   if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
-    QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH-static || echo -n)"
-    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH || echo -n)"
+    QEMU_STATIC_BIN_FILE="$(type -P qemu-$QEMU_ARCH-static || echo -n)"
+    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(type -P qemu-$QEMU_ARCH || echo -n)"
   fi
   [[ -n $QEMU_STATIC_BIN_FILE ]] || return_err "File qemu-$QEMU_ARCH or qemu-$QEMU_ARCH-static not found! Check qemu-static package or QEMU_STATIC_BIN_DIR variable."
   shift; [[ "$#" == 1 ]] && return 0
@@ -540,8 +549,8 @@ function qemu_run_bin() {
     fi
   fi
   if [[ -z $QEMU_STATIC_BIN_FILE ]]; then
-    QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH-static || echo -n)"
-    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(which qemu-$QEMU_ARCH || echo -n)"
+    QEMU_STATIC_BIN_FILE="$(type -P qemu-$QEMU_ARCH-static || echo -n)"
+    [[ -n $QEMU_STATIC_BIN_DIR ]] || QEMU_STATIC_BIN_FILE="$(type -P qemu-$QEMU_ARCH || echo -n)"
   fi
   [[ -n $QEMU_STATIC_BIN_FILE ]] || return_err "File qemu-$QEMU_ARCH or qemu-$QEMU_ARCH-static not found! Check qemu-static package or QEMU_STATIC_BIN_DIR variable."
   AP100_DBG msg_print debug "Using $QEMU_STATIC_BIN_FILE."
