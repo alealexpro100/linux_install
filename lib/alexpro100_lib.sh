@@ -8,11 +8,11 @@
 shopt -s expand_aliases
 set -e
 
-ALEXPRO100_LIB_VERSION="0.4.6"
+ALEXPRO100_LIB_VERSION="0.4.7"
 ALEXPRO100_LIB_LOCATION="$(realpath "${BASH_SOURCE[0]}")"
 export ALEXPRO100_LIB_VERSION ALEXPRO100_LIB_LOCATION
 export CHROOT_ACTIVE_MOUNTS=() CHROOT_CREATED=() ROOTFS_DIR_NO_FIX=0
-export PROOT_MOUNTS=() FORCE_PROOT=0 PROOT_ROOT=""
+export BWRAP_MOUNTS=() FORCE_BWRAP=0 BWRAP_ROOT=""
 export ALEXPRO100_LIB_DEBUG="${ALEXPRO100_LIB_DEBUG:-0}"
 
 #NOTE: Take attention to the parentheses (() or {}). They may vary.
@@ -62,6 +62,8 @@ export DUnderline="\e[21m"	# Double Underlined
 
 export AP100_DBG_ON="$ALEXPRO100_LIB_DEBUG"
 
+# Place it before function to make it running while debug.
+# NOTE: debug is defined by ALEXPRO100_LIB_DEBUG on init of alexpro100_lib.sh
 function AP100_DBG() {
   [[ ! $AP100_DBG_ON == 1 ]] || "$@"
 }
@@ -93,11 +95,14 @@ function msg_print() {
 }
 export -f msg_print
 
+# Return error with print of message
+# Example: return_err "Failed!" 2
 function return_err() {
   msg_print error "$1"; return "${2:-1}"
 }
 export -f return_err
 
+# Print help message and return error (exit).
 function echo_help() {
   msg_print warning "Printing help message."
   msg_print note "$*"
@@ -168,12 +173,15 @@ function try_exec() {
 }
 export -f try_exec
 
+# Check if command exists (function or executable in PATH).
 function command_exists() {
   AP100_DBG msg_print debug "Checking $1..."
+  # Binary `which` seems to be outdated, so not using it.
   command -v "$1" &>/dev/null
 }
 export -f command_exists
 
+# Check if argument is function (of BASH), not executable file.
 function is_function() {
   AP100_DBG msg_print debug "Checking $1..."
   declare -F "$1" > /dev/null;
@@ -181,11 +189,11 @@ function is_function() {
 export -f is_function
 
 # Hack for busybox. Prints list of files in directory.
-# Busybox's find applet doesn't support option to shrink directory name.
-# WARNING: last / is important!
 # Example: list_files /mnt/ext4_1/
 function list_files() {
   local DIR_SEARCH="$1"; shift
+  # Busybox's find applet doesn't support option to shrink directory name.
+  # WARNING: last / is important!
   find "$DIR_SEARCH" -maxdepth 1 "$@" | sort | sed "s|$DIR_SEARCH||g;/^$/d"
 }
 export -f list_files
@@ -359,14 +367,13 @@ function chroot_add_mount() {
   fi
   AP100_DBG msg_print debug "Mounting $2..."
   shift;
-  if [[ $FORCE_PROOT == "1" ]] || has_root; then
+  if has_root && [[ $FORCE_BWRAP != "1" ]]; then
     AP100_DBG msg_print debug "Root detected. Using real mount."
     mount "$@" || msg_print warning "$2 not mounted!"
     CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
   else
-    AP100_DBG msg_print debug "Root not detected. Using proot mount (cmd params)."
-    [[ -n $PROOT_ROOT ]] || msg_print warning "Variable PROOT_ROOT is empty. Incorrect mount will be set."
-    PROOT_MOUNTS=("${PROOT_MOUNTS[@]}" "-b" "$1:${2#"$PROOT_ROOT"}")
+    AP100_DBG msg_print debug "Root not detected. Assuming usage of bind."
+
   fi
 }
 export -f chroot_add_mount
@@ -376,8 +383,17 @@ export -f chroot_add_mount
 function chroot_setup() {
   [[ -d "$1" ]] || return_err "Location $1 is not directory or does not exist!"
   if ! has_root; then
-    AP100_DBG msg_print debug "Root is required for chroot_setup. Switching to chroot_setup_light..."
-    PROOT_ROOT="${PROOT_ROOT-:$1}" chroot_setup_light "$@" || return_err "chroot_setup_light failed with code $?!"
+    [[ -n $BWRAP_ROOT ]] || msg_print warning "Variable BWRAP_ROOT is empty. Incorrect mount will be set."
+    local ROOT_MOUNT="$1"
+    BWRAP_MOUNTS=("${BWRAP_MOUNTS[@]}"
+      "--bind" "$ROOT_MOUNT" "${ROOT_MOUNT#"$BWRAP_ROOT"}/"
+      "--proc" "${ROOT_MOUNT#"$BWRAP_ROOT"}/proc"
+      "--bind" "/sys" "${ROOT_MOUNT#"$BWRAP_ROOT"}/sys"
+      "--dev-bind" "/dev" "${ROOT_MOUNT#"$BWRAP_ROOT"}/dev"
+      "--tmpfs" "${ROOT_MOUNT#"$BWRAP_ROOT"}/dev/shm"
+      "--ro-bind" "/etc/resolv.conf" "${ROOT_MOUNT#"$BWRAP_ROOT"}/etc/resolv.conf"
+    )
+    AP100_DBG msg_print debug "Root is required for chroot_setup. Skipping."
     return 0
   fi
   AP100_DBG msg_print debug "Running ${FUNCNAME[*]}..."
@@ -425,9 +441,9 @@ function chroot_teardown() {
     done
     CHROOT_ACTIVE_MOUNTS=()
   fi
-  if (( ${#PROOT_MOUNTS[@]} )); then
-    AP100_DBG msg_print debug "Cleaning up proot mount params..."
-    PROOT_MOUNTS=()
+  if (( ${#BWRAP_MOUNTS[@]} )); then
+    AP100_DBG msg_print debug "Cleaning up bwrap mount params..."
+    BWRAP_MOUNTS=()
   fi
   if [[ (( ${#CHROOT_CREATED[@]} )) && "$1" == "--remove-created" ]]; then
     for name in "${CHROOT_CREATED[@]}"; do
@@ -455,7 +471,7 @@ function chroot_rootfs() {
     chroot_add_mount dir "$CHROOT_DIR" "$CHROOT_DIR" --bind
   fi
   if [[ $mode == "auto" ]]; then
-    if has_root && [[ $FORCE_PROOT != "1" ]]; then
+    if has_root && [[ $FORCE_BWRAP != "1" ]]; then
       AP100_DBG msg_print debug "Auto mode enabled. Using main mode."
       mode="main"
     else
@@ -463,17 +479,18 @@ function chroot_rootfs() {
       mode="no_root"
     fi
   fi
+  chroot_setup "$CHROOT_DIR"
   case $mode in
     main)
-      chroot_setup "$CHROOT_DIR"
       AP100_DBG msg_print debug "Running chroot..."
       unshare --fork chroot "$CHROOT_DIR" "$@" || local EXIT_CODE=$?
       chroot_teardown ""
     ;;
     no_root)
-      # We do not use chroot_setup here. Proot will do the job itself
-      AP100_DBG msg_print debug "Running proot..."
-      proot "${PROOT_MOUNTS[@]}" -S "$CHROOT_DIR" "$@" || local EXIT_CODE=$?
+      AP100_DBG msg_print debug "Running bwrap..."
+      BWRAP_ROOT="${BWRAP_ROOT:-CHROOT_DIR}"
+      bwrap "${BWRAP_MOUNTS[@]}" --uid 0 --gid 0 --new-session --unshare-ipc --unshare-uts --cap-add CAP_SYS_CHROOT \
+        --share-net -- "$@" || local EXIT_CODE=$?
     ;;
     *) return_err "Incorrect switch for mode $mode";;
   esac

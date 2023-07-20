@@ -3,13 +3,12 @@ linux_install (development notes)
 
 ## Why only root for install_sys.sh?
 
-Due to user permissions limitations, even with utilities like `proot` and `fakeroot`, it is not possible to use `install_sys.sh` without root permissions.
+Due to user permissions limitations, even with utilities like `bwrap` or `proot`, it is not possible to use `install_sys.sh` without root permissions.
 
 More detailed limitations:
 
-* Alpine package manager (apk) uses mount functions (works only for real root) when installing to non-root location.
+* Alpine package manager (apk) uses chown functions which cannot be modified using `fakeroot`.
 * Proot does not correctly support recursive mounts, so it is not possible to use for arch-like installations (pacman).
-* Other was not tested - no motivation for it.
 
 ## Why there are no trap functions?
 
